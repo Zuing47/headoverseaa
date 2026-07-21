@@ -700,14 +700,14 @@ export const pt: SiteContent = {
         name: "Beatriz Nicola",
         role: "Líder de Marketing",
         bio: "Conduz posicionamento e marca das empresas do portfólio.",
-        photo: "/images/team/beatriz.png",
+        photo: "/images/team/beatriz.jpg",
         linkedin: "https://www.linkedin.com/in/beatriz-nicola-559aa0169/",
       },
       {
         name: "Jakson Martins",
         role: "Project Manager",
         bio: "Governança ativa e operação — a ponte entre a tese e a execução diária.",
-        photo: "/images/team/Jakson.png",
+        photo: "/images/team/Jakson.jpg",
         linkedin: "https://www.linkedin.com/in/jakson-martins-770b08150/",
       },
       {

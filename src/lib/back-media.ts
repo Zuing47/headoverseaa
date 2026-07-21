@@ -21,13 +21,13 @@
  * - flag + chicago poster → Como atuamos (impact grid)
  *
  * Videos — one page each:
- * - sunset               → Home hero only
+ * - sunset               → Home hero (NYC golden-hour, 1080p)
  * - ocean                → Home StoryBand only
  * - back-markets         → Private Equity only
  * - portrait-a           → Por que Head Oversea only
  * - portrait-b           → Fundadores only
  * - niagara              → Tese + Private Equity hero (shared by request)
- * - investidores.mp4     → Investidores only (from 231177_medium)
+ * - investidores.mp4     → Investidores (slim 1080p from same master)
  * - eua                  → Como atuamos only
  * - videoplayback        → Private Equity featured (with audio)
  * - realestate.mp4       → Real Estate only
