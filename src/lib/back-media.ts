@@ -25,7 +25,8 @@
  * - ocean                → Home StoryBand only
  * - back-markets         → Private Equity only
  * - portrait-a           → Por que Head Oversea only
- * - portrait-b           → Fundadores hero band
+ * - portrait-b           → reserved (not page hero)
+ * - contact.mp4          → Contato + Fundadores hero
  * - niagara              → Tese + Private Equity hero (shared by request)
  * - investidores.mp4     → Investidores only
  * - eua                  → Como atuamos only
@@ -84,6 +85,7 @@ export const BACK_MEDIA = {
   videoSunset: "/videos/us-city-skyline-sunset.mp4",
   videoNiagara: "/videos/niagara-falls-sunrise.mp4",
   videoFounder: "/videos/founder-us-presence.mp4",
+  videoContact: "/videos/contact.mp4",
   videoEua: "/videos/eua.mp4",
   videoPeFeatured: "/videos/videoplayback.mp4",
   videoAboutFeatured: "/videos/videoplayback-about.mp4",

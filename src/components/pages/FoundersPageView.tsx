@@ -323,9 +323,9 @@ export function FoundersPageView({
           <MediaRise className="absolute inset-0" delay={0.06}>
             <ParallaxMedia strength={9}>
               <LazyVideo
-                className="absolute inset-0 h-full w-full scale-100 object-cover object-[center_30%] md:scale-[1.08]"
-                src={BACK_MEDIA.videoPortraitB}
-                poster="/images/founders-hero-poster.jpg"
+                className="absolute inset-0 h-full w-full scale-100 object-cover object-center md:scale-[1.08]"
+                src={BACK_MEDIA.videoContact}
+                poster="/images/contact-poster.jpg"
                 aria-hidden
               />
             </ParallaxMedia>
