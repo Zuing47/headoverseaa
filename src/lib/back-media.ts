@@ -21,16 +21,17 @@
  * - flag + chicago poster → Como atuamos (impact grid)
  *
  * Videos — one page each:
- * - sunset               → Home hero (NYC golden-hour, 1080p)
+ * - sunset               → Home hero only
  * - ocean                → Home StoryBand only
  * - back-markets         → Private Equity only
  * - portrait-a           → Por que Head Oversea only
- * - portrait-b           → Fundadores only
+ * - portrait-b           → Fundadores hero band
  * - niagara              → Tese + Private Equity hero (shared by request)
- * - investidores.mp4     → Investidores (slim 1080p from same master)
+ * - investidores.mp4     → Investidores only
  * - eua                  → Como atuamos only
  * - videoplayback        → Private Equity featured (with audio)
  * - realestate.mp4       → Real Estate only
+ * - founder-us-presence  → Segment / founders presence (not page hero)
  */
 export const BACK_MEDIA = {
   peDesk: "/images/private-equity.jpg",
