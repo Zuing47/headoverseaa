@@ -2,6 +2,10 @@
 
 import { ReactLenis } from "lenis/react";
 import { useEffect, useState, type ReactNode } from "react";
+import {
+  LenisRouteScrollReset,
+  NativeRouteScrollReset,
+} from "@/components/motion/RouteScrollReset";
 
 interface SmoothScrollProps {
   children: ReactNode;
@@ -42,7 +46,14 @@ export function SmoothScroll({ children }: SmoothScrollProps) {
     };
   }, []);
 
-  if (!enabled) return <>{children}</>;
+  if (!enabled) {
+    return (
+      <>
+        <NativeRouteScrollReset />
+        {children}
+      </>
+    );
+  }
 
   return (
     <ReactLenis
@@ -54,6 +65,7 @@ export function SmoothScroll({ children }: SmoothScrollProps) {
         anchors: { offset: -80, duration: 1.1 },
       }}
     >
+      <LenisRouteScrollReset />
       {children}
     </ReactLenis>
   );

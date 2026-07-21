@@ -51,6 +51,7 @@ export function PortfolioGrid({ content, locale = "pt" }: PortfolioGridProps) {
   const offsetRef = useRef(0);
   const halfRef = useRef(0);
   const pausedRef = useRef(false);
+  const pendingRef = useRef(false);
   const draggingRef = useRef(false);
   const dragStartX = useRef(0);
   const dragStartOffset = useRef(0);
@@ -117,29 +118,38 @@ export function PortfolioGrid({ content, locale = "pt" }: PortfolioGridProps) {
     };
   }, [applyTransform, measure, normalize, items.length]);
 
+  /** Start drag only after a real swipe — never capture on tap, so logo links work. */
   const onPointerDown = (e: React.PointerEvent) => {
     if (e.button !== 0 && e.pointerType === "mouse") return;
-    const shell = shellRef.current;
-    if (!shell) return;
-    draggingRef.current = true;
+    pendingRef.current = true;
+    draggingRef.current = false;
     movedRef.current = false;
     dragStartX.current = e.clientX;
     dragStartOffset.current = offsetRef.current;
-    setGrabbing(true);
-    setPaused(true);
-    shell.setPointerCapture(e.pointerId);
   };
 
   const onPointerMove = (e: React.PointerEvent) => {
-    if (!draggingRef.current) return;
+    if (!pendingRef.current) return;
     const dx = e.clientX - dragStartX.current;
-    if (Math.abs(dx) > 4) movedRef.current = true;
+    if (!draggingRef.current && Math.abs(dx) > 8) {
+      draggingRef.current = true;
+      movedRef.current = true;
+      setGrabbing(true);
+      setPaused(true);
+      try {
+        shellRef.current?.setPointerCapture(e.pointerId);
+      } catch {
+        /* ignore */
+      }
+    }
+    if (!draggingRef.current) return;
     offsetRef.current = dragStartOffset.current - dx;
     normalize();
     applyTransform();
   };
 
   const endDrag = (e: React.PointerEvent) => {
+    pendingRef.current = false;
     if (!draggingRef.current) return;
     draggingRef.current = false;
     setGrabbing(false);
@@ -155,8 +165,8 @@ export function PortfolioGrid({ content, locale = "pt" }: PortfolioGridProps) {
     if (movedRef.current) {
       e.preventDefault();
       e.stopPropagation();
-      movedRef.current = false;
     }
+    movedRef.current = false;
   };
 
   if (!items.length) return null;
@@ -232,9 +242,16 @@ export function PortfolioGrid({ content, locale = "pt" }: PortfolioGridProps) {
 }
 
 function LogoOnly({ item, locale }: { item: CaseStudy; locale: Locale }) {
-  const href =
-    item.visitUrl ?? (locale === "en" ? "/en/cases" : "/cases");
-  const external = Boolean(item.visitUrl);
+  const href = item.detail
+    ? locale === "en"
+      ? `/en/cases/${item.id}`
+      : `/cases/${item.id}`
+    : item.visitUrl && item.visitUrl !== "#"
+      ? item.visitUrl
+      : locale === "en"
+        ? "/en/cases"
+        : "/cases";
+  const external = Boolean(item.visitUrl && !item.detail && item.visitUrl !== "#");
   const src = LOGO_SRC[item.id] ?? item.logo!;
   const optical = LOGO_OPTICAL[item.id] ?? 1;
 
@@ -244,7 +261,7 @@ function LogoOnly({ item, locale }: { item: CaseStudy; locale: Locale }) {
       target={external ? "_blank" : undefined}
       rel={external ? "noopener noreferrer" : undefined}
       draggable={false}
-      className="group flex h-28 w-[240px] shrink-0 items-center justify-center px-6 md:h-32 md:w-[280px] md:px-8"
+      className="group relative z-20 flex h-28 w-[240px] shrink-0 items-center justify-center px-6 md:h-32 md:w-[280px] md:px-8"
       aria-label={item.company}
     >
       <span className="inline-flex origin-center" style={{ scale: optical }}>
