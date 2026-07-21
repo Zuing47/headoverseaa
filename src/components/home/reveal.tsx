@@ -2,9 +2,11 @@
 
 import {
   motion,
+  useInView,
   useReducedMotion,
   type TargetAndTransition,
 } from "framer-motion";
+import { useEffect, useRef, useState } from "react";
 import { DURATION, EASE_OUT, VIEWPORT } from "@/lib/motion";
 import { cn } from "@/lib/utils";
 
@@ -21,6 +23,10 @@ export type RevealVariant =
  * exactly 0, so we keep a barely-perceptible sliver instead. Movement is
  * the primary signal: every variant now rises from below with real
  * distance so the entrance reads clearly, not as a soft fade.
+ *
+ * A timed safety net forces full opacity if IntersectionObserver never
+ * fires (some mobile browsers + route transitions), so copy never stays
+ * invisible on dark bands.
  */
 const VARIANTS: Record<
   RevealVariant,
@@ -54,6 +60,9 @@ const VARIANTS: Record<
 
 const STATIC: TargetAndTransition = { opacity: 1, y: 0, x: 0, scale: 1 };
 
+/** If IO never fires, force visible after this (ms). */
+const REVEAL_FALLBACK_MS = 1600;
+
 export function reveal(delay = 0, variant: RevealVariant = "fadeUp") {
   const v = VARIANTS[variant];
   return {
@@ -76,11 +85,34 @@ export function Reveal({
   variant?: RevealVariant;
 }) {
   const reduce = useReducedMotion();
+  const ref = useRef<HTMLDivElement>(null);
+  const inView = useInView(ref, {
+    once: true,
+    amount: VIEWPORT.amount,
+    margin: VIEWPORT.margin,
+  });
+  const [fallback, setFallback] = useState(false);
+
+  useEffect(() => {
+    const id = window.setTimeout(() => setFallback(true), REVEAL_FALLBACK_MS);
+    return () => window.clearTimeout(id);
+  }, []);
+
   if (reduce) {
     return <div className={cn(className)}>{children}</div>;
   }
+
+  const v = VARIANTS[variant];
+  const show = inView || fallback;
+
   return (
-    <motion.div className={cn(className)} {...reveal(delay, variant)}>
+    <motion.div
+      ref={ref}
+      className={cn(className)}
+      initial={v.initial}
+      animate={show ? v.whileInView : v.initial}
+      transition={{ duration: DURATION.slow, delay, ease: EASE_OUT }}
+    >
       {children}
     </motion.div>
   );

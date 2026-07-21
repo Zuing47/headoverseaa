@@ -29,7 +29,11 @@ export function InsightsSignup({ locale = "en" }: InsightsSignupProps) {
   return (
     <section
       className="border-t border-white/[0.08] text-white"
-      style={{ backgroundColor: "#071428" }}
+      style={{
+        backgroundColor: "#071428",
+        color: "#ffffff",
+        colorScheme: "dark",
+      }}
       aria-label={en ? "Insights signup" : "Inscrição em insights"}
     >
       <div className="page-shell py-[clamp(3.25rem,7vw,5.5rem)]">
@@ -38,14 +42,20 @@ export function InsightsSignup({ locale = "en" }: InsightsSignupProps) {
             <BackLabel tone="light">{en ? "News" : "Notícias"}</BackLabel>
           </Reveal>
           <Reveal delay={0.08} variant="rise">
-            <h2 className="font-display mt-8 text-[clamp(1.85rem,3.4vw,2.85rem)] leading-[1.12]">
+            <h2
+              className="font-display mt-8 text-[clamp(1.85rem,3.4vw,2.85rem)] leading-[1.12] text-white"
+              style={{ color: "#ffffff" }}
+            >
               {en
                 ? "Sign up for our latest insights"
                 : "Assine nossos últimos insights"}
             </h2>
           </Reveal>
           <Reveal delay={0.14} variant="fadeUp">
-            <p className="mt-5 max-w-[34ch] text-[15px] leading-relaxed text-white/45">
+            <p
+              className="mt-5 max-w-[34ch] text-[15px] leading-relaxed text-white/45"
+              style={{ color: "rgba(255,255,255,0.45)" }}
+            >
               {en
                 ? "Perspectives on active ownership across Brazil and the United States — no noise."
                 : "Perspectivas sobre active ownership entre Brasil e Estados Unidos — sem ruído."}
@@ -54,7 +64,10 @@ export function InsightsSignup({ locale = "en" }: InsightsSignupProps) {
 
           <Reveal delay={0.2} variant="fadeUp" className="mt-12">
             {status === "done" ? (
-              <p className="font-display text-[1.35rem] text-white/80">
+              <p
+                className="font-display text-[1.35rem] text-white/80"
+                style={{ color: "rgba(255,255,255,0.8)" }}
+              >
                 {en ? "You’re on the list." : "Você está na lista."}
               </p>
             ) : (
@@ -79,10 +92,12 @@ export function InsightsSignup({ locale = "en" }: InsightsSignupProps) {
                     "placeholder:text-white/30",
                     "outline-none focus:placeholder:text-white/45",
                   )}
+                  style={{ color: "#ffffff" }}
                 />
                 <button
                   type="submit"
                   className="inline-flex shrink-0 items-center gap-3 py-4 text-[13px] tracking-[0.04em] text-white transition-opacity hover:opacity-65 sm:pl-8"
+                  style={{ color: "#ffffff" }}
                 >
                   {en ? "Subscribe" : "Inscrever-se"}
                   <span

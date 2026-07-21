@@ -227,7 +227,10 @@ export function WhyHeadOverseaPageView({
   return (
     <BackShell content={content} locale={locale} headerSurface="dark">
       {/* Hero — navy copy band; video beside on desktop, full band under on mobile */}
-      <section className="relative overflow-hidden bg-[var(--navy)] text-white">
+      <section
+        className="relative overflow-hidden bg-[var(--navy)] text-white"
+        style={{ color: "#ffffff", colorScheme: "dark" }}
+      >
         <div className="page-shell relative z-10 pt-[calc(72px+clamp(3rem,8vw,5.5rem))] pb-[clamp(2.5rem,6vw,4rem)] md:pt-[calc(5rem+clamp(3.5rem,9vw,6rem))] lg:min-h-[min(78vh,700px)] lg:pb-[clamp(5rem,10vw,7.5rem)]">
           <div className="grid items-center gap-10 lg:grid-cols-12 lg:gap-8">
             <div className="relative z-10 lg:col-span-5">
@@ -235,12 +238,18 @@ export function WhyHeadOverseaPageView({
                 <BackLabel tone="light">{t.eyebrow}</BackLabel>
               </Reveal>
               <Reveal delay={0.08} variant="rise">
-                <h1 className="font-display mt-8 max-w-[14ch] whitespace-pre-line text-[clamp(2.35rem,4.5vw,3.75rem)] leading-[1.06] text-white">
+                <h1
+                  className="font-display mt-8 max-w-[14ch] whitespace-pre-line text-[clamp(2.35rem,4.5vw,3.75rem)] leading-[1.06] text-white"
+                  style={{ color: "#ffffff" }}
+                >
                   {t.title}
                 </h1>
               </Reveal>
               <Reveal delay={0.14} variant="fadeUp">
-                <p className="body-editorial mt-7 max-w-[38ch] text-white/55">
+                <p
+                  className="body-editorial mt-7 max-w-[38ch] text-white/55"
+                  style={{ color: "rgba(255,255,255,0.55)" }}
+                >
                   {t.intro}
                 </p>
               </Reveal>
@@ -310,7 +319,10 @@ export function WhyHeadOverseaPageView({
       </section>
 
       {/* Dois mercados — flag videos */}
-      <section className="border-t border-white/[0.08] bg-black text-white">
+      <section
+        className="border-t border-white/[0.08] bg-black text-white"
+        style={{ color: "#ffffff", colorScheme: "dark" }}
+      >
         <div className="page-shell py-[clamp(3rem,7vw,5rem)]">
           <div className="grid items-end gap-10 lg:grid-cols-12 lg:gap-14">
             <div className="lg:col-span-5">
@@ -318,12 +330,18 @@ export function WhyHeadOverseaPageView({
                 <BackLabel tone="light">{t.marketsEyebrow}</BackLabel>
               </Reveal>
               <Reveal delay={0.08} variant="rise">
-                <h2 className="font-display mt-7 max-w-[16ch] whitespace-pre-line text-[clamp(1.85rem,3.4vw,2.85rem)] leading-[1.1]">
+                <h2
+                  className="font-display mt-7 max-w-[16ch] whitespace-pre-line text-[clamp(1.85rem,3.4vw,2.85rem)] leading-[1.1] text-white"
+                  style={{ color: "#ffffff" }}
+                >
                   {t.marketsTitle}
                 </h2>
               </Reveal>
               <Reveal delay={0.12} variant="fadeUp">
-                <p className="body-editorial mt-6 max-w-[40ch] text-white/55">
+                <p
+                  className="body-editorial mt-6 max-w-[40ch] text-white/55"
+                  style={{ color: "rgba(255,255,255,0.55)" }}
+                >
                   {t.marketsBody}
                 </p>
               </Reveal>
@@ -414,7 +432,10 @@ export function WhyHeadOverseaPageView({
       </section>
 
       {/* Liderança ativa + quote */}
-      <section className="border-t border-white/[0.08] bg-black text-white">
+      <section
+        className="border-t border-white/[0.08] bg-black text-white"
+        style={{ color: "#ffffff", colorScheme: "dark" }}
+      >
         <div className="page-shell py-[clamp(3rem,7vw,5rem)]">
           <div className="grid items-start gap-12 lg:grid-cols-12 lg:gap-16">
             <div className="lg:col-span-5">
@@ -422,12 +443,18 @@ export function WhyHeadOverseaPageView({
                 <BackLabel tone="light">{t.leadershipEyebrow}</BackLabel>
               </Reveal>
               <Reveal delay={0.08} variant="rise">
-                <h2 className="font-display mt-7 max-w-[14ch] whitespace-pre-line text-[clamp(1.85rem,3.4vw,2.75rem)] leading-[1.1]">
+                <h2
+                  className="font-display mt-7 max-w-[14ch] whitespace-pre-line text-[clamp(1.85rem,3.4vw,2.75rem)] leading-[1.1] text-white"
+                  style={{ color: "#ffffff" }}
+                >
                   {t.leadershipTitle}
                 </h2>
               </Reveal>
               <Reveal delay={0.12} variant="fadeUp">
-                <p className="body-editorial mt-6 max-w-[40ch] text-white/55">
+                <p
+                  className="body-editorial mt-6 max-w-[40ch] text-white/55"
+                  style={{ color: "rgba(255,255,255,0.55)" }}
+                >
                   {t.leadershipBody}
                 </p>
               </Reveal>
@@ -450,7 +477,10 @@ export function WhyHeadOverseaPageView({
                 >
                   “
                 </span>
-                <p className="font-display mt-2 max-w-[28ch] text-[clamp(1.35rem,2.4vw,1.85rem)] leading-[1.35] text-white/80">
+                <p
+                  className="font-display mt-2 max-w-[28ch] text-[clamp(1.35rem,2.4vw,1.85rem)] leading-[1.35] text-white/80"
+                  style={{ color: "rgba(255,255,255,0.8)" }}
+                >
                   {t.quote}
                 </p>
                 <footer className="mt-10 flex items-center gap-4">
@@ -458,7 +488,10 @@ export function WhyHeadOverseaPageView({
                     className="h-px w-10 bg-[var(--gold)]"
                     aria-hidden
                   />
-                  <cite className="not-italic text-[13px] tracking-[0.04em] text-white/50">
+                  <cite
+                    className="not-italic text-[13px] tracking-[0.04em] text-white/50"
+                    style={{ color: "rgba(255,255,255,0.5)" }}
+                  >
                     {t.quoteBy}
                   </cite>
                 </footer>

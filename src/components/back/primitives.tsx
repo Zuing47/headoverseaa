@@ -58,6 +58,11 @@ export function BackBand({
             : "border-t border-white/[0.08] bg-black text-white",
         className,
       )}
+      style={
+        tone === "white"
+          ? { color: "#050505", colorScheme: "light" }
+          : { color: "#ffffff", colorScheme: "dark" }
+      }
     >
       <div className="page-shell section-space-lg">{children}</div>
     </section>

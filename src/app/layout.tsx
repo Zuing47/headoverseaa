@@ -90,6 +90,7 @@ export default function RootLayout({
     <html
       lang="en"
       className={`${sans.variable} ${serif.variable} ${mono.variable} h-full antialiased`}
+      style={{ colorScheme: "light" }}
     >
       <body className="min-h-full flex flex-col bg-black text-white">
         <JsonLd />
