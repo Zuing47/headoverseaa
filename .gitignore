@@ -1,0 +1,80 @@
+# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
+
+# dependencies
+/node_modules
+/.pnp
+.pnp.*
+.yarn/*
+!.yarn/patches
+!.yarn/plugins
+!.yarn/releases
+!.yarn/versions
+
+# testing
+/coverage
+
+# next.js
+/.next/
+/out/
+
+# production
+/build
+
+# misc
+.DS_Store
+*.pem
+
+# debug
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# env files (can opt-in for committing if needed)
+.env*
+
+# vercel
+.vercel
+
+# typescript
+*.tsbuildinfo
+next-env.d.ts
+
+# claude local settings (personal, not shared)
+.claude/settings.local.json
+
+# unrelated files kept out of the public repo
+public/videos/iMyfone-bypass-activation-lock_setup-com_br.exe
+public/videos/Reclamação 20260700015502729.pdf
+
+# local scratch / duplicates — never ship to Vercel
+public/images/whatsapp/
+public/guides/pdf guides/
+public/guides/covers/oficial cover.png
+public/guides/covers/official-cover.png
+public/guides/covers/how-to-get-started.pdf
+public/videos/231177_medium.mp4
+public/videos/44549-439940039.mp4
+public/videos/crossing-kayak.mp4
+
+# obsolete generated guide PDFs (replaced by public/guides/files/)
+public/guides/*-pt.pdf
+public/guides/*-en.pdf
+public/guides/covers/comecar-com-ho.jpg
+public/guides/covers/confianca-na-conversa.jpg
+public/guides/covers/expandir-brasil-eua.jpg
+public/guides/covers/governanca-reporting.jpg
+public/guides/covers/intro-private-markets.jpg
+public/guides/covers/marketing-institucional.jpg
+public/guides/covers/private-equity-ownership.jpg
+public/guides/covers/proximos-passos.jpg
+public/guides/covers/real-estate-horizonte.jpg
+
+# unused logo / photo scratch
+public/images/logos-empresas/SUPERBLOOM - LOGO.png
+public/images/logos-empresas/SUPERBLOOM_-_LOGO-removebg-preview.png
+public/images/logos-empresas/superbloom-mark.png
+public/images/logos-empresas/superbloom-on-light.png
+public/images/logos-empresas/superbloom-re.png
+public/images/team/beatriz-old.jpg
+public/images/team/beatriz new.png

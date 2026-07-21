@@ -1,0 +1,336 @@
+@import "tailwindcss";
+
+:root {
+  /* Layout — closer institutional scale (About uses --section-space-roomy) */
+  --page-max: 1440px;
+  --page-padding-desktop: 40px;
+  --page-padding-tablet: 28px;
+  --page-padding-mobile: 16px;
+  --section-space-xl: 88px;
+  --section-space-lg: 72px;
+  --section-space-md: 56px;
+  --section-space-roomy: 148px;
+  --header-height: 72px;
+
+  /* Palette — cool institutional (black / white / graphite) */
+  --black: #050505;
+  --graphite: #0e0e0e;
+  --white: #ffffff;
+  --off-white: #f3f3f3;
+  --muted: #7c7c7c;
+  /* Was champagne/gold — now institutional gray (labels, accents) */
+  --gold: #8f8f8f;
+  --gold-dim: #6e6e6e;
+  /* Douglas / HO navy — use on figures & key headlines */
+  --navy: #061a33;
+  --navy-soft: #0c3a6e;
+
+  --border-dark: rgba(255, 255, 255, 0.1);
+  --border-light: rgba(0, 0, 0, 0.08);
+
+  /* Legacy aliases */
+  --obsidian: var(--black);
+  --charcoal: #080808;
+  --slate: #141414;
+  --ivory: var(--white);
+  --stone: rgba(255, 255, 255, 0.58);
+  --mist: rgba(255, 255, 255, 0.4);
+  --champagne: var(--gold);
+  --champagne-dim: var(--gold-dim);
+  --champagne-deep: #5a5a5a;
+  --border: var(--border-dark);
+  --border-strong: rgba(255, 255, 255, 0.2);
+  --glow: transparent;
+  --porcelain: var(--off-white);
+  --porcelain-alt: #eaeaea;
+  --ink: #0a0a0a;
+  --ink-soft: #3f3f3f;
+  --ink-mute: #6b6b6b;
+  --border-ink: var(--border-light);
+  --border-ink-strong: rgba(10, 10, 10, 0.18);
+}
+
+@theme inline {
+  --color-black: var(--black);
+  --color-graphite: var(--graphite);
+  --color-white: var(--white);
+  --color-off-white: var(--off-white);
+  --color-muted: var(--muted);
+  --color-gold: var(--gold);
+  --color-gold-dim: var(--gold-dim);
+  --color-navy: var(--navy);
+  --color-navy-soft: var(--navy-soft);
+  --color-border-dark: var(--border-dark);
+  --color-border-light: var(--border-light);
+
+  --color-obsidian: var(--obsidian);
+  --color-charcoal: var(--charcoal);
+  --color-slate: var(--slate);
+  --color-ivory: var(--ivory);
+  --color-stone: var(--stone);
+  --color-mist: var(--mist);
+  --color-champagne: var(--champagne);
+  --color-champagne-dim: var(--champagne-dim);
+  --color-champagne-deep: var(--champagne-deep);
+  --color-border: var(--border);
+  --color-border-strong: var(--border-strong);
+  --color-porcelain: var(--porcelain);
+  --color-porcelain-alt: var(--porcelain-alt);
+  --color-ink: var(--ink);
+  --color-ink-soft: var(--ink-soft);
+  --color-ink-mute: var(--ink-mute);
+  --color-border-ink: var(--border-ink);
+  --color-border-ink-strong: var(--border-ink-strong);
+
+  --font-sans: var(--font-sans-var);
+  --font-serif: var(--font-serif-var);
+  --font-mono: var(--font-mono-var);
+
+  --max-width-page: var(--page-max);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+html.lenis,
+html.lenis body {
+  height: auto;
+}
+
+.lenis.lenis-smooth {
+  scroll-behavior: auto !important;
+}
+
+.lenis.lenis-smooth [data-lenis-prevent] {
+  overscroll-behavior: contain;
+}
+
+.lenis.lenis-stopped {
+  overflow: hidden;
+}
+
+.lenis.lenis-smooth iframe {
+  pointer-events: none;
+}
+
+body {
+  background: var(--black);
+  color: var(--white);
+  font-family: var(--font-sans-var), system-ui, sans-serif;
+  font-size: 17px;
+  line-height: 1.55;
+  letter-spacing: 0.005em;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+::selection {
+  background: #f5e642;
+  color: #050505;
+}
+
+::-moz-selection {
+  background: #f5e642;
+  color: #050505;
+}
+
+/* Display — institutional serif, medium weight for clarity on photos */
+.font-display {
+  font-family: var(--font-serif-var), Georgia, "Times New Roman", serif;
+  font-weight: 400;
+  letter-spacing: -0.015em;
+  line-height: 1.08;
+  hyphens: none;
+  -webkit-hyphens: none;
+  overflow-wrap: normal;
+  word-break: normal;
+}
+
+/* Legacy Tailwind font-light was tuned for thin Cormorant — keep display solid */
+.font-display.font-light {
+  font-weight: 400;
+}
+
+.label-caps {
+  font-family: var(--font-sans-var), system-ui, sans-serif;
+  font-size: 0.6875rem;
+  font-weight: 500;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+.body-editorial {
+  font-size: 1.0625rem;
+  line-height: 1.6;
+  letter-spacing: 0.005em;
+}
+
+.label-mono {
+  font-family: var(--font-mono-var), monospace;
+  font-size: 0.72rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+.text-balance {
+  text-wrap: balance;
+}
+
+.text-metallic {
+  color: #ffffff;
+}
+
+.page-shell {
+  width: 100%;
+  max-width: var(--page-max);
+  margin-inline: auto;
+  padding-inline: var(--page-padding-mobile);
+}
+
+@media (min-width: 768px) {
+  .page-shell {
+    padding-inline: var(--page-padding-tablet);
+  }
+}
+
+@media (min-width: 1024px) {
+  .page-shell {
+    padding-inline: var(--page-padding-desktop);
+  }
+}
+
+.section-space-xl {
+  padding-block: clamp(2.75rem, 5.5vw, var(--section-space-xl));
+}
+
+.section-space-lg {
+  padding-block: clamp(2.5rem, 5vw, var(--section-space-lg));
+}
+
+.section-space-md {
+  padding-block: clamp(2rem, 4vw, var(--section-space-md));
+}
+
+/* Reserved for About / Leadership — keeps the airier rhythm */
+.section-space-roomy {
+  padding-block: clamp(4.5rem, 10vw, var(--section-space-roomy));
+}
+
+.section-padding {
+  padding-top: clamp(2.75rem, 5.5vw, var(--section-space-xl));
+  padding-bottom: clamp(2.75rem, 5.5vw, var(--section-space-xl));
+}
+
+.link-arrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.65rem;
+  font-size: 0.75rem;
+  font-weight: 500;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  transition: color 0.4s ease, gap 0.4s ease;
+}
+
+.link-arrow:hover {
+  gap: 0.9rem;
+}
+
+.grain {
+  pointer-events: none;
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  opacity: 0.022;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+}
+
+.line-accent {
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.08) 20%,
+    rgba(255, 255, 255, 0.2) 50%,
+    rgba(255, 255, 255, 0.08) 80%,
+    transparent
+  );
+  height: 1px;
+}
+
+.hero-gradient {
+  background: var(--black);
+}
+
+@keyframes marquee {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+.animate-marquee {
+  animation: marquee 48s linear infinite;
+}
+
+@keyframes team-scroll {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+.team-track {
+  animation: team-scroll 52s linear infinite;
+}
+
+.team-track:hover {
+  animation-play-state: paused;
+}
+
+input,
+textarea,
+select {
+  font-family: inherit;
+}
+
+:focus-visible {
+  outline: 1px solid rgba(255, 255, 255, 0.35);
+  outline-offset: 3px;
+}
+
+/* Crossing System — living BR↔US meridian */
+@keyframes meridian {
+  0% {
+    transform: translateX(-100%);
+  }
+  50% {
+    transform: translateX(100%);
+  }
+  100% {
+    transform: translateX(-100%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  .animate-marquee,
+  .team-track {
+    animation: none !important;
+  }
+
+  [class*="animate-\\[meridian"] {
+    animation: none !important;
+  }
+}

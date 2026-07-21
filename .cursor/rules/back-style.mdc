@@ -1,0 +1,42 @@
+---
+description: Estilo visual "back" — organização Blackstone PWS com identidade Head Oversea. Ativar sempre que o usuário pedir página/seção no estilo back.
+alwaysApply: true
+---
+
+# Estilo BACK (Head Oversea)
+
+Quando o usuário disser **"estilo back"**, **"página back"** ou **"nova página no estilo back"**, usar este sistema — **não** inventar outro layout e **não** copiar branding Blackstone.
+
+## O que é
+
+- **Organização:** ritmo institucional da Blackstone Private Wealth (faixas preto/branco, hero tipográfico, stats com sublinha, approach + quote, grids de 3, listas com CTA à direita, contato split).
+- **Identidade:** 100% Head Oversea — tipografia do site (Source Serif 4 display + Instrument Sans), CTA **Meridian** (dois pontos Brasil↔USA), meridian `Brasil — USA`, preto `#050505`, sem seta-em-círculo genérica Blackstone como marca.
+
+## Stack canônico de uma página BACK
+
+Usar componentes em `src/components/back/`:
+
+1. `BackShell` — header + children + `BackContact` + footer
+2. `BackHero` — faixa preta: label + título serif grande (+ subtítulo opcional)
+3. Opcional: mídia 21:9 com `ImageReveal` sob o hero
+4. `BackBand` white → `BackLabel` + título + conteúdo (stats / split / list)
+5. `BackApproach` — faixa preta: mídia + copy + quote mascarada
+6. `BackTrackGrid` — 3 colunas imagem + título (quando fizer sentido)
+7. `BackSplit` — Z-pattern texto | mídia alternando
+8. `BackList` — linhas full-width com Meridian à direita
+9. `BackContact` — contato texto (home pode omitir foto; interiores CTA único)
+
+## Regras de UI
+
+- **Label:** uppercase + line **à direita** do texto (`BackLabel`)
+- **CTA:** sempre `MeridianLink` (nunca pill laranja, nunca card de marketing)
+- **Motion:** `Reveal` / `ImageReveal` / `MaskedText` — 2–3 motions por página, institucional
+- **Cards:** proibidos no hero; listas e splits sem shadow/radius decorativo
+- **Exceções:** home tem spine próprio (FeatureRail etc.) mas deve seguir o mesmo DNA visual; **contato** pode ser layout especial sem forçar todo o stack
+
+## Ao criar página nova
+
+1. Confirmar idioma PT/EN via content
+2. Montar com `BackShell` + blocos acima
+3. Conteúdo HO (tese, PE, RE, cases) — zero copy Blackstone
+4. Commit/push se o fluxo do projeto pedir deploy
