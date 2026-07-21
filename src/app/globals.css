@@ -95,9 +95,9 @@
 
 html {
   scroll-behavior: smooth;
-  /* Keep authored light/dark bands intact — stop Chrome/Android auto-dark
-     from flipping white text to black on navy/black sections. */
-  color-scheme: light;
+  /* Author light/dark bands ourselves — block Chrome/Android/Edge auto-dark
+     from flipping white copy to black on navy/black sections (PC + mobile). */
+  color-scheme: only light;
 }
 
 html.lenis,

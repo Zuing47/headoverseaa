@@ -40,7 +40,11 @@ export function BackShell({
           ? "min-h-screen bg-white text-black"
           : "min-h-screen bg-black text-white"
       }
-      style={{ overflowX: "clip" }}
+      style={
+        headerSurface === "light"
+          ? { overflowX: "clip", color: "#050505", colorScheme: "light" }
+          : { overflowX: "clip", color: "#ffffff", colorScheme: "dark" }
+      }
     >
       <Header content={content} locale={locale} surface={headerSurface} />
       {children}

@@ -711,7 +711,7 @@ export const en: SiteContent = {
         linkedin: "https://www.linkedin.com/in/jakson-martins-770b08150/",
       },
       {
-        name: "Mariana Lewandowski",
+        name: "Mariana Levandoski",
         role: "HR Coordinator",
         bio: "Builds leadership and culture for companies ready to scale globally.",
         photo: "/images/team/mariana.jpg",

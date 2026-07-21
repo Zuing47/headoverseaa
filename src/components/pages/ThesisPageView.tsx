@@ -225,7 +225,10 @@ export function ThesisPageView({
   return (
     <BackShell content={content} locale={locale}>
       {/* Hero — thesis1 full-bleed */}
-      <section className="relative min-h-[min(88vh,820px)] overflow-hidden bg-black text-white">
+      <section
+        className="relative min-h-[min(88vh,820px)] overflow-hidden bg-black text-white"
+        style={{ color: "#ffffff", colorScheme: "dark" }}
+      >
         <div className="absolute inset-0">
           <Image
             src={BACK_MEDIA.thesisHero}
@@ -260,7 +263,10 @@ export function ThesisPageView({
               <p className="label-caps text-[var(--gold)]">{t.heroEyebrow}</p>
             </Reveal>
             <Reveal delay={0.08} variant="rise">
-              <h1 className="font-display mt-7 whitespace-pre-line text-[clamp(2.35rem,4.8vw,3.85rem)] leading-[1.06]">
+              <h1
+                className="font-display mt-7 whitespace-pre-line text-[clamp(2.35rem,4.8vw,3.85rem)] leading-[1.06] text-white"
+                style={{ color: "#ffffff" }}
+              >
                 {t.heroTitle}
               </h1>
             </Reveal>
@@ -269,7 +275,10 @@ export function ThesisPageView({
               aria-hidden
             />
             <Reveal delay={0.14} variant="fadeUp">
-              <p className="body-editorial mt-8 max-w-[40ch] text-white/65">
+              <p
+                className="body-editorial mt-8 max-w-[40ch] text-white/65"
+                style={{ color: "rgba(255,255,255,0.65)" }}
+              >
                 {t.heroBody}
               </p>
             </Reveal>
@@ -336,7 +345,10 @@ export function ThesisPageView({
       </section>
 
       {/* Dois mercados — thesis2 | copy */}
-      <section className="border-t border-white/[0.08] bg-black text-white">
+      <section
+        className="border-t border-white/[0.08] bg-black text-white"
+        style={{ color: "#ffffff", colorScheme: "dark" }}
+      >
         <div className="grid lg:grid-cols-2">
           <Reveal variant="fadeScale" className="relative min-h-[320px] lg:min-h-[560px]">
             <ImageReveal className="absolute inset-0" immediate={false}>
@@ -356,7 +368,10 @@ export function ThesisPageView({
               <p className="label-caps text-[var(--gold)]">{t.marketsEyebrow}</p>
             </Reveal>
             <Reveal delay={0.08} variant="rise">
-              <h2 className="font-display mt-7 max-w-[22ch] text-[clamp(1.75rem,3.2vw,2.55rem)] leading-[1.12]">
+              <h2
+                className="font-display mt-7 max-w-[22ch] text-[clamp(1.75rem,3.2vw,2.55rem)] leading-[1.12] text-white"
+                style={{ color: "#ffffff" }}
+              >
                 {t.marketsTitle}
               </h2>
             </Reveal>
@@ -366,7 +381,10 @@ export function ThesisPageView({
                 <p className="text-[11px] uppercase tracking-[0.18em] text-[var(--gold)]">
                   {t.brazilLabel}
                 </p>
-                <p className="mt-3 max-w-[28ch] text-[14px] leading-relaxed text-white/55">
+                <p
+                  className="mt-3 max-w-[28ch] text-[14px] leading-relaxed text-white/55"
+                  style={{ color: "rgba(255,255,255,0.55)" }}
+                >
                   {t.brazilBody}
                 </p>
               </Reveal>
@@ -374,7 +392,10 @@ export function ThesisPageView({
                 <p className="text-[11px] uppercase tracking-[0.18em] text-[var(--gold)]">
                   {t.usLabel}
                 </p>
-                <p className="mt-3 max-w-[28ch] text-[14px] leading-relaxed text-white/55">
+                <p
+                  className="mt-3 max-w-[28ch] text-[14px] leading-relaxed text-white/55"
+                  style={{ color: "rgba(255,255,255,0.55)" }}
+                >
                   {t.usBody}
                 </p>
               </Reveal>
@@ -435,7 +456,10 @@ export function ThesisPageView({
       </section>
 
       {/* Nosso impacto */}
-      <section className="border-t border-white/[0.08] bg-black text-white">
+      <section
+        className="border-t border-white/[0.08] bg-black text-white"
+        style={{ color: "#ffffff", colorScheme: "dark" }}
+      >
         <div className="page-shell py-[clamp(3rem,7vw,5rem)]">
           <div className="grid items-end gap-12 lg:grid-cols-12 lg:gap-10">
             <div className="lg:col-span-4">
@@ -443,7 +467,10 @@ export function ThesisPageView({
                 <p className="label-caps text-[var(--gold)]">{t.impactEyebrow}</p>
               </Reveal>
               <Reveal delay={0.08} variant="rise">
-                <h2 className="font-display mt-6 max-w-[16ch] text-[clamp(1.65rem,2.8vw,2.25rem)] leading-[1.15]">
+                <h2
+                  className="font-display mt-6 max-w-[16ch] text-[clamp(1.65rem,2.8vw,2.25rem)] leading-[1.15] text-white"
+                  style={{ color: "#ffffff" }}
+                >
                   {t.impactTitle}
                 </h2>
               </Reveal>
@@ -452,10 +479,16 @@ export function ThesisPageView({
             <div className="grid grid-cols-2 gap-x-8 gap-y-10 sm:grid-cols-4 lg:col-span-8">
               {t.stats.map((stat, i) => (
                 <Reveal key={stat.label} delay={0.08 + i * 0.05} variant="rise">
-                  <p className="font-display text-[clamp(2.5rem,5vw,3.5rem)] leading-none tracking-[-0.03em]">
+                  <p
+                    className="font-display text-[clamp(2.5rem,5vw,3.5rem)] leading-none tracking-[-0.03em] text-white"
+                    style={{ color: "#ffffff" }}
+                  >
                     {stat.value}
                   </p>
-                  <p className="mt-3 max-w-[14ch] text-[11px] uppercase tracking-[0.14em] text-white/40">
+                  <p
+                    className="mt-3 max-w-[14ch] text-[11px] uppercase tracking-[0.14em] text-white/40"
+                    style={{ color: "rgba(255,255,255,0.4)" }}
+                  >
                     {stat.label}
                   </p>
                 </Reveal>
@@ -480,7 +513,10 @@ export function ThesisPageView({
       </section>
 
       {/* Quote + portrait — full shell width like ref, photo right */}
-      <section className="border-t border-white/[0.08] bg-black text-white">
+      <section
+        className="border-t border-white/[0.08] bg-black text-white"
+        style={{ color: "#ffffff", colorScheme: "dark" }}
+      >
         <div className="page-shell py-[clamp(3rem,7vw,5rem)]">
           <div className="flex flex-col gap-8 lg:flex-row lg:items-center lg:gap-12 xl:gap-16">
             <div className="order-2 flex min-w-0 flex-1 flex-col justify-between gap-10 lg:order-1 lg:min-h-[22rem]">
