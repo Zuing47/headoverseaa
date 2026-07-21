@@ -242,16 +242,12 @@ export function PortfolioGrid({ content, locale = "pt" }: PortfolioGridProps) {
 }
 
 function LogoOnly({ item, locale }: { item: CaseStudy; locale: Locale }) {
-  const href = item.detail
-    ? locale === "en"
-      ? `/en/cases/${item.id}`
-      : `/cases/${item.id}`
-    : item.visitUrl && item.visitUrl !== "#"
-      ? item.visitUrl
-      : locale === "en"
-        ? "/en/cases"
-        : "/cases";
-  const external = Boolean(item.visitUrl && !item.detail && item.visitUrl !== "#");
+  const companyUrl =
+    item.visitUrl && item.visitUrl !== "#" ? item.visitUrl : null;
+  const href =
+    companyUrl ??
+    (locale === "en" ? `/en/cases/${item.id}` : `/cases/${item.id}`);
+  const external = Boolean(companyUrl);
   const src = LOGO_SRC[item.id] ?? item.logo!;
   const optical = LOGO_OPTICAL[item.id] ?? 1;
 
