@@ -18,6 +18,9 @@ const TO = process.env.CONTACT_TO_EMAIL?.trim() || "contact@headoversea.com";
  * when contact@ is also the inbox you're reading.
  */
 const FROM_DEFAULT = "Head Oversea <noreply@headoversea.com>";
+const SITE = "https://www.headoversea.com";
+const LOGO_URL = `${SITE}/email/logo-white.png`;
+const MARK_URL = `${SITE}/email/mark-white.png`;
 
 function isEmail(v: string) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v);
@@ -44,17 +47,17 @@ type Payload = {
 function row(label: string, value: string, href?: string) {
   const display = escapeHtml(value || "—");
   const content = href
-    ? `<a href="${escapeHtml(href)}" style="color:#050505;text-decoration:underline;">${display}</a>`
+    ? `<a href="${escapeHtml(href)}" style="color:#050505;text-decoration:none;border-bottom:1px solid rgba(5,5,5,0.25);">${display}</a>`
     : display;
   return `
     <tr>
-      <td style="padding:14px 0;border-bottom:1px solid #ebebeb;width:34%;vertical-align:top;">
-        <p style="margin:0;font-family:Arial,Helvetica,sans-serif;font-size:11px;letter-spacing:0.14em;text-transform:uppercase;color:#8a8a8a;">
+      <td style="padding:18px 0;border-bottom:1px solid #ececec;width:128px;vertical-align:top;">
+        <p style="margin:0;font-family:'Instrument Sans',Arial,Helvetica,sans-serif;font-size:10px;font-weight:500;letter-spacing:0.16em;text-transform:uppercase;color:#9a9a9a;">
           ${escapeHtml(label)}
         </p>
       </td>
-      <td style="padding:14px 0;border-bottom:1px solid #ebebeb;vertical-align:top;">
-        <p style="margin:0;font-family:Georgia,'Times New Roman',serif;font-size:16px;line-height:1.45;color:#050505;">
+      <td style="padding:18px 0;border-bottom:1px solid #ececec;vertical-align:top;">
+        <p style="margin:0;font-family:Georgia,'Times New Roman',serif;font-size:17px;line-height:1.4;color:#050505;">
           ${content}
         </p>
       </td>
@@ -68,31 +71,71 @@ function buildHtml(payload: Payload) {
   const telHref = payload.phone
     ? `tel:${payload.phone.replace(/[^\d+]/g, "")}`
     : undefined;
+  const when = new Date().toLocaleString("pt-BR", {
+    timeZone: "America/Sao_Paulo",
+    dateStyle: "medium",
+    timeStyle: "short",
+  });
 
   return `<!DOCTYPE html>
 <html lang="pt">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta name="color-scheme" content="light only" />
   <title>Novo contato — Head Oversea</title>
 </head>
-<body style="margin:0;padding:0;background:#f3f3f3;">
-  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f3f3f3;padding:32px 12px;">
+<body style="margin:0;padding:0;background:#ececec;">
+  <div style="display:none;max-height:0;overflow:hidden;opacity:0;">
+    ${escapeHtml(payload.name)} · ${escapeHtml(payload.email)} · ${escapeHtml(payload.objective || "Contato pelo site")}
+  </div>
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#ececec;padding:40px 16px;">
     <tr>
       <td align="center">
-        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;background:#ffffff;border:1px solid #e6e6e6;">
+        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:600px;background:#ffffff;border-collapse:collapse;">
+
+          <!-- Brand header -->
           <tr>
-            <td style="background:#050505;padding:28px 32px;">
-              <p style="margin:0;font-family:Arial,Helvetica,sans-serif;font-size:11px;letter-spacing:0.2em;text-transform:uppercase;color:rgba(255,255,255,0.45);">
-                Head Oversea
+            <td style="background:#050505;padding:36px 40px 32px;">
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+                <tr>
+                  <td align="left" style="vertical-align:middle;">
+                    <a href="${SITE}" style="text-decoration:none;">
+                      <img src="${LOGO_URL}" width="200" height="55" alt="Head Oversea" style="display:block;border:0;outline:none;width:200px;height:auto;max-width:200px;" />
+                    </a>
+                  </td>
+                  <td align="right" style="vertical-align:middle;">
+                    <p style="margin:0;font-family:Arial,Helvetica,sans-serif;font-size:10px;letter-spacing:0.18em;text-transform:uppercase;color:rgba(255,255,255,0.4);">
+                      Site lead
+                    </p>
+                  </td>
+                </tr>
+              </table>
+              <div style="height:1px;background:rgba(255,255,255,0.12);margin:28px 0 24px;"></div>
+              <p style="margin:0;font-family:Arial,Helvetica,sans-serif;font-size:11px;letter-spacing:0.18em;text-transform:uppercase;color:rgba(255,255,255,0.45);">
+                Formulário de contato
               </p>
-              <p style="margin:12px 0 0;font-family:Georgia,'Times New Roman',serif;font-size:26px;line-height:1.2;color:#ffffff;">
+              <p style="margin:14px 0 0;font-family:Georgia,'Times New Roman',serif;font-size:28px;line-height:1.2;color:#ffffff;">
                 Novo contato pelo site
+              </p>
+              <p style="margin:12px 0 0;font-family:Arial,Helvetica,sans-serif;font-size:13px;line-height:1.5;color:rgba(255,255,255,0.5);">
+                ${escapeHtml(when)} · Brasil–EUA
               </p>
             </td>
           </tr>
+
+          <!-- Intro -->
           <tr>
-            <td style="padding:8px 32px 28px;">
+            <td style="padding:32px 40px 8px;">
+              <p style="margin:0;font-family:Georgia,'Times New Roman',serif;font-size:18px;line-height:1.45;color:#050505;">
+                ${escapeHtml(payload.name)} entrou em contato pela página Contato.
+              </p>
+            </td>
+          </tr>
+
+          <!-- Fields -->
+          <tr>
+            <td style="padding:16px 40px 8px;">
               <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
                 ${row("Nome", payload.name)}
                 ${row("E-mail", payload.email, `mailto:${payload.email}`)}
@@ -101,30 +144,73 @@ function buildHtml(payload: Payload) {
                 ${row("Objetivo", payload.objective || "—")}
                 ${row("Idioma", localeLabel)}
               </table>
-              <div style="margin-top:28px;padding-top:22px;border-top:1px solid #ebebeb;">
-                <p style="margin:0 0 10px;font-family:Arial,Helvetica,sans-serif;font-size:11px;letter-spacing:0.14em;text-transform:uppercase;color:#8a8a8a;">
-                  Mensagem
-                </p>
-                <p style="margin:0;font-family:Georgia,'Times New Roman',serif;font-size:16px;line-height:1.55;color:#050505;">
-                  ${messageHtml}
-                </p>
-              </div>
-              <div style="margin-top:28px;">
-                <a href="mailto:${escapeHtml(payload.email)}"
-                   style="display:inline-block;background:#050505;color:#ffffff;font-family:Arial,Helvetica,sans-serif;font-size:12px;letter-spacing:0.12em;text-transform:uppercase;text-decoration:none;padding:14px 22px;">
-                  Responder
-                </a>
-              </div>
             </td>
           </tr>
+
+          <!-- Message card -->
           <tr>
-            <td style="padding:18px 32px 24px;border-top:1px solid #ebebeb;background:#fafafa;">
-              <p style="margin:0;font-family:Arial,Helvetica,sans-serif;font-size:12px;line-height:1.5;color:#8a8a8a;">
-                Enviado pelo formulário de contato · headoversea.com<br/>
-                Responder vai para ${escapeHtml(payload.email)}
+            <td style="padding:20px 40px 8px;">
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f7f7f7;border:1px solid #ececec;">
+                <tr>
+                  <td style="padding:24px 26px;">
+                    <p style="margin:0 0 12px;font-family:Arial,Helvetica,sans-serif;font-size:10px;font-weight:500;letter-spacing:0.16em;text-transform:uppercase;color:#9a9a9a;">
+                      Mensagem
+                    </p>
+                    <p style="margin:0;font-family:Georgia,'Times New Roman',serif;font-size:17px;line-height:1.55;color:#050505;">
+                      ${messageHtml}
+                    </p>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+
+          <!-- CTA -->
+          <tr>
+            <td style="padding:28px 40px 36px;">
+              <table role="presentation" cellpadding="0" cellspacing="0">
+                <tr>
+                  <td style="background:#050505;">
+                    <a href="mailto:${escapeHtml(payload.email)}?subject=${encodeURIComponent(`Re: Contato Head Oversea — ${payload.name}`)}"
+                       style="display:inline-block;padding:15px 26px;font-family:Arial,Helvetica,sans-serif;font-size:11px;font-weight:500;letter-spacing:0.14em;text-transform:uppercase;color:#ffffff;text-decoration:none;">
+                      Responder agora
+                    </a>
+                  </td>
+                  <td width="14"></td>
+                  <td style="border:1px solid #d4d4d4;">
+                    <a href="${SITE}/contato"
+                       style="display:inline-block;padding:14px 22px;font-family:Arial,Helvetica,sans-serif;font-size:11px;font-weight:500;letter-spacing:0.14em;text-transform:uppercase;color:#050505;text-decoration:none;">
+                      Ver página
+                    </a>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+
+          <!-- Footer -->
+          <tr>
+            <td style="background:#050505;padding:28px 40px;">
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+                <tr>
+                  <td style="vertical-align:middle;" width="44">
+                    <img src="${MARK_URL}" width="36" height="36" alt="" style="display:block;border:0;width:36px;height:36px;" />
+                  </td>
+                  <td style="vertical-align:middle;padding-left:14px;">
+                    <p style="margin:0;font-family:Arial,Helvetica,sans-serif;font-size:12px;line-height:1.5;color:rgba(255,255,255,0.55);">
+                      Head Oversea · Private Equity &amp; Real Estate<br/>
+                      <a href="${SITE}" style="color:rgba(255,255,255,0.75);text-decoration:none;">headoversea.com</a>
+                      · Orlando, FL
+                    </p>
+                  </td>
+                </tr>
+              </table>
+              <p style="margin:20px 0 0;font-family:Arial,Helvetica,sans-serif;font-size:11px;line-height:1.5;color:rgba(255,255,255,0.35);">
+                Enviado automaticamente pelo formulário do site. Reply-to: ${escapeHtml(payload.email)}
               </p>
             </td>
           </tr>
+
         </table>
       </td>
     </tr>
