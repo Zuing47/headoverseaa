@@ -13,9 +13,6 @@ type ContactBody = {
 };
 
 const TO = process.env.CONTACT_TO_EMAIL?.trim() || "contact@headoversea.com";
-const FROM =
-  process.env.CONTACT_FROM_EMAIL?.trim() ||
-  "Head Oversea <onboarding@resend.dev>";
 
 function isEmail(v: string) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v);
@@ -29,7 +26,7 @@ function escapeHtml(s: string) {
     .replace(/"/g, "&quot;");
 }
 
-async function sendWithResend(payload: {
+type Payload = {
   name: string;
   email: string;
   phone: string;
@@ -37,12 +34,10 @@ async function sendWithResend(payload: {
   objective: string;
   message: string;
   locale: string;
-}) {
-  const key = process.env.RESEND_API_KEY?.trim();
-  if (!key) return false;
+};
 
-  const subject = `Contato Head Oversea — ${payload.name}`;
-  const html = `
+function buildHtml(payload: Payload) {
+  return `
     <h2>Novo contato pelo site</h2>
     <p><strong>Nome:</strong> ${escapeHtml(payload.name)}</p>
     <p><strong>E-mail:</strong> ${escapeHtml(payload.email)}</p>
@@ -53,6 +48,14 @@ async function sendWithResend(payload: {
     <p><strong>Mensagem:</strong></p>
     <p>${escapeHtml(payload.message || "—").replace(/\n/g, "<br/>")}</p>
   `;
+}
+
+async function sendWithResend(
+  payload: Payload,
+  from: string,
+): Promise<{ ok: boolean; detail?: string }> {
+  const key = process.env.RESEND_API_KEY?.trim();
+  if (!key) return { ok: false, detail: "missing_resend_key" };
 
   const res = await fetch("https://api.resend.com/emails", {
     method: "POST",
@@ -61,58 +64,54 @@ async function sendWithResend(payload: {
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
-      from: FROM,
+      from,
       to: [TO],
       reply_to: payload.email,
-      subject,
-      html,
+      subject: `Contato Head Oversea — ${payload.name}`,
+      html: buildHtml(payload),
     }),
   });
 
   if (!res.ok) {
     const text = await res.text().catch(() => "");
-    console.error("[contact] resend failed", res.status, text);
-    return false;
+    console.error("[contact] resend failed", from, res.status, text);
+    return { ok: false, detail: text.slice(0, 280) || `status_${res.status}` };
   }
-  return true;
+  return { ok: true };
 }
 
-async function sendWithFormSubmit(payload: {
-  name: string;
-  email: string;
-  phone: string;
-  company: string;
-  objective: string;
-  message: string;
-  locale: string;
-}) {
-  const res = await fetch(`https://formsubmit.co/ajax/${encodeURIComponent(TO)}`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Accept: "application/json",
-    },
-    body: JSON.stringify({
-      name: payload.name,
-      email: payload.email,
-      phone: payload.phone,
-      company: payload.company,
-      objective: payload.objective,
-      message: payload.message,
-      locale: payload.locale,
-      _subject: `Contato Head Oversea — ${payload.name}`,
-      _template: "table",
-      _captcha: "false",
-      _replyto: payload.email,
-    }),
+/**
+ * Resend rejects unverified domains. Try custom from first, then the
+ * Resend onboarding sender (works immediately for the account owner /
+ * verified recipients).
+ */
+async function deliverViaResend(payload: Payload) {
+  const custom = process.env.CONTACT_FROM_EMAIL?.trim();
+  const attempts = [
+    custom,
+    "Head Oversea <onboarding@resend.dev>",
+  ].filter(Boolean) as string[];
+
+  // de-dupe
+  const seen = new Set<string>();
+  const unique = attempts.filter((f) => {
+    if (seen.has(f)) return false;
+    seen.add(f);
+    return true;
   });
 
-  if (!res.ok) {
-    const text = await res.text().catch(() => "");
-    console.error("[contact] formsubmit failed", res.status, text);
-    return false;
+  let lastDetail = "resend_unavailable";
+  for (const from of unique) {
+    try {
+      const result = await sendWithResend(payload, from);
+      if (result.ok) return { ok: true as const };
+      lastDetail = result.detail || lastDetail;
+    } catch (err) {
+      console.error("[contact] resend error", from, err);
+      lastDetail = "resend_exception";
+    }
   }
-  return true;
+  return { ok: false as const, detail: lastDetail };
 }
 
 export async function POST(request: Request) {
@@ -123,7 +122,6 @@ export async function POST(request: Request) {
     return NextResponse.json({ ok: false, error: "invalid_json" }, { status: 400 });
   }
 
-  // Bot honeypot
   if (String(body.website ?? "").trim()) {
     return NextResponse.json({ ok: true });
   }
@@ -140,12 +138,22 @@ export async function POST(request: Request) {
     return NextResponse.json({ ok: false, error: "invalid_fields" }, { status: 400 });
   }
 
-  const payload = { name, email, phone, company, objective, message, locale };
+  const payload: Payload = {
+    name,
+    email,
+    phone,
+    company,
+    objective,
+    message,
+    locale,
+  };
 
-  const webhook = process.env.CONTACT_WEBHOOK_URL?.trim() || process.env.LEAD_WEBHOOK_URL?.trim();
+  const webhook =
+    process.env.CONTACT_WEBHOOK_URL?.trim() ||
+    process.env.LEAD_WEBHOOK_URL?.trim();
   if (webhook) {
     try {
-      const res = await fetch(webhook, {
+      await fetch(webhook, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -155,33 +163,34 @@ export async function POST(request: Request) {
           receivedAt: new Date().toISOString(),
         }),
       });
-      if (!res.ok) {
-        console.error("[contact] webhook failed", res.status);
-      }
     } catch (err) {
       console.error("[contact] webhook error", err);
     }
   }
 
-  let delivered = false;
-  try {
-    delivered = await sendWithResend(payload);
-  } catch (err) {
-    console.error("[contact] resend error", err);
-  }
-
-  if (!delivered) {
-    try {
-      delivered = await sendWithFormSubmit(payload);
-    } catch (err) {
-      console.error("[contact] formsubmit error", err);
-    }
-  }
-
-  if (!delivered) {
-    console.info("[contact] undelivered lead", JSON.stringify(payload));
+  if (!process.env.RESEND_API_KEY?.trim()) {
+    console.error("[contact] RESEND_API_KEY missing on server");
     return NextResponse.json(
-      { ok: false, error: "delivery_failed" },
+      {
+        ok: false,
+        error: "missing_resend_key",
+        hint: "Add RESEND_API_KEY in Vercel and Redeploy",
+      },
+      { status: 502 },
+    );
+  }
+
+  const delivered = await deliverViaResend(payload);
+  if (!delivered.ok) {
+    console.info("[contact] undelivered", JSON.stringify(payload), delivered.detail);
+    return NextResponse.json(
+      {
+        ok: false,
+        error: "delivery_failed",
+        // Helps diagnose without exposing the full key
+        hint: delivered.detail,
+        to: TO,
+      },
       { status: 502 },
     );
   }

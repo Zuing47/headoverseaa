@@ -92,12 +92,59 @@ export function ContactPageView({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       });
-      if (!res.ok) {
-        setStatus("error");
+      const json = (await res.json().catch(() => null)) as {
+        ok?: boolean;
+        error?: string;
+        hint?: string;
+      } | null;
+
+      if (res.ok && json?.ok) {
+        setStatus("done");
+        formEl.reset();
         return;
       }
-      setStatus("done");
-      formEl.reset();
+
+      // Browser-side FormSubmit fallback (works with site Origin; server-side does not)
+      const fs = await fetch(
+        "https://formsubmit.co/ajax/contact@headoversea.com",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Accept: "application/json",
+          },
+          body: JSON.stringify({
+            name: payload.name,
+            email: payload.email,
+            phone: payload.phone,
+            company: payload.company,
+            objective: payload.objective,
+            message: payload.message,
+            locale: payload.locale,
+            _subject: `Contato Head Oversea — ${payload.name}`,
+            _template: "table",
+            _captcha: "false",
+            _replyto: payload.email,
+          }),
+        },
+      );
+      const fsJson = (await fs.json().catch(() => null)) as {
+        success?: string | boolean;
+      } | null;
+      const fsOk =
+        fs.ok &&
+        (fsJson?.success === true ||
+          fsJson?.success === "true" ||
+          String(fsJson?.success).toLowerCase() === "true");
+
+      if (fsOk) {
+        setStatus("done");
+        formEl.reset();
+        return;
+      }
+
+      console.error("[contact form]", json?.error, json?.hint);
+      setStatus("error");
     } catch {
       setStatus("error");
     }
