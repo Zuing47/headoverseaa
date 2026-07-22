@@ -1,7 +1,8 @@
 "use client";
 
-import { FormEvent, useState } from "react";
+import { FormEvent, useEffect, useRef, useState } from "react";
 import type { Locale } from "@/types/content";
+import { isEmail } from "@/lib/form-guard";
 import { Reveal } from "./reveal";
 import { BackLabel } from "@/components/back";
 import { cn } from "@/lib/utils";
@@ -11,19 +12,53 @@ interface InsightsSignupProps {
 }
 
 /**
- * Premium newsletter signup — minimal field + meridian submit.
- * Near footer on home.
+ * Premium newsletter signup — posts to /api/newsletter (Resend → contact@).
  */
 export function InsightsSignup({ locale = "en" }: InsightsSignupProps) {
   const en = locale === "en";
+  const formStartedAt = useRef(0);
   const [email, setEmail] = useState("");
-  const [status, setStatus] = useState<"idle" | "done">("idle");
+  const [website, setWebsite] = useState("");
+  const [status, setStatus] = useState<"idle" | "sending" | "done" | "error">(
+    "idle",
+  );
 
-  const onSubmit = (e: FormEvent) => {
+  useEffect(() => {
+    formStartedAt.current = Date.now();
+  }, []);
+
+  const onSubmit = async (e: FormEvent) => {
     e.preventDefault();
-    if (!email.trim()) return;
-    setStatus("done");
-    setEmail("");
+    if (status === "sending") return;
+    const trimmed = email.trim().toLowerCase();
+    if (!trimmed || !isEmail(trimmed)) {
+      setStatus("error");
+      return;
+    }
+
+    setStatus("sending");
+    try {
+      const res = await fetch("/api/newsletter", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email: trimmed,
+          locale,
+          website,
+          formStartedAt: formStartedAt.current,
+        }),
+      });
+      const json = (await res.json().catch(() => null)) as { ok?: boolean } | null;
+      if (res.ok && json?.ok) {
+        setStatus("done");
+        setEmail("");
+        formStartedAt.current = Date.now();
+        return;
+      }
+      setStatus("error");
+    } catch {
+      setStatus("error");
+    }
   };
 
   return (
@@ -74,7 +109,23 @@ export function InsightsSignup({ locale = "en" }: InsightsSignupProps) {
               <form
                 onSubmit={onSubmit}
                 className="group flex flex-col gap-0 border-b border-white/25 sm:flex-row sm:items-end"
+                noValidate
               >
+                <div
+                  className="absolute left-[-9999px] h-0 w-0 overflow-hidden opacity-0"
+                  aria-hidden
+                >
+                  <label htmlFor="insights-website">Website</label>
+                  <input
+                    id="insights-website"
+                    name="website"
+                    type="text"
+                    tabIndex={-1}
+                    autoComplete="off"
+                    value={website}
+                    onChange={(e) => setWebsite(e.target.value)}
+                  />
+                </div>
                 <label className="sr-only" htmlFor="insights-email">
                   {en ? "Email address" : "E-mail"}
                 </label>
@@ -85,7 +136,10 @@ export function InsightsSignup({ locale = "en" }: InsightsSignupProps) {
                   required
                   autoComplete="email"
                   value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  onChange={(e) => {
+                    setEmail(e.target.value);
+                    if (status === "error") setStatus("idle");
+                  }}
                   placeholder={en ? "Email address" : "Seu e-mail"}
                   className={cn(
                     "w-full min-w-0 flex-1 bg-transparent py-4 text-[15px] text-white",
@@ -96,10 +150,17 @@ export function InsightsSignup({ locale = "en" }: InsightsSignupProps) {
                 />
                 <button
                   type="submit"
-                  className="inline-flex shrink-0 items-center gap-3 py-4 text-[13px] tracking-[0.04em] text-white transition-opacity hover:opacity-65 sm:pl-8"
+                  disabled={status === "sending"}
+                  className="inline-flex shrink-0 items-center gap-3 py-4 text-[13px] tracking-[0.04em] text-white transition-opacity hover:opacity-65 disabled:opacity-45 sm:pl-8"
                   style={{ color: "#ffffff" }}
                 >
-                  {en ? "Subscribe" : "Inscrever-se"}
+                  {status === "sending"
+                    ? en
+                      ? "Sending…"
+                      : "Enviando…"
+                    : en
+                      ? "Subscribe"
+                      : "Inscrever-se"}
                   <span
                     className="flex h-8 w-8 items-center justify-center border border-white/25 transition-colors group-hover:border-white/55"
                     aria-hidden
@@ -112,6 +173,13 @@ export function InsightsSignup({ locale = "en" }: InsightsSignupProps) {
                 </button>
               </form>
             )}
+            {status === "error" ? (
+              <p className="mt-4 text-[13px] text-white/55">
+                {en
+                  ? "Could not subscribe. Please try again."
+                  : "Não foi possível inscrever. Tente de novo."}
+              </p>
+            ) : null}
           </Reveal>
         </div>
       </div>
