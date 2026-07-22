@@ -119,7 +119,7 @@ const COPY = {
     commitTitle:
       "Estratégia e capital alinhados — com presença onde as decisões acontecem.",
     quote:
-      "Nossa tese é clara: ownership ativo, presença Brasil–EUA e horizonte longo — valor construído com método, não com distância.",
+      "Nossa filosofia é simples: construir negócios excepcionais, cultivar pessoas excepcionais e criar valor que perdura.",
     quoteName: "Douglas Bubna",
     quoteRole: "CEO & Founder",
     contactEyebrow: "Vamos conversar",
@@ -203,7 +203,7 @@ const COPY = {
     commitTitle:
       "Strategy and capital aligned — with presence where decisions are made.",
     quote:
-      "Our thesis is clear: active ownership, Brazil–U.S. presence, and a long horizon — value built with method, not from a distance.",
+      "Our philosophy is simple: build exceptional businesses, cultivate exceptional people, and create value that endures.",
     quoteName: "Douglas Bubna",
     quoteRole: "CEO & Founder",
     contactEyebrow: "Let's talk",
