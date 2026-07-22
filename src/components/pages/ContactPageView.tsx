@@ -1,5 +1,6 @@
 "use client";
 
+import { FormEvent, useState } from "react";
 import { motion } from "framer-motion";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
@@ -24,6 +25,10 @@ const COPY = {
     mapEyebrow: "Escritório",
     mapTitle: "Orlando, Flórida",
     mapOpen: "Abrir no Google Maps",
+    sending: "Enviando…",
+    success: "Mensagem enviada. Retornamos em breve.",
+    error:
+      "Não foi possível enviar. Tente de novo ou escreva para contact@headoversea.com.",
   },
   en: {
     formTitle: "Talk to a specialist",
@@ -33,6 +38,9 @@ const COPY = {
     mapEyebrow: "Office",
     mapTitle: "Orlando, Florida",
     mapOpen: "Open in Google Maps",
+    sending: "Sending…",
+    success: "Message sent. We’ll get back to you shortly.",
+    error: "Could not send. Try again or email contact@headoversea.com.",
   },
 } as const;
 
@@ -42,10 +50,8 @@ const OFFICE_ADDRESS =
 /** Google Business Profile — Head Oversea (share.google / Maps place) */
 const MAPS_PLACE_ID = "ChIJXaNfr5p754gRXvCql6HsR8o";
 const MAPS_FEATURE_ID = "0x88e77b9aaf5fa35d:0xca47eca197aaf05e";
-const MAPS_EMBED =
-  `https://www.google.com/maps/embed?pb=!1m14!1m8!1m3!1d3504.8!2d-81.3786413!3d28.5406251!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s${encodeURIComponent(MAPS_FEATURE_ID)}!2sHead%20Oversea!5e0!3m2!1sen!2sus!4v1!5m2!1sen!2sus`;
+const MAPS_EMBED = `https://www.google.com/maps/embed?pb=!1m14!1m8!1m3!1d3504.8!2d-81.3786413!3d28.5406251!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s${encodeURIComponent(MAPS_FEATURE_ID)}!2sHead%20Oversea!5e0!3m2!1sen!2sus!4v1!5m2!1sen!2sus`;
 const MAPS_LINK = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent("Head Oversea")}&query_place_id=${MAPS_PLACE_ID}`;
-
 
 export function ContactPageView({
   content,
@@ -53,12 +59,57 @@ export function ContactPageView({
 }: ContactPageViewProps) {
   const { form, info, eyebrow, title, subtitle } = content.contact;
   const t = COPY[locale];
+  const [status, setStatus] = useState<"idle" | "sending" | "done" | "error">(
+    "idle",
+  );
+
+  const onSubmit = async (e: FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    if (status === "sending") return;
+
+    const formEl = e.currentTarget;
+    const data = new FormData(formEl);
+    const payload = {
+      name: String(data.get("name") ?? "").trim(),
+      email: String(data.get("email") ?? "").trim(),
+      phone: String(data.get("phone") ?? "").trim(),
+      company: String(data.get("company") ?? "").trim(),
+      objective: String(data.get("objective") ?? "").trim(),
+      message: String(data.get("message") ?? "").trim(),
+      website: String(data.get("website") ?? "").trim(),
+      locale,
+    };
+
+    if (!payload.name || !payload.email) {
+      setStatus("error");
+      return;
+    }
+
+    setStatus("sending");
+    try {
+      const res = await fetch("/api/contact", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      if (!res.ok) {
+        setStatus("error");
+        return;
+      }
+      setStatus("done");
+      formEl.reset();
+    } catch {
+      setStatus("error");
+    }
+  };
 
   return (
-    <main className="min-h-screen bg-black text-white" style={{ overflowX: "clip" }}>
+    <main
+      className="min-h-screen bg-black text-white"
+      style={{ overflowX: "clip" }}
+    >
       <Header content={content} locale={locale} surface="dark" />
 
-      {/* Video as a top band only — not full-page background */}
       <section
         className="relative h-[min(48vh,380px)] min-h-[260px] overflow-hidden md:h-[42vh] md:min-h-[280px] md:max-h-[420px]"
         aria-label={
@@ -88,8 +139,7 @@ export function ContactPageView({
           className="pointer-events-none absolute inset-x-0 bottom-0 h-16"
           aria-hidden
           style={{
-            background:
-              "linear-gradient(to top, #000 0%, transparent 100%)",
+            background: "linear-gradient(to top, #000 0%, transparent 100%)",
           }}
         />
       </section>
@@ -189,56 +239,77 @@ export function ContactPageView({
               <h2 className="font-display text-2xl text-white">{t.formTitle}</h2>
               <p className="mt-2 text-[14px] text-white/50">{t.formHint}</p>
 
-              <form
-                className="mt-8 space-y-5"
-                onSubmit={(e) => e.preventDefault()}
-              >
-                <div className="grid gap-5 sm:grid-cols-2">
-                  <Field label={form.name} name="name" type="text" />
-                  <Field label={form.email} name="email" type="email" />
-                </div>
-                <div className="grid gap-5 sm:grid-cols-2">
-                  <Field label={form.phone} name="phone" type="tel" />
-                  <Field label={form.company} name="company" type="text" />
-                </div>
-                <SelectField
-                  label={form.objective}
-                  name="objective"
-                  options={form.objectiveOptions}
-                />
-                <div>
-                  <label
-                    htmlFor="message"
-                    className="label-caps mb-2 block text-white/45"
-                  >
-                    {form.message}
-                  </label>
-                  <textarea
-                    id="message"
-                    name="message"
-                    rows={3}
-                    className="w-full resize-none border border-white/15 bg-transparent px-4 py-3 text-[15px] text-white placeholder:text-white/25 transition-colors focus:border-white/40 focus:outline-none"
-                  />
-                </div>
-                <button
-                  type="submit"
-                  className="group flex w-full items-center justify-center gap-2 border border-white/25 bg-white py-4 text-[12px] font-medium uppercase tracking-[0.14em] text-black transition-colors hover:bg-transparent hover:text-white"
-                >
-                  {form.submit}
-                  <span
-                    className="transition-transform duration-500 group-hover:translate-x-1"
+              {status === "done" ? (
+                <p className="mt-10 font-display text-[1.35rem] leading-snug text-white/85">
+                  {t.success}
+                </p>
+              ) : (
+                <form className="mt-8 space-y-5" onSubmit={onSubmit}>
+                  <input
+                    type="text"
+                    name="website"
+                    tabIndex={-1}
+                    autoComplete="off"
+                    className="absolute left-[-9999px] h-0 w-0 opacity-0"
                     aria-hidden
+                  />
+                  <div className="grid gap-5 sm:grid-cols-2">
+                    <Field label={form.name} name="name" type="text" required />
+                    <Field
+                      label={form.email}
+                      name="email"
+                      type="email"
+                      required
+                    />
+                  </div>
+                  <div className="grid gap-5 sm:grid-cols-2">
+                    <Field label={form.phone} name="phone" type="tel" />
+                    <Field label={form.company} name="company" type="text" />
+                  </div>
+                  <SelectField
+                    label={form.objective}
+                    name="objective"
+                    options={form.objectiveOptions}
+                  />
+                  <div>
+                    <label
+                      htmlFor="message"
+                      className="label-caps mb-2 block text-white/45"
+                    >
+                      {form.message}
+                    </label>
+                    <textarea
+                      id="message"
+                      name="message"
+                      rows={3}
+                      className="w-full resize-none border border-white/15 bg-transparent px-4 py-3 text-[15px] text-white placeholder:text-white/25 transition-colors focus:border-white/40 focus:outline-none"
+                    />
+                  </div>
+                  {status === "error" ? (
+                    <p className="text-[13px] leading-relaxed text-white/55">
+                      {t.error}
+                    </p>
+                  ) : null}
+                  <button
+                    type="submit"
+                    disabled={status === "sending"}
+                    className="group flex w-full items-center justify-center gap-2 border border-white/25 bg-white py-4 text-[12px] font-medium uppercase tracking-[0.14em] text-black transition-colors hover:bg-transparent hover:text-white disabled:opacity-50"
                   >
-                    →
-                  </span>
-                </button>
-              </form>
+                    {status === "sending" ? t.sending : form.submit}
+                    <span
+                      className="transition-transform duration-500 group-hover:translate-x-1"
+                      aria-hidden
+                    >
+                      →
+                    </span>
+                  </button>
+                </form>
+              )}
             </motion.div>
           </div>
         </div>
       </section>
 
-      {/* Office map — Orlando */}
       <section className="border-t border-white/[0.08] bg-black text-white">
         <div className="page-shell py-[clamp(2.5rem,6vw,4.5rem)]">
           <div className="grid items-end gap-8 lg:grid-cols-12 lg:gap-12">
@@ -285,10 +356,12 @@ function Field({
   label,
   name,
   type,
+  required,
 }: {
   label: string;
   name: string;
   type: string;
+  required?: boolean;
 }) {
   return (
     <div>
@@ -299,6 +372,7 @@ function Field({
         id={name}
         name={name}
         type={type}
+        required={required}
         className="w-full border border-white/15 bg-transparent px-4 py-3 text-[15px] text-white placeholder:text-white/25 transition-colors focus:border-white/40 focus:outline-none"
       />
     </div>

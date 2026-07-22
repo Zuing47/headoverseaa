@@ -768,7 +768,7 @@ export const en: SiteContent = {
     form: {
       name: "Full name",
       email: "Corporate email",
-      phone: "Phone (with WhatsApp)",
+      phone: "Phone",
       company: "Company name",
       revenue: "Annual revenue",
       revenueOptions: [

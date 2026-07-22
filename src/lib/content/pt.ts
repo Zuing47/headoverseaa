@@ -768,7 +768,7 @@ export const pt: SiteContent = {
     form: {
       name: "Nome completo",
       email: "E-mail corporativo",
-      phone: "Telefone (com WhatsApp)",
+      phone: "Telefone",
       company: "Nome da empresa",
       revenue: "Faturamento anual",
       revenueOptions: [
