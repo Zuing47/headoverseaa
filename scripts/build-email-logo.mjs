@@ -35,12 +35,12 @@ const markSvg = `<?xml version="1.0" encoding="UTF-8"?>
   </g>
 </svg>`;
 
-fs.mkdirSync("public/email", { recursive: true });
+fs.mkdirSync("public/images/email", { recursive: true });
 
 await sharp(Buffer.from(lockupSvg))
   .resize(480, null, { fit: "inside" })
   .png()
-  .toFile("public/email/logo-white.png");
+  .toFile("public/images/email/logo-white.png");
 
 await sharp(Buffer.from(markSvg))
   .resize(128, 128, {
@@ -48,6 +48,6 @@ await sharp(Buffer.from(markSvg))
     background: { r: 0, g: 0, b: 0, alpha: 0 },
   })
   .png()
-  .toFile("public/email/mark-white.png");
+  .toFile("public/images/email/mark-white.png");
 
 console.log("ok");

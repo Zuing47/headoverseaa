@@ -19,8 +19,8 @@ const TO = process.env.CONTACT_TO_EMAIL?.trim() || "contact@headoversea.com";
  */
 const FROM_DEFAULT = "Head Oversea <noreply@headoversea.com>";
 const SITE = "https://www.headoversea.com";
-const LOGO_URL = `${SITE}/email/logo-white.png`;
-const MARK_URL = `${SITE}/email/mark-white.png`;
+const LOGO_URL = `${SITE}/images/email/logo-white.png`;
+const MARK_URL = `${SITE}/images/email/mark-white.png`;
 
 function isEmail(v: string) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v);
