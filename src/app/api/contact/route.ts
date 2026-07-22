@@ -13,6 +13,8 @@ type ContactBody = {
 };
 
 const TO = process.env.CONTACT_TO_EMAIL?.trim() || "contact@headoversea.com";
+/** Must use a Resend-verified domain (headoversea.com). */
+const FROM_DEFAULT = "Head Oversea <contact@headoversea.com>";
 
 function isEmail(v: string) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v);
@@ -82,14 +84,14 @@ async function sendWithResend(
 }
 
 /**
- * Resend rejects unverified domains / non-owner recipients on the free tier.
- * Try custom from, then onboarding@resend.dev; if TO is blocked, fall back to
- * the account owner email parsed from Resend's error (usually mateus@…).
+ * Domain headoversea.com is verified on Resend — send from/to contact@.
+ * Keep a last-resort owner inbox only if contact@ delivery still fails.
  */
 async function deliverViaResend(payload: Payload) {
-  const custom = process.env.CONTACT_FROM_EMAIL?.trim();
   const froms = [
-    custom,
+    process.env.CONTACT_FROM_EMAIL?.trim(),
+    FROM_DEFAULT,
+    "Head Oversea <noreply@headoversea.com>",
     "Head Oversea <onboarding@resend.dev>",
   ].filter(Boolean) as string[];
 
@@ -100,21 +102,21 @@ async function deliverViaResend(payload: Payload) {
     return true;
   });
 
+  // Prefer the firm inbox; only add owner email if Resend blocks contact@
   const recipients = [TO];
   let lastDetail = "resend_unavailable";
 
   for (const from of uniqueFrom) {
-    for (const to of recipients) {
+    for (const to of [...recipients]) {
       try {
         const result = await sendWithResend(payload, from, to);
         if (result.ok) return { ok: true as const, to };
         lastDetail = result.detail || lastDetail;
 
-        // Free Resend: can only send to the account email until domain is verified
         const own = lastDetail.match(
           /own email address \(([^)]+@[^)]+)\)/i,
         );
-        if (own?.[1] && !recipients.includes(own[1])) {
+        if (own?.[1] && !recipients.includes(own[1].trim())) {
           recipients.push(own[1].trim());
         }
       } catch (err) {
@@ -207,5 +209,5 @@ export async function POST(request: Request) {
     );
   }
 
-  return NextResponse.json({ ok: true });
+  return NextResponse.json({ ok: true, to: delivered.to ?? TO });
 }
