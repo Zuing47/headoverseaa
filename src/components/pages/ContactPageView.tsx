@@ -1,12 +1,17 @@
 "use client";
 
-import { FormEvent, useState } from "react";
+import { FormEvent, useEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { SectionLabel } from "@/components/home/Editorial";
 import { ImageReveal } from "@/components/pages/ImageReveal";
 import { LazyVideo } from "@/components/ui/LazyVideo";
+import {
+  isEmail,
+  isValidPhone,
+  sanitizePhoneInput,
+} from "@/lib/form-guard";
 import { DURATION, EASE_OUT } from "@/lib/motion";
 import type { Locale, SiteContent } from "@/types/content";
 import { cn } from "@/lib/utils";
@@ -59,9 +64,15 @@ export function ContactPageView({
 }: ContactPageViewProps) {
   const { form, info, eyebrow, title, subtitle } = content.contact;
   const t = COPY[locale];
+  const formStartedAt = useRef(0);
+  const [phone, setPhone] = useState("");
   const [status, setStatus] = useState<"idle" | "sending" | "done" | "error">(
     "idle",
   );
+
+  useEffect(() => {
+    formStartedAt.current = Date.now();
+  }, []);
 
   const onSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -72,15 +83,20 @@ export function ContactPageView({
     const payload = {
       name: String(data.get("name") ?? "").trim(),
       email: String(data.get("email") ?? "").trim(),
-      phone: String(data.get("phone") ?? "").trim(),
+      phone: sanitizePhoneInput(phone),
       company: String(data.get("company") ?? "").trim(),
       objective: String(data.get("objective") ?? "").trim(),
       message: String(data.get("message") ?? "").trim(),
       website: String(data.get("website") ?? "").trim(),
+      formStartedAt: formStartedAt.current,
       locale,
     };
 
-    if (!payload.name || !payload.email) {
+    if (!payload.name || !payload.email || !isEmail(payload.email)) {
+      setStatus("error");
+      return;
+    }
+    if (!isValidPhone(payload.phone)) {
       setStatus("error");
       return;
     }
@@ -101,45 +117,8 @@ export function ContactPageView({
       if (res.ok && json?.ok) {
         setStatus("done");
         formEl.reset();
-        return;
-      }
-
-      // Browser-side FormSubmit fallback (works with site Origin; server-side does not)
-      const fs = await fetch(
-        "https://formsubmit.co/ajax/contact@headoversea.com",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Accept: "application/json",
-          },
-          body: JSON.stringify({
-            name: payload.name,
-            email: payload.email,
-            phone: payload.phone,
-            company: payload.company,
-            objective: payload.objective,
-            message: payload.message,
-            locale: payload.locale,
-            _subject: `Contato Head Oversea — ${payload.name}`,
-            _template: "table",
-            _captcha: "false",
-            _replyto: payload.email,
-          }),
-        },
-      );
-      const fsJson = (await fs.json().catch(() => null)) as {
-        success?: string | boolean;
-      } | null;
-      const fsOk =
-        fs.ok &&
-        (fsJson?.success === true ||
-          fsJson?.success === "true" ||
-          String(fsJson?.success).toLowerCase() === "true");
-
-      if (fsOk) {
-        setStatus("done");
-        formEl.reset();
+        setPhone("");
+        formStartedAt.current = Date.now();
         return;
       }
 
@@ -310,7 +289,26 @@ export function ContactPageView({
                     />
                   </div>
                   <div className="grid gap-5 sm:grid-cols-2">
-                    <Field label={form.phone} name="phone" type="tel" />
+                    <div>
+                      <label
+                        htmlFor="phone"
+                        className="label-caps mb-2 block text-white/45"
+                      >
+                        {form.phone}
+                      </label>
+                      <input
+                        id="phone"
+                        name="phone"
+                        type="tel"
+                        inputMode="tel"
+                        autoComplete="tel"
+                        value={phone}
+                        onChange={(e) =>
+                          setPhone(sanitizePhoneInput(e.target.value))
+                        }
+                        className="w-full border border-white/15 bg-transparent px-4 py-3 text-[15px] text-white placeholder:text-white/25 transition-colors focus:border-white/40 focus:outline-none"
+                      />
+                    </div>
                     <Field label={form.company} name="company" type="text" />
                   </div>
                   <SelectField

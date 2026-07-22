@@ -2,12 +2,17 @@
 
 import { useEffect, useId, useRef, useState } from "react";
 import { cn } from "@/lib/utils";
+import {
+  isEmail,
+  isValidPhone,
+  sanitizePhoneInput,
+} from "@/lib/form-guard";
 import type { Locale } from "@/types/content";
 
 const COPY = {
   pt: {
     title: "Acesso ao material gratuito",
-    body: "Para fazer o download, informe nome, telefone e e-mail.",
+    body: "Para fazer o download, informe nome e e-mail. Telefone é opcional.",
     name: "Nome",
     phone: "Telefone",
     email: "E-mail",
@@ -15,11 +20,13 @@ const COPY = {
     submitting: "Enviando…",
     close: "Fechar",
     error: "Não foi possível enviar. Tente de novo em instantes.",
-    required: "Preencha todos os campos.",
+    required: "Nome e e-mail são obrigatórios.",
+    invalidEmail: "Informe um e-mail válido.",
+    invalidPhone: "Telefone: use apenas números.",
   },
   en: {
     title: "Access free material",
-    body: "To download, please share your name, phone, and email.",
+    body: "To download, share your name and email. Phone is optional.",
     name: "Name",
     phone: "Phone",
     email: "Email",
@@ -27,7 +34,9 @@ const COPY = {
     submitting: "Sending…",
     close: "Close",
     error: "Could not submit. Please try again shortly.",
-    required: "Please fill in all fields.",
+    required: "Name and email are required.",
+    invalidEmail: "Please enter a valid email.",
+    invalidPhone: "Phone: numbers only.",
   },
 } as const;
 
@@ -38,6 +47,8 @@ export type GuideLeadPayload = {
   guideId: string;
   guideTitle: string;
   locale: Locale;
+  website?: string;
+  formStartedAt: number;
 };
 
 type GuideLeadModalProps = {
@@ -62,9 +73,11 @@ export function GuideLeadModal({
   const t = COPY[locale];
   const titleId = useId();
   const firstFieldRef = useRef<HTMLInputElement>(null);
+  const startedAtRef = useRef(0);
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
   const [email, setEmail] = useState("");
+  const [website, setWebsite] = useState("");
   const [status, setStatus] = useState<"idle" | "loading" | "error">("idle");
   const [message, setMessage] = useState<string | null>(null);
 
@@ -72,6 +85,8 @@ export function GuideLeadModal({
     if (!open) return;
     setStatus("idle");
     setMessage(null);
+    setWebsite("");
+    startedAtRef.current = Date.now();
     const prev = document.body.style.overflow;
     document.body.style.overflow = "hidden";
     const tId = window.setTimeout(() => firstFieldRef.current?.focus(), 40);
@@ -96,12 +111,22 @@ export function GuideLeadModal({
     e.preventDefault();
     const trimmed = {
       name: name.trim(),
-      phone: phone.trim(),
+      phone: sanitizePhoneInput(phone),
       email: email.trim(),
     };
-    if (!trimmed.name || !trimmed.phone || !trimmed.email) {
+    if (!trimmed.name || !trimmed.email) {
       setStatus("error");
       setMessage(t.required);
+      return;
+    }
+    if (!isEmail(trimmed.email)) {
+      setStatus("error");
+      setMessage(t.invalidEmail);
+      return;
+    }
+    if (!isValidPhone(trimmed.phone)) {
+      setStatus("error");
+      setMessage(t.invalidPhone);
       return;
     }
 
@@ -113,6 +138,8 @@ export function GuideLeadModal({
       guideId,
       guideTitle,
       locale,
+      website,
+      formStartedAt: startedAtRef.current,
     };
 
     try {
@@ -124,7 +151,6 @@ export function GuideLeadModal({
       if (!res.ok) throw new Error("lead_failed");
 
       onUnlocked?.();
-      // Trigger download
       const a = document.createElement("a");
       a.href = pdfHref;
       a.download = "";
@@ -173,9 +199,23 @@ export function GuideLeadModal({
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="px-6 py-6 md:px-7 md:py-7">
+        <form onSubmit={handleSubmit} className="px-6 py-6 md:px-7 md:py-7" noValidate>
           <p className="text-[14px] leading-relaxed text-black/55">{t.body}</p>
           <p className="mt-3 text-[13px] text-black/40">{guideTitle}</p>
+
+          {/* Honeypot — bots fill this; humans never see it */}
+          <div className="absolute left-[-9999px] h-0 w-0 overflow-hidden opacity-0" aria-hidden>
+            <label htmlFor="lead-website">Website</label>
+            <input
+              id="lead-website"
+              name="website"
+              type="text"
+              tabIndex={-1}
+              autoComplete="off"
+              value={website}
+              onChange={(e) => setWebsite(e.target.value)}
+            />
+          </div>
 
           <div className="mt-7 space-y-4">
             <Field
@@ -185,14 +225,16 @@ export function GuideLeadModal({
               autoComplete="name"
               value={name}
               onChange={setName}
+              required
             />
             <Field
               label={t.phone}
               name="phone"
               type="tel"
+              inputMode="tel"
               autoComplete="tel"
               value={phone}
-              onChange={setPhone}
+              onChange={(v) => setPhone(sanitizePhoneInput(v))}
             />
             <Field
               label={t.email}
@@ -201,6 +243,7 @@ export function GuideLeadModal({
               autoComplete="email"
               value={email}
               onChange={setEmail}
+              required
             />
           </div>
 
@@ -234,17 +277,21 @@ function Field({
   label,
   name,
   type = "text",
+  inputMode,
   autoComplete,
   value,
   onChange,
+  required,
   ref,
 }: {
   label: string;
   name: string;
   type?: string;
+  inputMode?: React.HTMLAttributes<HTMLInputElement>["inputMode"];
   autoComplete?: string;
   value: string;
   onChange: (v: string) => void;
+  required?: boolean;
   ref?: React.Ref<HTMLInputElement>;
 }) {
   const id = `lead-${name}`;
@@ -258,7 +305,8 @@ function Field({
         id={id}
         name={name}
         type={type}
-        required
+        inputMode={inputMode}
+        required={required}
         autoComplete={autoComplete}
         value={value}
         onChange={(e) => onChange(e.target.value)}
