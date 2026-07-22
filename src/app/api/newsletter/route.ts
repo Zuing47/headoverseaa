@@ -91,17 +91,18 @@ export async function POST(request: Request) {
 
   if (!list.ok) {
     console.error("[newsletter] audience failed", email, list.detail);
-    return NextResponse.json(
-      {
-        ok: false,
-        error: "audience_failed",
-        hint: list.detail,
-      },
-      { status: 502 },
-    );
+    // Still notify the team — signup shouldn't hard-fail if the key can't manage Audience
   }
 
   const localeLabel = locale === "en" ? "English" : "Português";
+  const listStatus = !segmentId
+    ? "Sem SEGMENT_ID no Vercel"
+    : list.ok && list.segmented
+      ? "Adicionado ao segmento"
+      : list.ok
+        ? "Contato criado"
+        : `Falha na lista: ${(list.detail || "erro").slice(0, 120)}`;
+
   const delivered = await sendBrandedNotify({
     subject: `Cadastro newsletter — ${email}`,
     badge: "Cadastros",
@@ -112,14 +113,7 @@ export async function POST(request: Request) {
       { label: "E-mail", value: email, href: `mailto:${email}` },
       { label: "Idioma", value: localeLabel },
       { label: "Origem", value: "Newsletter / Insights" },
-      {
-        label: "Lista Resend",
-        value: list.segmented
-          ? "Adicionado ao segmento"
-          : segmentId
-            ? "Contato criado (segmento não aplicado)"
-            : "Sem SEGMENT_ID — só notificação",
-      },
+      { label: "Lista Resend", value: listStatus },
     ],
     replyTo: email,
     ctaLabel: "Responder",
@@ -128,22 +122,25 @@ export async function POST(request: Request) {
     secondaryCtaHref: NOTIFY_SITE,
   });
 
-  if (!delivered.ok) {
-    // Contact is already on the list — don't fail the signup UX
-    console.info("[newsletter] notify failed", email, delivered.detail);
-    return NextResponse.json({
-      ok: true,
-      listed: true,
-      notified: false,
-      to: NOTIFY_TO,
-    });
+  if (!delivered.ok && !list.ok) {
+    console.info("[newsletter] both failed", email, delivered.detail, list.detail);
+    return NextResponse.json(
+      {
+        ok: false,
+        error: "delivery_failed",
+        hint: list.detail || delivered.detail,
+        to: NOTIFY_TO,
+      },
+      { status: 502 },
+    );
   }
 
   return NextResponse.json({
     ok: true,
-    listed: true,
+    listed: list.ok,
     segmented: list.segmented,
-    notified: true,
+    notified: delivered.ok,
+    audienceHint: list.ok ? undefined : list.detail,
     to: delivered.to ?? NOTIFY_TO,
   });
 }
