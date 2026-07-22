@@ -53,6 +53,7 @@ function buildHtml(payload: Payload) {
 async function sendWithResend(
   payload: Payload,
   from: string,
+  to: string,
 ): Promise<{ ok: boolean; detail?: string }> {
   const key = process.env.RESEND_API_KEY?.trim();
   if (!key) return { ok: false, detail: "missing_resend_key" };
@@ -65,7 +66,7 @@ async function sendWithResend(
     },
     body: JSON.stringify({
       from,
-      to: [TO],
+      to: [to],
       reply_to: payload.email,
       subject: `Contato Head Oversea — ${payload.name}`,
       html: buildHtml(payload),
@@ -74,41 +75,52 @@ async function sendWithResend(
 
   if (!res.ok) {
     const text = await res.text().catch(() => "");
-    console.error("[contact] resend failed", from, res.status, text);
-    return { ok: false, detail: text.slice(0, 280) || `status_${res.status}` };
+    console.error("[contact] resend failed", from, to, res.status, text);
+    return { ok: false, detail: text.slice(0, 400) || `status_${res.status}` };
   }
   return { ok: true };
 }
 
 /**
- * Resend rejects unverified domains. Try custom from first, then the
- * Resend onboarding sender (works immediately for the account owner /
- * verified recipients).
+ * Resend rejects unverified domains / non-owner recipients on the free tier.
+ * Try custom from, then onboarding@resend.dev; if TO is blocked, fall back to
+ * the account owner email parsed from Resend's error (usually mateus@…).
  */
 async function deliverViaResend(payload: Payload) {
   const custom = process.env.CONTACT_FROM_EMAIL?.trim();
-  const attempts = [
+  const froms = [
     custom,
     "Head Oversea <onboarding@resend.dev>",
   ].filter(Boolean) as string[];
 
-  // de-dupe
-  const seen = new Set<string>();
-  const unique = attempts.filter((f) => {
-    if (seen.has(f)) return false;
-    seen.add(f);
+  const seenFrom = new Set<string>();
+  const uniqueFrom = froms.filter((f) => {
+    if (seenFrom.has(f)) return false;
+    seenFrom.add(f);
     return true;
   });
 
+  const recipients = [TO];
   let lastDetail = "resend_unavailable";
-  for (const from of unique) {
-    try {
-      const result = await sendWithResend(payload, from);
-      if (result.ok) return { ok: true as const };
-      lastDetail = result.detail || lastDetail;
-    } catch (err) {
-      console.error("[contact] resend error", from, err);
-      lastDetail = "resend_exception";
+
+  for (const from of uniqueFrom) {
+    for (const to of recipients) {
+      try {
+        const result = await sendWithResend(payload, from, to);
+        if (result.ok) return { ok: true as const, to };
+        lastDetail = result.detail || lastDetail;
+
+        // Free Resend: can only send to the account email until domain is verified
+        const own = lastDetail.match(
+          /own email address \(([^)]+@[^)]+)\)/i,
+        );
+        if (own?.[1] && !recipients.includes(own[1])) {
+          recipients.push(own[1].trim());
+        }
+      } catch (err) {
+        console.error("[contact] resend error", from, to, err);
+        lastDetail = "resend_exception";
+      }
     }
   }
   return { ok: false as const, detail: lastDetail };
