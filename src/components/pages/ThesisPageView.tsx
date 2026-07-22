@@ -240,19 +240,19 @@ export function ThesisPageView({
             quality={90}
           />
           <div
-            className="absolute inset-0"
+            className="pointer-events-none absolute inset-0 lg:hidden"
+            aria-hidden
+            style={{
+              background:
+                "linear-gradient(180deg, rgba(5,5,5,0.55) 0%, rgba(5,5,5,0.4) 35%, rgba(5,5,5,0.88) 100%)",
+            }}
+          />
+          <div
+            className="pointer-events-none absolute inset-0 hidden lg:block"
             aria-hidden
             style={{
               background:
                 "linear-gradient(90deg, rgba(5,5,5,0.92) 0%, rgba(5,5,5,0.72) 38%, rgba(5,5,5,0.28) 68%, rgba(5,5,5,0.45) 100%)",
-            }}
-          />
-          <div
-            className="absolute inset-0 lg:hidden"
-            aria-hidden
-            style={{
-              background:
-                "linear-gradient(180deg, rgba(5,5,5,0.4) 0%, rgba(5,5,5,0.2) 40%, rgba(5,5,5,0.7) 100%)",
             }}
           />
         </div>
@@ -264,7 +264,7 @@ export function ThesisPageView({
             </Reveal>
             <Reveal delay={0.08} variant="rise">
               <h1
-                className="font-display mt-7 whitespace-pre-line text-[clamp(2.35rem,4.8vw,3.85rem)] leading-[1.06] text-white"
+                className="font-display mt-6 whitespace-pre-line text-[clamp(2rem,5.5vw,3.85rem)] leading-[1.08] text-white md:mt-7 md:text-[clamp(2.35rem,4.8vw,3.85rem)]"
                 style={{ color: "#ffffff" }}
               >
                 {t.heroTitle}

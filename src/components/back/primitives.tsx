@@ -136,7 +136,7 @@ export function BackListRow({
     <Link
       href={href}
       className={cn(
-        "group flex items-center justify-between gap-8 border-t py-7 transition-opacity last:border-b hover:opacity-70",
+        "group flex flex-col items-start gap-4 border-t py-6 transition-opacity last:border-b hover:opacity-70 sm:flex-row sm:items-center sm:justify-between sm:gap-8 sm:py-7",
         tone === "light" ? "border-white/[0.12]" : "border-black/[0.08]",
       )}
     >

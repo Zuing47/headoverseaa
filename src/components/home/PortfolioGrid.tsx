@@ -184,7 +184,7 @@ export function PortfolioGrid({ content, locale = "pt" }: PortfolioGridProps) {
           </Reveal>
           <MaskedText
             delay={0.08}
-            className="font-display mt-5 text-[clamp(2.4rem,4vw,3.5rem)] leading-[1.08] text-black"
+            className="font-display mt-5 text-[clamp(1.85rem,4vw,3.5rem)] leading-[1.1] text-black"
           >
             {portfolio.title}
           </MaskedText>
@@ -218,11 +218,11 @@ export function PortfolioGrid({ content, locale = "pt" }: PortfolioGridProps) {
         onClickCapture={onClickCapture}
       >
         <div
-          className="pointer-events-none absolute inset-y-0 left-0 z-10 w-10 bg-gradient-to-r from-white via-white/80 to-transparent md:w-36"
+          className="pointer-events-none absolute inset-y-0 left-0 z-10 w-16 bg-gradient-to-r from-white via-white/80 to-transparent sm:w-24 md:w-36"
           aria-hidden
         />
         <div
-          className="pointer-events-none absolute inset-y-0 right-0 z-10 w-10 bg-gradient-to-l from-white via-white/80 to-transparent md:w-36"
+          className="pointer-events-none absolute inset-y-0 right-0 z-10 w-16 bg-gradient-to-l from-white via-white/80 to-transparent sm:w-24 md:w-36"
           aria-hidden
         />
 
@@ -257,7 +257,7 @@ function LogoOnly({ item, locale }: { item: CaseStudy; locale: Locale }) {
       target={external ? "_blank" : undefined}
       rel={external ? "noopener noreferrer" : undefined}
       draggable={false}
-      className="group relative z-20 flex h-28 w-[240px] shrink-0 items-center justify-center px-6 md:h-32 md:w-[280px] md:px-8"
+      className="group relative z-20 flex h-24 w-[200px] shrink-0 items-center justify-center px-5 md:h-32 md:w-[280px] md:px-8"
       aria-label={item.company}
     >
       <span className="inline-flex origin-center" style={{ scale: optical }}>
@@ -268,7 +268,7 @@ function LogoOnly({ item, locale }: { item: CaseStudy; locale: Locale }) {
             width={280}
             height={72}
             draggable={false}
-            className="pointer-events-none h-12 w-auto max-w-[11rem] object-contain object-center opacity-70 transition duration-700 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:opacity-100 md:h-14 md:max-w-[13rem]"
+            className="pointer-events-none h-12 w-auto max-w-[11rem] object-contain object-center opacity-80 transition duration-700 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:opacity-100 md:h-14 md:max-w-[13rem]"
           />
         </span>
       </span>

@@ -33,8 +33,8 @@ export function FeatureRail({ content, locale = "pt" }: FeatureRailProps) {
 
   return (
     <section className="bg-black text-white" aria-label="Featured">
-      <div className="page-shell pb-16 pt-6 md:pb-24 md:pt-10">
-        <div className="mb-8 flex items-end justify-between gap-6 md:mb-10">
+      <div className="page-shell pb-14 pt-10 md:pb-24 md:pt-10">
+        <div className="mb-6 flex items-end justify-between gap-6 md:mb-10">
           <BackLabel tone="light">
             {en ? "Perspectives" : "Perspectivas"}
           </BackLabel>
@@ -67,7 +67,7 @@ export function FeatureRail({ content, locale = "pt" }: FeatureRailProps) {
             transition={{ duration: DURATION.slow, ease: EASE_OUT }}
           >
             <Link href={active.href} className="group block">
-              <ImageReveal className="relative aspect-[4/3] w-full min-h-[220px] overflow-hidden bg-[#111] sm:aspect-[16/10] sm:min-h-0 md:aspect-[21/9] lg:aspect-[24/9]">
+              <ImageReveal className="relative aspect-[16/11] w-full overflow-hidden bg-[#111] sm:aspect-[16/10] md:aspect-[21/9] lg:aspect-[24/9]">
                 {active.image ? (
                   <Image
                     src={active.image}
@@ -80,24 +80,24 @@ export function FeatureRail({ content, locale = "pt" }: FeatureRailProps) {
                   />
                 ) : null}
                 <div
-                  className="absolute inset-0 bg-gradient-to-t from-black/55 via-transparent to-transparent"
+                  className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent"
                   aria-hidden
                 />
               </ImageReveal>
             </Link>
 
-            <div className="mt-8 grid gap-8 border-t border-white/[0.1] pt-8 md:mt-10 md:grid-cols-12 md:gap-10 md:pt-10">
+            <div className="mt-6 grid gap-5 border-t border-white/[0.1] pt-6 md:mt-10 md:grid-cols-12 md:gap-10 md:pt-10">
               <div className="md:col-span-5">
                 <p className="label-caps text-white/40">{active.category}</p>
-                <h2 className="font-display mt-4 text-[clamp(1.65rem,2.8vw,2.35rem)] leading-[1.12]">
+                <h2 className="font-display mt-3 text-[clamp(1.45rem,2.8vw,2.35rem)] leading-[1.15] md:mt-4 md:text-[clamp(1.65rem,2.8vw,2.35rem)]">
                   {active.title}
                 </h2>
               </div>
               <div className="flex flex-col justify-between md:col-span-6 md:col-start-7">
-                <p className="body-editorial max-w-[42ch] text-white/50">
+                <p className="body-editorial max-w-[42ch] text-white/60">
                   {active.description}
                 </p>
-                <div className="mt-8">
+                <div className="mt-6 md:mt-8">
                   <MeridianLink href={active.href} tone="light">
                     {en ? "Learn more" : "Saiba mais"}
                   </MeridianLink>

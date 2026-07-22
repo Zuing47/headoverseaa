@@ -188,21 +188,26 @@ export function RealEstatePageView({
           aria-hidden
           style={{
             background:
-              "linear-gradient(180deg, rgba(0,0,0,0.15) 0%, rgba(0,0,0,0.25) 40%, rgba(0,0,0,0.72) 100%)",
+              "linear-gradient(180deg, rgba(0,0,0,0.45) 0%, rgba(0,0,0,0.4) 40%, rgba(0,0,0,0.88) 100%)",
           }}
         />
-        <div className="page-shell relative z-10 flex min-h-[min(72vh,680px)] items-end py-14 lg:items-center lg:justify-end lg:py-20">
+        <div className="page-shell relative z-10 flex min-h-[min(72vh,680px)] items-end py-12 pb-16 lg:items-center lg:justify-end lg:py-20">
           <div className="w-full max-w-[40ch] lg:w-[min(100%,420px)]">
             <Reveal variant="rise">
               <BackLabel tone="light">{t.area}</BackLabel>
             </Reveal>
             <Reveal delay={0.08} variant="rise">
-              <h1 className="font-display mt-6 whitespace-pre-line text-[clamp(2.1rem,4vw,3.25rem)] leading-[1.08]">
+              <h1 className="font-display mt-5 whitespace-pre-line text-[clamp(1.95rem,5.5vw,3.25rem)] leading-[1.1] text-white md:mt-6 md:text-[clamp(2.1rem,4vw,3.25rem)]">
                 {t.headline}
               </h1>
             </Reveal>
             <Reveal delay={0.14} variant="fadeUp">
-              <p className="body-editorial mt-5 text-white/55">{t.intro}</p>
+              <p
+                className="body-editorial mt-5 text-white/70"
+                style={{ color: "rgba(255,255,255,0.7)" }}
+              >
+                {t.intro}
+              </p>
             </Reveal>
           </div>
         </div>

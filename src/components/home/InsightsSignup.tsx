@@ -53,8 +53,8 @@ export function InsightsSignup({ locale = "en" }: InsightsSignupProps) {
           </Reveal>
           <Reveal delay={0.14} variant="fadeUp">
             <p
-              className="mt-5 max-w-[34ch] text-[15px] leading-relaxed text-white/45"
-              style={{ color: "rgba(255,255,255,0.45)" }}
+              className="mt-5 max-w-[34ch] text-[15px] leading-relaxed text-white/60"
+              style={{ color: "rgba(255,255,255,0.6)" }}
             >
               {en
                 ? "Perspectives on active ownership across Brazil and the United States — no noise."

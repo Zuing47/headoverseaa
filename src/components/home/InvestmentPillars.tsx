@@ -87,7 +87,7 @@ export function InvestmentPillars({ locale = "pt" }: InvestmentPillarsProps) {
             <Reveal
               delay={0.2}
               variant="fadeUp"
-              className="flex flex-col gap-5 lg:items-start lg:justify-center"
+              className="flex flex-col gap-3 sm:gap-4 lg:items-start lg:justify-center lg:gap-5"
             >
               <MeridianLink href={peHref} tone="light">
                 {en ? "Explore Private Equity" : "Explorar Private Equity"}
@@ -149,7 +149,7 @@ export function InvestmentPillars({ locale = "pt" }: InvestmentPillarsProps) {
             <Reveal
               delay={0.2}
               variant="fadeUp"
-              className="mt-10 flex flex-col gap-5"
+              className="mt-8 flex flex-col gap-3 sm:mt-10 sm:gap-5"
             >
               <MeridianLink href={reHref}>
                 {en ? "Explore Real Estate" : "Explorar Real Estate"}
@@ -179,7 +179,7 @@ export function InvestmentPillars({ locale = "pt" }: InvestmentPillarsProps) {
               aria-hidden
               style={{
                 background:
-                  "linear-gradient(180deg, #fff 0%, transparent 22%, transparent 78%, #fff 100%), linear-gradient(90deg, #fff 0%, transparent 18%, transparent 82%, #fff 100%)",
+                  "linear-gradient(180deg, #fff 0%, transparent 18%, transparent 82%, #fff 100%)",
               }}
             />
           </div>

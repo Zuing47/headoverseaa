@@ -222,7 +222,7 @@ export function InvestorsPageView({
         <div className="page-shell pt-[calc(72px+clamp(2.5rem,6vw,4rem))] pb-[clamp(2.5rem,5vw,3.5rem)] md:pt-[calc(5rem+clamp(2.5rem,6vw,4rem))]">
           <div className="grid items-end gap-10 lg:grid-cols-12 lg:gap-14">
             <Reveal variant="rise" className="lg:col-span-5">
-              <h1 className="font-display text-[clamp(2.75rem,5.5vw,4.5rem)] leading-[1.02] tracking-[-0.02em]">
+              <h1 className="font-display text-[clamp(2.35rem,6.5vw,4.5rem)] leading-[1.05] tracking-[-0.02em] text-white md:text-[clamp(2.75rem,5.5vw,4.5rem)]">
                 {t.heroTitle}
               </h1>
             </Reveal>
@@ -419,7 +419,7 @@ export function InvestorsPageView({
             {t.resources.map((item, i) => (
               <Reveal key={item.href} delay={0.04 + i * 0.04} variant="fadeUp">
                 <div className="border-b border-white/[0.1]">
-                  <div className="flex items-center justify-between gap-6 py-6 md:py-7">
+                  <div className="flex flex-col items-start gap-3 py-6 sm:flex-row sm:items-center sm:justify-between sm:gap-6 md:py-7">
                     <p className="font-display text-[clamp(1.15rem,2vw,1.45rem)] leading-snug">
                       {item.title}
                     </p>

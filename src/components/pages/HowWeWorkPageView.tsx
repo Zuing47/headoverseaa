@@ -362,22 +362,22 @@ export function HowWeWorkPageView({
           aria-hidden
           style={{
             background:
-              "linear-gradient(180deg, rgba(0,0,0,0.55) 0%, rgba(0,0,0,0.62) 45%, rgba(0,0,0,0.78) 100%)",
+              "linear-gradient(180deg, rgba(0,0,0,0.62) 0%, rgba(0,0,0,0.68) 45%, rgba(0,0,0,0.85) 100%)",
           }}
         />
-        <div className="page-shell relative z-10 flex min-h-[min(78vh,720px)] flex-col items-center justify-center py-24 text-center md:py-28">
+        <div className="page-shell relative z-10 flex min-h-[min(78vh,720px)] flex-col items-center justify-center py-20 text-center md:py-28">
           <Reveal variant="rise">
             <BackLabel tone="light" className="justify-center">
               {content.valueCreation.eyebrow}
             </BackLabel>
           </Reveal>
           <Reveal delay={0.08} variant="rise">
-            <h1 className="font-display mt-6 max-w-[18ch] whitespace-pre-line text-[clamp(2.85rem,6.5vw,5rem)] font-light leading-[1.02]">
+            <h1 className="font-display mt-5 max-w-[16ch] whitespace-pre-line text-[clamp(2.25rem,7vw,5rem)] font-light leading-[1.05] text-white md:mt-6 md:max-w-[18ch] md:text-[clamp(2.85rem,6.5vw,5rem)]">
               {t.heroTitle}
             </h1>
           </Reveal>
           <Reveal delay={0.16} variant="fadeUp">
-            <p className="body-editorial mx-auto mt-6 max-w-[44ch] text-white/65">
+            <p className="body-editorial mx-auto mt-5 max-w-[44ch] text-white/70 md:mt-6">
               {t.heroBody}
             </p>
           </Reveal>
