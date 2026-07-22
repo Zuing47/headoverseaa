@@ -13,8 +13,11 @@ type ContactBody = {
 };
 
 const TO = process.env.CONTACT_TO_EMAIL?.trim() || "contact@headoversea.com";
-/** Must use a Resend-verified domain (headoversea.com). */
-const FROM_DEFAULT = "Head Oversea <contact@headoversea.com>";
+/**
+ * Use noreply@ (not contact@) as From — otherwise Gmail shows the sender as "me"
+ * when contact@ is also the inbox you're reading.
+ */
+const FROM_DEFAULT = "Head Oversea <noreply@headoversea.com>";
 
 function isEmail(v: string) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v);
@@ -38,18 +41,112 @@ type Payload = {
   locale: string;
 };
 
-function buildHtml(payload: Payload) {
+function row(label: string, value: string, href?: string) {
+  const display = escapeHtml(value || "—");
+  const content = href
+    ? `<a href="${escapeHtml(href)}" style="color:#050505;text-decoration:underline;">${display}</a>`
+    : display;
   return `
-    <h2>Novo contato pelo site</h2>
-    <p><strong>Nome:</strong> ${escapeHtml(payload.name)}</p>
-    <p><strong>E-mail:</strong> ${escapeHtml(payload.email)}</p>
-    <p><strong>Telefone:</strong> ${escapeHtml(payload.phone || "—")}</p>
-    <p><strong>Empresa:</strong> ${escapeHtml(payload.company || "—")}</p>
-    <p><strong>Objetivo:</strong> ${escapeHtml(payload.objective || "—")}</p>
-    <p><strong>Idioma:</strong> ${escapeHtml(payload.locale)}</p>
-    <p><strong>Mensagem:</strong></p>
-    <p>${escapeHtml(payload.message || "—").replace(/\n/g, "<br/>")}</p>
+    <tr>
+      <td style="padding:14px 0;border-bottom:1px solid #ebebeb;width:34%;vertical-align:top;">
+        <p style="margin:0;font-family:Arial,Helvetica,sans-serif;font-size:11px;letter-spacing:0.14em;text-transform:uppercase;color:#8a8a8a;">
+          ${escapeHtml(label)}
+        </p>
+      </td>
+      <td style="padding:14px 0;border-bottom:1px solid #ebebeb;vertical-align:top;">
+        <p style="margin:0;font-family:Georgia,'Times New Roman',serif;font-size:16px;line-height:1.45;color:#050505;">
+          ${content}
+        </p>
+      </td>
+    </tr>
   `;
+}
+
+function buildHtml(payload: Payload) {
+  const localeLabel = payload.locale === "en" ? "English" : "Português";
+  const messageHtml = escapeHtml(payload.message || "—").replace(/\n/g, "<br/>");
+  const telHref = payload.phone
+    ? `tel:${payload.phone.replace(/[^\d+]/g, "")}`
+    : undefined;
+
+  return `<!DOCTYPE html>
+<html lang="pt">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Novo contato — Head Oversea</title>
+</head>
+<body style="margin:0;padding:0;background:#f3f3f3;">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f3f3f3;padding:32px 12px;">
+    <tr>
+      <td align="center">
+        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;background:#ffffff;border:1px solid #e6e6e6;">
+          <tr>
+            <td style="background:#050505;padding:28px 32px;">
+              <p style="margin:0;font-family:Arial,Helvetica,sans-serif;font-size:11px;letter-spacing:0.2em;text-transform:uppercase;color:rgba(255,255,255,0.45);">
+                Head Oversea
+              </p>
+              <p style="margin:12px 0 0;font-family:Georgia,'Times New Roman',serif;font-size:26px;line-height:1.2;color:#ffffff;">
+                Novo contato pelo site
+              </p>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:8px 32px 28px;">
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+                ${row("Nome", payload.name)}
+                ${row("E-mail", payload.email, `mailto:${payload.email}`)}
+                ${row("Telefone", payload.phone || "—", telHref)}
+                ${row("Empresa", payload.company || "—")}
+                ${row("Objetivo", payload.objective || "—")}
+                ${row("Idioma", localeLabel)}
+              </table>
+              <div style="margin-top:28px;padding-top:22px;border-top:1px solid #ebebeb;">
+                <p style="margin:0 0 10px;font-family:Arial,Helvetica,sans-serif;font-size:11px;letter-spacing:0.14em;text-transform:uppercase;color:#8a8a8a;">
+                  Mensagem
+                </p>
+                <p style="margin:0;font-family:Georgia,'Times New Roman',serif;font-size:16px;line-height:1.55;color:#050505;">
+                  ${messageHtml}
+                </p>
+              </div>
+              <div style="margin-top:28px;">
+                <a href="mailto:${escapeHtml(payload.email)}"
+                   style="display:inline-block;background:#050505;color:#ffffff;font-family:Arial,Helvetica,sans-serif;font-size:12px;letter-spacing:0.12em;text-transform:uppercase;text-decoration:none;padding:14px 22px;">
+                  Responder
+                </a>
+              </div>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:18px 32px 24px;border-top:1px solid #ebebeb;background:#fafafa;">
+              <p style="margin:0;font-family:Arial,Helvetica,sans-serif;font-size:12px;line-height:1.5;color:#8a8a8a;">
+                Enviado pelo formulário de contato · headoversea.com<br/>
+                Responder vai para ${escapeHtml(payload.email)}
+              </p>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>`;
+}
+
+function buildText(payload: Payload) {
+  return [
+    "Novo contato pelo site",
+    "",
+    `Nome: ${payload.name}`,
+    `E-mail: ${payload.email}`,
+    `Telefone: ${payload.phone || "—"}`,
+    `Empresa: ${payload.company || "—"}`,
+    `Objetivo: ${payload.objective || "—"}`,
+    `Idioma: ${payload.locale === "en" ? "English" : "Português"}`,
+    "",
+    "Mensagem:",
+    payload.message || "—",
+  ].join("\n");
 }
 
 async function sendWithResend(
@@ -70,8 +167,9 @@ async function sendWithResend(
       from,
       to: [to],
       reply_to: payload.email,
-      subject: `Contato Head Oversea — ${payload.name}`,
+      subject: `Novo contato — ${payload.name}`,
       html: buildHtml(payload),
+      text: buildText(payload),
     }),
   });
 
@@ -84,25 +182,27 @@ async function sendWithResend(
 }
 
 /**
- * Domain headoversea.com is verified on Resend — send from/to contact@.
- * Keep a last-resort owner inbox only if contact@ delivery still fails.
+ * From = noreply@ (avoids Gmail "me"). To = contact@.
  */
 async function deliverViaResend(payload: Payload) {
   const froms = [
     process.env.CONTACT_FROM_EMAIL?.trim(),
     FROM_DEFAULT,
-    "Head Oversea <noreply@headoversea.com>",
+    "Head Oversea Website <forms@headoversea.com>",
     "Head Oversea <onboarding@resend.dev>",
   ].filter(Boolean) as string[];
 
   const seenFrom = new Set<string>();
   const uniqueFrom = froms.filter((f) => {
+    // Never send From contact@ — Gmail labels it "me" in that inbox
+    if (/<\s*contact@headoversea\.com\s*>/i.test(f) || /^contact@headoversea\.com$/i.test(f)) {
+      return false;
+    }
     if (seenFrom.has(f)) return false;
     seenFrom.add(f);
     return true;
   });
 
-  // Prefer the firm inbox; only add owner email if Resend blocks contact@
   const recipients = [TO];
   let lastDetail = "resend_unavailable";
 
@@ -201,7 +301,6 @@ export async function POST(request: Request) {
       {
         ok: false,
         error: "delivery_failed",
-        // Helps diagnose without exposing the full key
         hint: delivered.detail,
         to: TO,
       },
