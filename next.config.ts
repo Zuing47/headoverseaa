@@ -1,5 +1,41 @@
 import type { NextConfig } from "next";
 
+/**
+ * Legacy WordPress / pre-repositioning URLs still in Google's index.
+ * Each maps to the nearest current page — never blanket-redirect to home.
+ */
+const legacyRedirects: { source: string; destination: string }[] = [
+  // EN — structural pages
+  { source: "/en/our-solutions", destination: "/en/private-equity" },
+  { source: "/en/about-us", destination: "/en/about" },
+  { source: "/en/contact-us", destination: "/en/contact" },
+  { source: "/en/portfolio", destination: "/en/cases" },
+  { source: "/en/news", destination: "/en/insights" },
+  { source: "/en/blog", destination: "/en/insights" },
+  // EN — old pillar / article URLs
+  {
+    source: "/en/business-brokerage-the-bridge-between-brazilian-companies-and-us-investors",
+    destination: "/en/private-equity",
+  },
+  {
+    source: "/en/raising-capital-in-the-us-how-to-prepare-your-company-to-attract-investors",
+    destination: "/en/founders",
+  },
+  { source: "/en/equity-by-service", destination: "/en/private-equity" },
+  { source: "/en/internationalization", destination: "/en/private-equity" },
+  { source: "/en/business-brokerage", destination: "/en/private-equity" },
+  // PT — structural pages (common legacy slugs)
+  { source: "/nossas-solucoes", destination: "/private-equity" },
+  { source: "/sobre-nos", destination: "/sobre" },
+  { source: "/contato-nos", destination: "/contato" },
+  { source: "/portfolio", destination: "/cases" },
+  { source: "/noticias", destination: "/insights" },
+  { source: "/blog", destination: "/insights" },
+  { source: "/equity-by-service", destination: "/private-equity" },
+  { source: "/internacionalizacao", destination: "/private-equity" },
+  { source: "/business-brokerage", destination: "/private-equity" },
+];
+
 const nextConfig: NextConfig = {
   images: {
     formats: ["image/avif", "image/webp"],
@@ -9,6 +45,12 @@ const nextConfig: NextConfig = {
   },
   compress: true,
   poweredByHeader: false,
+  async redirects() {
+    return legacyRedirects.flatMap(({ source, destination }) => [
+      { source, destination, permanent: true },
+      { source: `${source}/`, destination, permanent: true },
+    ]);
+  },
   async headers() {
     return [
       {

@@ -11,7 +11,7 @@ export const metadata: Metadata = pageMeta({
   imageAlt: "Midtown Manhattan — Head Oversea news",
   keywords: [
     "news",
-    "internationalization",
+    "active ownership",
     "governance",
     "private equity",
     "Head Oversea",

@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { getContent } from "@/lib/content";
 import { pageMeta } from "@/lib/seo";
 import { CaseStoryPageView } from "@/components/pages/CaseStoryPageView";
+import { BreadcrumbJsonLd } from "@/components/seo/BreadcrumbJsonLd";
 
 type Props = { params: Promise<{ slug: string }> };
 
@@ -25,6 +26,13 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     path: `/en/cases/${slug}`,
     image: item.image,
     imageAlt: `${item.company} — Head Oversea case`,
+    keywords: [
+      item.company,
+      item.category,
+      "private equity",
+      "Head Oversea",
+      "portfolio",
+    ],
   });
 }
 
@@ -36,7 +44,19 @@ export default async function CaseStoryPageEn({ params }: Props) {
   );
   if (!item?.detail) notFound();
 
+  const path = `/en/cases/${slug}`;
+
   return (
-    <CaseStoryPageView content={content} locale="en" item={item} />
+    <>
+      <BreadcrumbJsonLd
+        id={`jsonld-breadcrumb-case-${slug}`}
+        items={[
+          { name: "Home", path: "/" },
+          { name: "Portfolio", path: "/en/cases" },
+          { name: item.company, path },
+        ]}
+      />
+      <CaseStoryPageView content={content} locale="en" item={item} />
+    </>
   );
 }

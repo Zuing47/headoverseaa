@@ -117,7 +117,7 @@ const COPY = {
       },
       {
         title: "Expansão",
-        body: "Ponte Brasil–EUA: originação, soft landing e escala institucional.",
+        body: "Ponte Brasil–EUA: originação, presença operacional e escala institucional.",
       },
       {
         title: "Marca",
@@ -244,7 +244,7 @@ const COPY = {
       },
       {
         title: "Expansion",
-        body: "Brazil–U.S. bridge: origination, soft landing, and institutional scale.",
+        body: "Brazil–U.S. bridge: origination, operating presence, and institutional scale.",
       },
       {
         title: "Brand",

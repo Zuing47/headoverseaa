@@ -133,37 +133,37 @@ export const pt: SiteContent = {
     items: [
       {
         id: "equity",
-        title: "Equity por serviço",
+        title: "Active ownership",
         description:
-          "Atuamos como parceiros estratégicos para reestruturar, revalorizar e preparar negócios para o mercado internacional — sem injeção de capital, com execução hands-on.",
+          "Assumimos posições de propriedade em empresas com modelo validado e atuamos na governança e na operação — lado a lado com a liderança, no horizonte longo.",
         highlights: [
           "Governança ativa junto à liderança",
-          "Reestruturação integral do modelo de negócio",
-          "Preparação para escala ou venda",
+          "Disciplina operacional no dia a dia",
+          "Capital alinhado ao ciclo do negócio",
         ],
         image: "/images/products/equity.jpg",
       },
       {
         id: "internationalization",
-        title: "Internacionalização",
+        title: "Corredor Brasil–EUA",
         description:
-          "Internacionalizamos empresas com inteligência estrutural, estratégia assertiva e segurança jurídica em cada etapa do processo.",
+          "Originação e confiança no Brasil; estrutura, disciplina e escala nos Estados Unidos — presença operacional nos dois lados.",
         highlights: [
-          "Setup completo nos EUA",
-          "Suporte local especializado",
-          "Crescimento sobre bases sólidas",
+          "Presença operacional nos dois mercados",
+          "Estrutura e governança à altura institucional",
+          "Escala com accountability local",
         ],
         image: "/images/products/internationalization.jpg",
       },
       {
         id: "brokerage",
-        title: "Assessoria em M&A",
+        title: "Criação de valor e liquidez",
         description:
-          "Conectamos empreendedores a investidores internacionais por meio de processos de venda estruturados que maximizam valor e garantem liquidez.",
+          "Preparamos empresas do portfólio para escala, rodadas ou eventos de liquidez — com valuation disciplinado, narrativa institucional e matching qualificado.",
         highlights: [
-          "Empresa preparada para venda",
-          "Matching com investidores qualificados",
-          "Negociação ponta a ponta",
+          "Empresa preparada para diligência",
+          "Matching com capital alinhado à tese",
+          "Negociação com critério e horizonte",
         ],
         image: "/images/products/brokerage.jpg",
       },
@@ -171,10 +171,10 @@ export const pt: SiteContent = {
         id: "realestate",
         title: "Real Estate",
         description:
-          "Identificamos e desenvolvemos oportunidades imobiliárias estratégicas nos EUA, com foco em liquidez, valorização e segurança patrimonial.",
+          "Investimos em ativos reais com capital paciente e disciplina estratégica — liquidez, valorização e gestão presente entre Brasil e Estados Unidos.",
         highlights: [
-          "Investimentos orientados à liquidez",
-          "Ativos sólidos internacionalmente",
+          "Capital paciente e seletivo",
+          "Ativos reais nos dois mercados",
           "Gestão profissional de portfólio",
         ],
         image: "/images/luxury-residential-real-estate.jpg",
@@ -189,11 +189,11 @@ export const pt: SiteContent = {
       "Não somos uma agência. Não somos uma consultoria. Somos uma firma de investimento — com ownership ativo e horizonte de longo prazo.",
     mission: {
       label: "Missão",
-      text: "Guiar empresas na expansão internacional com soluções práticas, personalizadas e seguras, criando valor duradouro por meio de parcerias estratégicas e governança ativa.",
+      text: "Construir valor duradouro em empresas e ativos reais por meio de ownership ativo — governança, operação e capital — no corredor Brasil–Estados Unidos.",
     },
     vision: {
       label: "Visão",
-      text: "Ser referência global em internacionalização e crescimento empresarial, com governança ativa e soft landing nos Estados Unidos.",
+      text: "Ser a firma de referência em private equity e real estate de middle market conectando Brasil e Estados Unidos, com tese de active ownership e horizonte de longo prazo.",
     },
   },
   cases: {

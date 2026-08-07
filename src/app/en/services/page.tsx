@@ -1,14 +1,21 @@
 import { ServicesPageView } from "@/components/pages/ServicesPageView";
 import { getContent } from "@/lib/content";
 import type { Metadata } from "next";
-import { alternates } from "@/lib/seo";
+import { pageMeta } from "@/lib/seo";
 
-export const metadata: Metadata = {
-  alternates: alternates("/en/services"),
-  title: "Services",
+export const metadata: Metadata = pageMeta({
+  title: "How we work",
   description:
-    "Equity by Service, Internationalization, M&A Advisory, and Real Estate — four pillars of the Equity Builders thesis.",
-};
+    "Private equity and real estate with active ownership — governance, operations, and capital across the Brazil–United States corridor.",
+  path: "/en/services",
+  keywords: [
+    "private equity",
+    "real estate",
+    "active ownership",
+    "Head Oversea",
+    "Brazil United States",
+  ],
+});
 
 export default function EnglishServicesPage() {
   return <ServicesPageView content={getContent("en")} locale="en" />;

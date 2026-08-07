@@ -12,7 +12,7 @@ export const metadata: Metadata = pageMeta({
   keywords: [
     "news",
     "notícias",
-    "internacionalização",
+    "active ownership",
     "governança",
     "private equity",
     "Head Oversea",

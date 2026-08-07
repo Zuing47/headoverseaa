@@ -1,4 +1,6 @@
 import { AboutPageView } from "@/components/pages/AboutPageView";
+import { AboutTeamJsonLd } from "@/components/seo/AboutTeamJsonLd";
+import { BreadcrumbJsonLd } from "@/components/seo/BreadcrumbJsonLd";
 import { getContent } from "@/lib/content";
 import type { Metadata } from "next";
 import { pageMeta } from "@/lib/seo";
@@ -6,13 +8,32 @@ import { pageMeta } from "@/lib/seo";
 export const metadata: Metadata = pageMeta({
   title: "Sobre nós",
   description:
-    "Conheça a Head Oversea — a firma e as pessoas por trás do equity entre Brasil e Estados Unidos.",
+    "Conheça a Head Oversea — firma de private equity e real estate com ownership ativo entre Brasil e Estados Unidos.",
   path: "/sobre",
   image: "/images/private-equity-team-collaboration.jpg",
   imageAlt: "Head Oversea — Sobre nós",
-  keywords: ["sobre", "Head Oversea", "time", "Douglas Bubna"],
+  keywords: [
+    "sobre",
+    "Head Oversea",
+    "time",
+    "Douglas Bubna",
+    "private equity",
+    "active ownership",
+  ],
 });
 
 export default function AboutPage() {
-  return <AboutPageView content={getContent("pt")} locale="pt" />;
+  const content = getContent("pt");
+  return (
+    <>
+      <AboutTeamJsonLd team={content.about.team} locale="pt" />
+      <BreadcrumbJsonLd
+        items={[
+          { name: "Home", path: "/pt" },
+          { name: "Sobre", path: "/sobre" },
+        ]}
+      />
+      <AboutPageView content={content} locale="pt" />
+    </>
+  );
 }

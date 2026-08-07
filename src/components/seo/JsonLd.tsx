@@ -4,7 +4,7 @@ const SITE_URL = "https://headoversea.com";
 
 const organizationSchema = {
   "@context": "https://schema.org",
-  "@type": "ProfessionalService",
+  "@type": ["Organization", "FinancialService"],
   "@id": `${SITE_URL}/#organization`,
   name: "Head Oversea",
   alternateName: "Head Oversea Private Equity & Real Estate",
@@ -47,9 +47,13 @@ const organizationSchema = {
     "Corporate Governance",
     "Long-term Investment",
     "Cross-border Investment",
+    "Middle Market",
   ],
   foundingDate: "2022",
-  sameAs: [] as string[],
+  sameAs: [
+    "https://www.linkedin.com/company/headoversea",
+    "https://www.instagram.com/headoversea",
+  ],
 };
 
 const websiteSchema = {

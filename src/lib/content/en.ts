@@ -133,37 +133,37 @@ export const en: SiteContent = {
     items: [
       {
         id: "equity",
-        title: "Equity by Service",
+        title: "Active ownership",
         description:
-          "We act as strategic partners to restructure, revalue, and prepare businesses for the international market — without capital injection, with hands-on execution.",
+          "We take ownership positions in companies with validated models and work in governance and operations — alongside leadership, on a long-term horizon.",
         highlights: [
           "Active governance alongside leadership",
-          "Comprehensive business model restructuring",
-          "Preparation to scale or sell",
+          "Day-to-day operating discipline",
+          "Capital aligned to the business cycle",
         ],
         image: "/images/products/equity.jpg",
       },
       {
         id: "internationalization",
-        title: "Internationalization",
+        title: "Brazil–U.S. corridor",
         description:
-          "We internationalize companies with structural intelligence, assertive strategy, and legal certainty at every step.",
+          "Origination and trust in Brazil; structure, discipline, and scale in the United States — operating presence on both sides.",
         highlights: [
-          "Full U.S. setup",
-          "Specialized local support",
-          "Growth on solid foundations",
+          "Operating presence in both markets",
+          "Institutional-grade structure and governance",
+          "Scale with local accountability",
         ],
         image: "/images/products/internationalization.jpg",
       },
       {
         id: "brokerage",
-        title: "M&A Advisory",
+        title: "Value creation & liquidity",
         description:
-          "We connect entrepreneurs with international investors through structured sale processes that maximize value and ensure liquidity.",
+          "We prepare portfolio companies for scale, rounds, or liquidity events — with disciplined valuation, institutional narrative, and qualified matching.",
         highlights: [
-          "Company prepared for sale",
-          "Qualified investor matching",
-          "End-to-end negotiation",
+          "Company prepared for diligence",
+          "Capital matched to the thesis",
+          "Negotiation with criteria and horizon",
         ],
         image: "/images/products/brokerage.jpg",
       },
@@ -171,10 +171,10 @@ export const en: SiteContent = {
         id: "realestate",
         title: "Real Estate",
         description:
-          "We identify and develop strategic real estate opportunities in the U.S., focusing on liquidity, appreciation, and asset security.",
+          "We invest in real assets with patient capital and strategic discipline — liquidity, appreciation, and present stewardship across Brazil and the United States.",
         highlights: [
-          "Liquidity-driven investments",
-          "Solid international assets",
+          "Patient, selective capital",
+          "Real assets in both markets",
           "Professional portfolio management",
         ],
         image: "/images/luxury-residential-real-estate.jpg",
@@ -189,11 +189,11 @@ export const en: SiteContent = {
       "We are not an agency. We are not a consultancy. We are an investment firm — with active ownership and a long-term horizon.",
     mission: {
       label: "Mission",
-      text: "Guide companies expanding internationally with practical, personalized, and secure solutions, creating lasting value through strategic partnerships and active governance.",
+      text: "Build lasting value in businesses and real assets through active ownership — governance, operations, and capital — across the Brazil–United States corridor.",
     },
     vision: {
       label: "Vision",
-      text: "To be a global reference in internationalization and business growth, with active governance and soft landing in the United States.",
+      text: "To be the reference firm for middle-market private equity and real estate connecting Brazil and the United States, with an active-ownership thesis and a long-term horizon.",
     },
   },
   cases: {

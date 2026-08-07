@@ -34,6 +34,9 @@ type PageMetaInput = {
   image?: string;
   imageAlt?: string;
   keywords?: string[];
+  /** Use for Insights articles */
+  type?: "website" | "article";
+  publishedTime?: string;
 };
 
 /** Per-page metadata with Open Graph, Twitter card, and hreflang. */
@@ -44,6 +47,8 @@ export function pageMeta({
   image = DEFAULT_OG,
   imageAlt = "Head Oversea — Private Equity & Real Estate",
   keywords,
+  type = "website",
+  publishedTime,
 }: PageMetaInput): Metadata {
   const url = `${SITE_URL}${path === "/" ? "" : path}`;
 
@@ -56,11 +61,12 @@ export function pageMeta({
     ...(keywords?.length ? { keywords } : {}),
     alternates: alternates(path),
     openGraph: {
-      type: "website",
+      type,
       url,
       title,
       description,
       siteName: "Head Oversea",
+      ...(type === "article" && publishedTime ? { publishedTime } : {}),
       images: [
         {
           url: image,

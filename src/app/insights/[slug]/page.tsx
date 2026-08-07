@@ -3,6 +3,11 @@ import { notFound } from "next/navigation";
 import { getContent } from "@/lib/content";
 import { pageMeta } from "@/lib/seo";
 import { NewsArticlePageView } from "@/components/pages/NewsArticlePageView";
+import {
+  ArticleJsonLd,
+  insightDatePublished,
+} from "@/components/seo/ArticleJsonLd";
+import { BreadcrumbJsonLd } from "@/components/seo/BreadcrumbJsonLd";
 
 type Props = { params: Promise<{ slug: string }> };
 
@@ -21,6 +26,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     path: `/insights/${slug}`,
     image: item.image,
     imageAlt: item.title,
+    type: "article",
+    publishedTime: insightDatePublished(item.date),
   });
 }
 
@@ -30,7 +37,19 @@ export default async function NewsArticlePage({ params }: Props) {
   const article = content.insights.items.find((a) => a.slug === slug);
   if (!article) notFound();
 
+  const path = `/insights/${slug}`;
+
   return (
-    <NewsArticlePageView content={content} locale="pt" article={article} />
+    <>
+      <ArticleJsonLd article={article} locale="pt" path={path} />
+      <BreadcrumbJsonLd
+        items={[
+          { name: "Home", path: "/pt" },
+          { name: "News", path: "/insights" },
+          { name: article.title, path },
+        ]}
+      />
+      <NewsArticlePageView content={content} locale="pt" article={article} />
+    </>
   );
 }
