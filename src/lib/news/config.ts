@@ -45,20 +45,36 @@ function normalizeBcryptHash(raw: string): string | null {
   return h;
 }
 
-/** Simplest Vercel-safe login: NEWS_ADMIN_EMAIL + NEWS_ADMIN_PASSWORD_SHA256 */
 export function newsAdminEmail(): string | null {
   const e = req("NEWS_ADMIN_EMAIL")?.toLowerCase();
   return e?.includes("@") ? e : null;
 }
 
+/** Simplest: plaintext password in Vercel env (Sensitive). */
+export function newsAdminPasswordPlain(): string | null {
+  const p = req("NEWS_ADMIN_PASSWORD");
+  if (!p || p.length < 8) return null;
+  return p;
+}
+
 export function newsAdminPasswordSha256(): string | null {
-  const h = req("NEWS_ADMIN_PASSWORD_SHA256")?.toLowerCase();
-  if (!h || !/^[a-f0-9]{64}$/.test(h)) return null;
+  let h = req("NEWS_ADMIN_PASSWORD_SHA256");
+  if (!h) return null;
+  h = h.replace(/^["']|["']$/g, "").replace(/\s+/g, "").toLowerCase();
+  if (h.startsWith("0x")) h = h.slice(2);
+  if (!/^[a-f0-9]{64}$/.test(h)) return null;
   return h;
 }
 
+export function isAllowedAdminEmail(email: string): boolean {
+  const normalized = email.trim().toLowerCase();
+  if (newsAdminEmail() === normalized) return true;
+  if (newsAdminCredentials().has(normalized)) return true;
+  return false;
+}
+
 /**
- * bcrypt map — B64 wins over legacy vars (avoids corrupted CREDENTIALS overwriting).
+ * bcrypt map — B64 wins over legacy vars.
  */
 export function newsAdminCredentials(): Map<string, string> {
   const map = new Map<string, string>();
@@ -125,6 +141,45 @@ export function newsIngestReady(): {
   return { ok: missing.length === 0, missing };
 }
 
+/** Safe diagnostics for the login page — never includes secret values. */
+export function newsAdminAuthDiagnostics(): string[] {
+  const notes: string[] = [];
+  const emailRaw = process.env.NEWS_ADMIN_EMAIL;
+  if (!emailRaw?.trim()) notes.push("NEWS_ADMIN_EMAIL: não encontrada no deploy");
+  else if (!newsAdminEmail()) {
+    notes.push(
+      `NEWS_ADMIN_EMAIL: valor inválido (len=${emailRaw.trim().length})`,
+    );
+  } else notes.push("NEWS_ADMIN_EMAIL: ok");
+
+  const plainRaw = process.env.NEWS_ADMIN_PASSWORD;
+  if (!plainRaw?.trim()) notes.push("NEWS_ADMIN_PASSWORD: não encontrada");
+  else if (!newsAdminPasswordPlain()) {
+    notes.push(
+      `NEWS_ADMIN_PASSWORD: muito curta (mín. 8, len=${plainRaw.trim().length})`,
+    );
+  } else notes.push("NEWS_ADMIN_PASSWORD: ok");
+
+  const shaRaw = process.env.NEWS_ADMIN_PASSWORD_SHA256;
+  if (!shaRaw?.trim()) notes.push("NEWS_ADMIN_PASSWORD_SHA256: não encontrada");
+  else if (!newsAdminPasswordSha256()) {
+    const cleaned = shaRaw.trim().replace(/\s+/g, "");
+    notes.push(
+      `NEWS_ADMIN_PASSWORD_SHA256: formato inválido (precisa 64 hex; len=${cleaned.length})`,
+    );
+  } else notes.push("NEWS_ADMIN_PASSWORD_SHA256: ok");
+
+  return notes;
+}
+
+export function newsAdminAuthConfigured(): boolean {
+  if (!newsAdminEmail()) return false;
+  if (newsAdminPasswordPlain()) return true;
+  if (newsAdminPasswordSha256()) return true;
+  if (newsAdminCredentials().size > 0) return true;
+  return false;
+}
+
 export function newsSystemReady(): {
   ok: boolean;
   missing: string[];
@@ -137,11 +192,9 @@ export function newsSystemReady(): {
     missing.push("NEWS_SESSION_SECRET (precisa ter pelo menos 32 caracteres)");
   }
 
-  const hasSha = Boolean(newsAdminEmail() && newsAdminPasswordSha256());
-  const hasBcrypt = newsAdminCredentials().size > 0;
-  if (!hasSha && !hasBcrypt) {
+  if (!newsAdminAuthConfigured()) {
     missing.push(
-      "NEWS_ADMIN_EMAIL + NEWS_ADMIN_PASSWORD_SHA256 (rode: npm run news:hash-password)",
+      "NEWS_ADMIN_EMAIL + NEWS_ADMIN_PASSWORD (texto da senha, mais simples)",
     );
   }
 

@@ -2,7 +2,10 @@ import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { NewsLoginClient } from "@/components/admin/NewsLoginClient";
 import { getNewsSession } from "@/lib/news/auth";
-import { newsSystemReady } from "@/lib/news/config";
+import {
+  newsAdminAuthDiagnostics,
+  newsSystemReady,
+} from "@/lib/news/config";
 
 export const metadata: Metadata = {
   title: "Login · News Admin",
@@ -16,6 +19,7 @@ export default async function NewsAdminLoginPage() {
   if (session) redirect("/admin/news");
 
   const ready = newsSystemReady();
+  const diagnostics = newsAdminAuthDiagnostics();
 
   return (
     <main className="min-h-screen bg-white text-black">
@@ -35,13 +39,23 @@ export default async function NewsAdminLoginPage() {
               Sistema ainda não configurado no servidor.
             </p>
             <p className="mt-2 text-amber-900/80">
-              Depois de salvar variáveis na Vercel, faça Redeploy. O runtime só
-              enxerga env do deploy atual.
+              Forma mais simples: na Vercel crie{" "}
+              <code>NEWS_ADMIN_EMAIL</code> e{" "}
+              <code>NEWS_ADMIN_PASSWORD</code> (a senha em texto, marcada
+              Sensitive) → salve → Redeploy.
             </p>
             <ul className="mt-3 list-disc space-y-1 pl-5">
               {ready.missing.map((item) => (
                 <li key={item}>
                   <code className="text-[13px]">{item}</code>
+                </li>
+              ))}
+            </ul>
+            <p className="mt-4 font-medium">O que este deploy enxerga:</p>
+            <ul className="mt-2 list-disc space-y-1 pl-5 text-amber-900/90">
+              {diagnostics.map((item) => (
+                <li key={item}>
+                  <code className="text-[12px]">{item}</code>
                 </li>
               ))}
             </ul>

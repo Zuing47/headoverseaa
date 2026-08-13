@@ -3,8 +3,10 @@ import { createHash } from "node:crypto";
 import { SignJWT, jwtVerify } from "jose";
 import { cookies } from "next/headers";
 import {
+  isAllowedAdminEmail,
   newsAdminCredentials,
   newsAdminEmail,
+  newsAdminPasswordPlain,
   newsAdminPasswordSha256,
   newsSessionSecret,
   newsSiteUrl,
@@ -31,19 +33,27 @@ export async function verifyAdminPassword(
   const normalized = email.trim().toLowerCase();
   if (password.length < 8 || password.length > 200) return false;
 
-  // Preferred: SHA-256 hex in env (no `$`, no Vercel interpolation issues)
   const adminEmail = newsAdminEmail();
+  if (!adminEmail || normalized !== adminEmail) {
+    // burn a bit of time
+    createHash("sha256").update(password, "utf8").digest("hex");
+    return false;
+  }
+
+  // 1) Plain password in env — most reliable on Vercel
+  const plain = newsAdminPasswordPlain();
+  if (plain) {
+    return safeEqual(password, plain);
+  }
+
+  // 2) SHA-256 hex
   const sha = newsAdminPasswordSha256();
-  if (adminEmail && sha) {
-    if (normalized !== adminEmail) {
-      // keep timing roughly similar
-      createHash("sha256").update(password, "utf8").digest("hex");
-      return false;
-    }
+  if (sha) {
     const got = createHash("sha256").update(password, "utf8").digest("hex");
     return safeEqual(got, sha);
   }
 
+  // 3) bcrypt fallback
   const creds = newsAdminCredentials();
   const hash = creds.get(normalized);
   if (!hash) {
@@ -77,8 +87,8 @@ export async function readSessionFromToken(
     if (payload.role !== "news_admin") return null;
     const email = String(payload.sub ?? "");
     if (!email.includes("@")) return null;
-    // Must still be in allowlist (revokes access if removed from env)
-    if (!newsAdminCredentials().has(email)) return null;
+    // Must still be allowlisted (email env or bcrypt map)
+    if (!isAllowedAdminEmail(email)) return null;
     return { email };
   } catch {
     return null;
