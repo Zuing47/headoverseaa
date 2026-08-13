@@ -5,7 +5,6 @@ import { assertSameOrigin, getNewsSession } from "@/lib/news/auth";
 import { newsQueueReady, newsRedisConfigured } from "@/lib/news/config";
 import {
   NEWS_FIELD_MAX,
-  parseLocale,
   sanitizeHttpsUrl,
   slugify,
   stripToPlainText,
@@ -21,7 +20,6 @@ type UpdateBody = {
   summary?: string;
   body?: string;
   category?: string;
-  locale?: string;
   slug?: string;
   sourceName?: string;
   sourceUrl?: string;
@@ -98,7 +96,6 @@ export async function POST(request: Request) {
 
   const category =
     stripToPlainText(body.category, NEWS_FIELD_MAX.category) || "News";
-  const locale = parseLocale(body.locale);
   const slug = body.slug ? slugify(String(body.slug)) : slugify(title);
   const sourceName =
     stripToPlainText(body.sourceName, NEWS_FIELD_MAX.sourceName) || null;
@@ -128,12 +125,12 @@ export async function POST(request: Request) {
   }
 
   try {
+    // Locale is fixed at ingest; approve always publishes PT + EN twin.
     const article = await updateArticle(id, {
       title,
       summary: summary || articleBody.slice(0, 280),
       body: articleBody,
       category,
-      locale,
       slug,
       sourceName,
       ...(sourceUrl !== undefined ? { sourceUrl } : {}),

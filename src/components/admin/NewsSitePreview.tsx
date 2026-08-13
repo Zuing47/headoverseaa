@@ -43,7 +43,7 @@ export function NewsSitePreview({ draft }: { draft: DraftFields }) {
   return (
     <div className="overflow-hidden border border-black/10 bg-white shadow-[0_24px_80px_rgba(0,0,0,0.08)]">
       <div className="border-b border-white/10 bg-black px-5 py-3 text-[11px] uppercase tracking-[0.16em] text-white/45">
-        Pré-visualização · {en ? "/en/insights/…" : "/insights/…"}
+        Pré-visualização · /insights + /en/insights
       </div>
 
       <div className="bg-black text-white">

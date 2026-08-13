@@ -218,7 +218,6 @@ export function NewsQueueClient({ initial }: { initial: NewsQueuePayload }) {
           summary: editorDraft.summary,
           body: editorDraft.body,
           category: editorDraft.category,
-          locale: editorDraft.locale,
           slug: editorDraft.slug,
           sourceName: editorDraft.sourceName,
           sourceUrl: selected.sourceUrl ?? "",
@@ -257,7 +256,9 @@ export function NewsQueueClient({ initial }: { initial: NewsQueuePayload }) {
     }
     if (
       decision === "approve" &&
-      !window.confirm("Aprovar e publicar esta notícia em /insights agora?")
+      !window.confirm(
+        "Aprovar e publicar em /insights e /en/insights? A tradução do outro idioma é automática.",
+      )
     ) {
       return;
     }
@@ -470,7 +471,7 @@ export function NewsQueueClient({ initial }: { initial: NewsQueuePayload }) {
                         {a.title}
                       </p>
                       <p className="mt-1 line-clamp-2 text-[12px] text-black/45">
-                        {a.category} · {a.locale.toUpperCase()}
+                        {a.category} · PT + EN
                       </p>
                     </button>
                     <button
@@ -666,30 +667,18 @@ export function NewsQueueClient({ initial }: { initial: NewsQueuePayload }) {
                       onChange={(e) => patchDraft("title", e.target.value)}
                     />
                   </Field>
-                  <div className="grid gap-5 sm:grid-cols-2">
-                    <Field label="Categoria">
-                      <input
-                        className={inputClass}
-                        value={editorDraft.category}
-                        onChange={(e) => patchDraft("category", e.target.value)}
-                      />
-                    </Field>
-                    <Field label="Idioma">
-                      <select
-                        className={inputClass}
-                        value={editorDraft.locale}
-                        onChange={(e) =>
-                          patchDraft(
-                            "locale",
-                            e.target.value === "en" ? "en" : "pt",
-                          )
-                        }
-                      >
-                        <option value="pt">Português (/insights)</option>
-                        <option value="en">English (/en/insights)</option>
-                      </select>
-                    </Field>
-                  </div>
+                  <p className="text-[12px] leading-relaxed text-black/45">
+                    Publicação padrão:{" "}
+                    <span className="text-black/70">PT + EN</span> (tradução
+                    automática do outro idioma na aprovação).
+                  </p>
+                  <Field label="Categoria">
+                    <input
+                      className={inputClass}
+                      value={editorDraft.category}
+                      onChange={(e) => patchDraft("category", e.target.value)}
+                    />
+                  </Field>
                   <div className="grid gap-5 sm:grid-cols-2">
                     <Field label="Slug (URL)">
                       <input
