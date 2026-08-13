@@ -1,5 +1,9 @@
 import { Redis } from "@upstash/redis";
-import { newsRedisConfigured } from "./config";
+import {
+  newsRedisConfigured,
+  redisRestToken,
+  redisRestUrl,
+} from "./config";
 import type { NewsArticleRecord, NewsStatus } from "./types";
 
 let client: Redis | null = null;
@@ -9,7 +13,10 @@ function redis(): Redis {
     throw new Error("news_store_unavailable");
   }
   if (!client) {
-    client = Redis.fromEnv();
+    const url = redisRestUrl();
+    const token = redisRestToken();
+    if (!url || !token) throw new Error("news_store_unavailable");
+    client = new Redis({ url, token });
   }
   return client;
 }

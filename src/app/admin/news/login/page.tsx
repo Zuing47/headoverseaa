@@ -30,10 +30,22 @@ export default async function NewsAdminLoginPage() {
         </p>
 
         {!ready.ok ? (
-          <p className="mt-10 border border-amber-200 bg-amber-50 px-4 py-3 text-[14px] text-amber-950">
-            Sistema ainda não configurado no servidor. Faltam variáveis de
-            ambiente.
-          </p>
+          <div className="mt-10 max-w-xl border border-amber-200 bg-amber-50 px-4 py-3 text-[14px] text-amber-950">
+            <p className="font-medium">
+              Sistema ainda não configurado no servidor.
+            </p>
+            <p className="mt-2 text-amber-900/80">
+              Depois de salvar variáveis na Vercel, faça Redeploy. O runtime só
+              enxerga env do deploy atual.
+            </p>
+            <ul className="mt-3 list-disc space-y-1 pl-5">
+              {ready.missing.map((item) => (
+                <li key={item}>
+                  <code className="text-[13px]">{item}</code>
+                </li>
+              ))}
+            </ul>
+          </div>
         ) : (
           <div className="mt-12">
             <NewsLoginClient />
