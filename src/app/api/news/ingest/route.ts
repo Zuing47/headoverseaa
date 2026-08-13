@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { clientIp, rateLimit } from "@/lib/form-guard";
 import { ingestAuthorized } from "@/lib/news/auth";
-import { newsIngestKey, newsRedisConfigured, newsSystemReady } from "@/lib/news/config";
+import { newsIngestKey, newsIngestReady, newsRedisConfigured } from "@/lib/news/config";
 import { newNewsId } from "@/lib/news/crypto";
 import {
   NEWS_FIELD_MAX,
@@ -21,10 +21,14 @@ export const runtime = "nodejs";
  * Never publishes. Never returns secrets.
  */
 export async function POST(request: Request) {
-  const ready = newsSystemReady();
+  const ready = newsIngestReady();
   if (!ready.ok || !newsRedisConfigured()) {
     return NextResponse.json(
-      { ok: false, error: "news_system_unconfigured" },
+      {
+        ok: false,
+        error: "news_system_unconfigured",
+        missing: ready.missing,
+      },
       { status: 503 },
     );
   }

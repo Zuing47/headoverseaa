@@ -106,24 +106,30 @@ export function newsSiteUrl(): string {
   ).replace(/\/$/, "");
 }
 
-export function newsSystemReady(): {
+export function newsIngestReady(): {
   ok: boolean;
   missing: string[];
 } {
   const missing: string[] = [];
-
   if (!redisRestUrl()) {
     missing.push("UPSTASH_REDIS_REST_URL (ou KV_REST_API_URL)");
   }
   if (!redisRestToken()) {
     missing.push("UPSTASH_REDIS_REST_TOKEN (ou KV_REST_API_TOKEN)");
   }
-
   const ingest = req("NEWS_INGEST_API_KEY");
   if (!ingest) missing.push("NEWS_INGEST_API_KEY");
   else if (ingest.length < 32) {
     missing.push("NEWS_INGEST_API_KEY (precisa ter pelo menos 32 caracteres)");
   }
+  return { ok: missing.length === 0, missing };
+}
+
+export function newsSystemReady(): {
+  ok: boolean;
+  missing: string[];
+} {
+  const missing: string[] = [...newsIngestReady().missing];
 
   const session = req("NEWS_SESSION_SECRET");
   if (!session) missing.push("NEWS_SESSION_SECRET");
