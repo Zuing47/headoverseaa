@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { getContent } from "@/lib/content";
+import { getPublicInsightBySlug } from "@/lib/news/public";
 import { pageMeta } from "@/lib/seo";
 import { NewsArticlePageView } from "@/components/pages/NewsArticlePageView";
 import {
@@ -15,9 +16,12 @@ export function generateStaticParams() {
   return getContent("pt").insights.items.map((item) => ({ slug: item.slug }));
 }
 
+export const dynamicParams = true;
+export const revalidate = 60;
+
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
-  const item = getContent("pt").insights.items.find((a) => a.slug === slug);
+  const item = await getPublicInsightBySlug("pt", slug);
   if (!item) return {};
 
   return pageMeta({
@@ -34,7 +38,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 export default async function NewsArticlePage({ params }: Props) {
   const { slug } = await params;
   const content = getContent("pt");
-  const article = content.insights.items.find((a) => a.slug === slug);
+  const article = await getPublicInsightBySlug("pt", slug);
   if (!article) notFound();
 
   const path = `/insights/${slug}`;

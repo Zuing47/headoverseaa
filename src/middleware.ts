@@ -2,8 +2,9 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
 /**
- * English is the default locale at `/`.
- * Keep `/en/*` deep links; only `/en` (home) redirects to `/`.
+ * - `/en` home → `/`
+ * - `/admin/news` gets noindex-ish headers + never cache
+ * Admin auth is enforced in page/API handlers (defense in depth).
  */
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
@@ -12,9 +13,26 @@ export function middleware(request: NextRequest) {
     return NextResponse.redirect(new URL("/", request.url), 308);
   }
 
+  if (pathname.startsWith("/admin")) {
+    const res = NextResponse.next();
+    res.headers.set("X-Robots-Tag", "noindex, nofollow, noarchive");
+    res.headers.set("Cache-Control", "no-store, max-age=0");
+    res.headers.set("X-Frame-Options", "DENY");
+    res.headers.set("X-Content-Type-Options", "nosniff");
+    res.headers.set("Referrer-Policy", "no-referrer");
+    return res;
+  }
+
+  if (pathname.startsWith("/api/news")) {
+    const res = NextResponse.next();
+    res.headers.set("Cache-Control", "no-store");
+    res.headers.set("X-Content-Type-Options", "nosniff");
+    return res;
+  }
+
   return NextResponse.next();
 }
 
 export const config = {
-  matcher: ["/en", "/en/"],
+  matcher: ["/en", "/en/", "/admin/:path*", "/api/news/:path*"],
 };

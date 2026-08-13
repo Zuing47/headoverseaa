@@ -1,5 +1,6 @@
 import { InsightsPageView } from "@/components/pages/InsightsPageView";
 import type { Metadata } from "next";
+import { getPublicInsights } from "@/lib/news/public";
 import { pageMeta } from "@/lib/seo";
 
 export const metadata: Metadata = pageMeta({
@@ -19,6 +20,9 @@ export const metadata: Metadata = pageMeta({
   ],
 });
 
-export default function InsightsPage() {
-  return <InsightsPageView locale="pt" />;
+export const revalidate = 60;
+
+export default async function InsightsPage() {
+  const items = await getPublicInsights("pt");
+  return <InsightsPageView locale="pt" items={items} />;
 }

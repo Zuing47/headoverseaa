@@ -1,7 +1,9 @@
 import type { MetadataRoute } from "next";
 import { getContent } from "@/lib/content";
+import { newsRedisConfigured } from "@/lib/news/config";
+import { listPublished } from "@/lib/news/store";
 
-export default function sitemap(): MetadataRoute.Sitemap {
+export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const base = "https://headoversea.com";
   const lastModified = new Date();
 
@@ -9,8 +11,21 @@ export default function sitemap(): MetadataRoute.Sitemap {
     .cases.items.filter((c) => Boolean(c.detail) && c.format !== "brand")
     .map((c) => c.id);
 
-  const insightPt = getContent("pt").insights.items.map((i) => i.slug);
-  const insightEn = getContent("en").insights.items.map((i) => i.slug);
+  const insightPt = new Set(getContent("pt").insights.items.map((i) => i.slug));
+  const insightEn = new Set(getContent("en").insights.items.map((i) => i.slug));
+
+  if (newsRedisConfigured()) {
+    try {
+      const published = await listPublished(100);
+      for (const a of published) {
+        if (a.status !== "published") continue;
+        if (a.locale === "pt") insightPt.add(a.slug);
+        else insightEn.add(a.slug);
+      }
+    } catch {
+      // sitemap still works with static only
+    }
+  }
 
   const routes: {
     path: string;
@@ -29,7 +44,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     })),
     { path: "/insights", priority: 0.8, changeFrequency: "weekly" },
     { path: "/materiais", priority: 0.8, changeFrequency: "monthly" },
-    ...insightPt.map((slug) => ({
+    ...[...insightPt].map((slug) => ({
       path: `/insights/${slug}`,
       priority: 0.7,
       changeFrequency: "monthly" as const,
@@ -52,7 +67,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     })),
     { path: "/en/insights", priority: 0.8, changeFrequency: "weekly" },
     { path: "/en/materials", priority: 0.8, changeFrequency: "monthly" },
-    ...insightEn.map((slug) => ({
+    ...[...insightEn].map((slug) => ({
       path: `/en/insights/${slug}`,
       priority: 0.7,
       changeFrequency: "monthly" as const,

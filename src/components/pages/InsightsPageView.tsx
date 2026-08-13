@@ -6,16 +6,21 @@ import { BackLabel, BackShell } from "@/components/back";
 import { Reveal } from "@/components/home/reveal";
 import { BACK_MEDIA } from "@/lib/back-media";
 import { getContent } from "@/lib/content";
-import type { Locale } from "@/types/content";
+import type { Insight, Locale } from "@/types/content";
 
 interface InsightsPageViewProps {
   locale?: Locale;
+  /** Server-fetched list (static + published). Falls back to static content. */
+  items?: Insight[];
 }
 
-export function InsightsPageView({ locale = "pt" }: InsightsPageViewProps) {
+export function InsightsPageView({
+  locale = "pt",
+  items,
+}: InsightsPageViewProps) {
   const content = getContent(locale);
   const en = locale === "en";
-  const insights = content.insights.items;
+  const insights = items ?? content.insights.items;
   const badge = "Blog";
 
   return (
