@@ -45,35 +45,23 @@ function normalizeBcryptHash(raw: string): string | null {
   return h;
 }
 
+/** Simplest Vercel-safe login: NEWS_ADMIN_EMAIL + NEWS_ADMIN_PASSWORD_SHA256 */
+export function newsAdminEmail(): string | null {
+  const e = req("NEWS_ADMIN_EMAIL")?.toLowerCase();
+  return e?.includes("@") ? e : null;
+}
+
+export function newsAdminPasswordSha256(): string | null {
+  const h = req("NEWS_ADMIN_PASSWORD_SHA256")?.toLowerCase();
+  if (!h || !/^[a-f0-9]{64}$/.test(h)) return null;
+  return h;
+}
+
 /**
- * Preferred (Vercel-safe, no `$`):
- *   NEWS_ADMIN_EMAIL=marketing@headoversea.com
- *   NEWS_ADMIN_PASSWORD_HASH_B64=<base64 do hash bcrypt>
- *
- * Also supported:
- *   NEWS_ADMIN_PASSWORD_HASH (escape $ as $$ in Vercel)
- *   NEWS_ADMIN_CREDENTIALS=email:hash
+ * bcrypt map — B64 wins over legacy vars (avoids corrupted CREDENTIALS overwriting).
  */
 export function newsAdminCredentials(): Map<string, string> {
   const map = new Map<string, string>();
-
-  const singleEmail = req("NEWS_ADMIN_EMAIL")?.toLowerCase();
-  const b64 = req("NEWS_ADMIN_PASSWORD_HASH_B64");
-  if (singleEmail?.includes("@") && b64) {
-    try {
-      const decoded = Buffer.from(b64, "base64").toString("utf8");
-      const hash = normalizeBcryptHash(decoded);
-      if (hash) map.set(singleEmail, hash);
-    } catch {
-      // ignore invalid base64
-    }
-  }
-
-  const singleHash = req("NEWS_ADMIN_PASSWORD_HASH");
-  if (singleEmail?.includes("@") && singleHash) {
-    const hash = normalizeBcryptHash(singleHash);
-    if (hash) map.set(singleEmail, hash);
-  }
 
   const raw = req("NEWS_ADMIN_CREDENTIALS");
   if (raw) {
@@ -84,6 +72,26 @@ export function newsAdminCredentials(): Map<string, string> {
       const hash = normalizeBcryptHash(part.slice(idx + 1));
       if (!email.includes("@") || !hash) continue;
       map.set(email, hash);
+    }
+  }
+
+  const singleEmail = newsAdminEmail();
+  const singleHash = req("NEWS_ADMIN_PASSWORD_HASH");
+  if (singleEmail && singleHash) {
+    const hash = normalizeBcryptHash(singleHash);
+    if (hash) map.set(singleEmail, hash);
+  }
+
+  const b64 = req("NEWS_ADMIN_PASSWORD_HASH_B64");
+  if (singleEmail && b64) {
+    try {
+      const decoded = Buffer.from(b64.replace(/\s/g, ""), "base64").toString(
+        "utf8",
+      );
+      const hash = normalizeBcryptHash(decoded);
+      if (hash) map.set(singleEmail, hash);
+    } catch {
+      // ignore
     }
   }
 
@@ -123,9 +131,11 @@ export function newsSystemReady(): {
     missing.push("NEWS_SESSION_SECRET (precisa ter pelo menos 32 caracteres)");
   }
 
-  if (newsAdminCredentials().size === 0) {
+  const hasSha = Boolean(newsAdminEmail() && newsAdminPasswordSha256());
+  const hasBcrypt = newsAdminCredentials().size > 0;
+  if (!hasSha && !hasBcrypt) {
     missing.push(
-      "NEWS_ADMIN_EMAIL + NEWS_ADMIN_PASSWORD_HASH_B64 (rode: npm run news:hash-password)",
+      "NEWS_ADMIN_EMAIL + NEWS_ADMIN_PASSWORD_SHA256 (rode: npm run news:hash-password)",
     );
   }
 

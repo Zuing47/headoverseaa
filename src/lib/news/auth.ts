@@ -1,8 +1,11 @@
 import bcrypt from "bcryptjs";
+import { createHash } from "node:crypto";
 import { SignJWT, jwtVerify } from "jose";
 import { cookies } from "next/headers";
 import {
   newsAdminCredentials,
+  newsAdminEmail,
+  newsAdminPasswordSha256,
   newsSessionSecret,
   newsSiteUrl,
 } from "./config";
@@ -25,18 +28,31 @@ export async function verifyAdminPassword(
   email: string,
   password: string,
 ): Promise<boolean> {
-  const creds = newsAdminCredentials();
   const normalized = email.trim().toLowerCase();
+  if (password.length < 8 || password.length > 200) return false;
+
+  // Preferred: SHA-256 hex in env (no `$`, no Vercel interpolation issues)
+  const adminEmail = newsAdminEmail();
+  const sha = newsAdminPasswordSha256();
+  if (adminEmail && sha) {
+    if (normalized !== adminEmail) {
+      // keep timing roughly similar
+      createHash("sha256").update(password, "utf8").digest("hex");
+      return false;
+    }
+    const got = createHash("sha256").update(password, "utf8").digest("hex");
+    return safeEqual(got, sha);
+  }
+
+  const creds = newsAdminCredentials();
   const hash = creds.get(normalized);
   if (!hash) {
-    // Dummy compare to reduce user-enumeration timing skew
     await bcrypt.compare(
       password,
       "$2b$12$KlRzJoue5aMSj1zz/p7bw.0g62uYRy6sCT4gzj53zeJlnvyZqQSI6",
     );
     return false;
   }
-  if (password.length < 10 || password.length > 200) return false;
   return bcrypt.compare(password, hash);
 }
 
@@ -100,14 +116,20 @@ export function clearSessionCookieOptions() {
 
 /** CSRF defense for cookie-authenticated mutations. */
 export function assertSameOrigin(request: Request): boolean {
-  const site = newsSiteUrl();
   const origin = request.headers.get("origin");
+  const reqUrl = new URL(request.url);
+
   if (origin) {
     try {
       const o = new URL(origin);
+      // Primary: Origin must match the host serving this API
+      if (o.protocol === reqUrl.protocol && o.host === reqUrl.host) {
+        return true;
+      }
+      // Also allow configured public site URL (www / apex mismatch edge cases)
+      const site = newsSiteUrl();
       const s = new URL(site);
       if (o.protocol === s.protocol && o.host === s.host) return true;
-      // Local dev
       if (
         process.env.NODE_ENV !== "production" &&
         (o.hostname === "localhost" || o.hostname === "127.0.0.1")
@@ -119,8 +141,7 @@ export function assertSameOrigin(request: Request): boolean {
     }
     return false;
   }
-  // Some browsers omit Origin on same-origin GET; for POST prefer Origin.
-  // Fallback: Sec-Fetch-Site
+
   const fetchSite = request.headers.get("sec-fetch-site");
   if (fetchSite === "same-origin") return true;
   if (process.env.NODE_ENV !== "production" && !origin) return true;

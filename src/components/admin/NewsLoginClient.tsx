@@ -28,7 +28,9 @@ export function NewsLoginClient() {
             ? "Muitas tentativas. Aguarde alguns minutos."
             : data.error === "news_system_unconfigured"
               ? "Sistema de news ainda não configurado no servidor."
-              : "Credenciais inválidas.",
+              : data.error === "forbidden"
+                ? "Bloqueado por segurança (origem). Confira NEWS_SITE_URL e tente em headoversea.com."
+                : "Credenciais inválidas. Use a SENHA em texto, não o hash.",
         );
         return;
       }
@@ -66,7 +68,7 @@ export function NewsLoginClient() {
           type="password"
           autoComplete="current-password"
           required
-          minLength={10}
+          minLength={8}
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           className="mt-2 w-full border border-black/15 bg-white px-4 py-3 text-[15px] outline-none focus:border-black"
