@@ -46,13 +46,29 @@ function normalizeBcryptHash(raw: string): string | null {
 }
 
 /**
- * Preferred (avoids `$` issues): NEWS_ADMIN_EMAIL + NEWS_ADMIN_PASSWORD_HASH
- * Or: NEWS_ADMIN_CREDENTIALS=email:$2b$12$... (escape $ as $$ in Vercel)
+ * Preferred (Vercel-safe, no `$`):
+ *   NEWS_ADMIN_EMAIL=marketing@headoversea.com
+ *   NEWS_ADMIN_PASSWORD_HASH_B64=<base64 do hash bcrypt>
+ *
+ * Also supported:
+ *   NEWS_ADMIN_PASSWORD_HASH (escape $ as $$ in Vercel)
+ *   NEWS_ADMIN_CREDENTIALS=email:hash
  */
 export function newsAdminCredentials(): Map<string, string> {
   const map = new Map<string, string>();
 
   const singleEmail = req("NEWS_ADMIN_EMAIL")?.toLowerCase();
+  const b64 = req("NEWS_ADMIN_PASSWORD_HASH_B64");
+  if (singleEmail?.includes("@") && b64) {
+    try {
+      const decoded = Buffer.from(b64, "base64").toString("utf8");
+      const hash = normalizeBcryptHash(decoded);
+      if (hash) map.set(singleEmail, hash);
+    } catch {
+      // ignore invalid base64
+    }
+  }
+
   const singleHash = req("NEWS_ADMIN_PASSWORD_HASH");
   if (singleEmail?.includes("@") && singleHash) {
     const hash = normalizeBcryptHash(singleHash);
@@ -109,7 +125,7 @@ export function newsSystemReady(): {
 
   if (newsAdminCredentials().size === 0) {
     missing.push(
-      "NEWS_ADMIN_CREDENTIALS inválido — use NEWS_ADMIN_EMAIL + NEWS_ADMIN_PASSWORD_HASH (recomendado)",
+      "NEWS_ADMIN_EMAIL + NEWS_ADMIN_PASSWORD_HASH_B64 (rode: npm run news:hash-password)",
     );
   }
 
