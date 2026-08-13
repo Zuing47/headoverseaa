@@ -21,10 +21,36 @@ export default async function NewsAdminPage() {
     return (
       <main className="min-h-screen bg-white text-black">
         <div className="page-shell py-16 md:py-20">
-          <p className="text-[15px] text-red-700">
-            Não foi possível carregar a fila ({queue.error}). Verifique Redis e
-            as variáveis de ambiente.
+          <p className="text-[15px] font-medium text-red-700">
+            Não foi possível carregar a fila ({queue.error}).
           </p>
+          <p className="mt-2 max-w-xl text-[14px] text-black/60">
+            A fila vive no Redis (Upstash). Confira as variáveis na Vercel
+            (Production) e faça Redeploy.
+          </p>
+          {queue.missing?.length ? (
+            <ul className="mt-4 list-disc space-y-1 pl-5 text-[13px] text-red-800">
+              {queue.missing.map((m) => (
+                <li key={m}>
+                  <code>{m}</code>
+                </li>
+              ))}
+            </ul>
+          ) : null}
+          {queue.diagnostics?.length ? (
+            <>
+              <p className="mt-6 text-[13px] font-medium text-black/70">
+                Diagnóstico deste deploy:
+              </p>
+              <ul className="mt-2 list-disc space-y-1 pl-5 text-[12px] text-black/55">
+                {queue.diagnostics.map((d) => (
+                  <li key={d}>
+                    <code>{d}</code>
+                  </li>
+                ))}
+              </ul>
+            </>
+          ) : null}
         </div>
       </main>
     );

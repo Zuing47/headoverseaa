@@ -6,7 +6,7 @@ import {
   sessionCookieOptions,
   verifyAdminPassword,
 } from "@/lib/news/auth";
-import { newsSystemReady } from "@/lib/news/config";
+import { newsLoginReady } from "@/lib/news/config";
 
 export const runtime = "nodejs";
 
@@ -20,10 +20,10 @@ type LoginBody = {
  * Generic errors only (no user enumeration).
  */
 export async function POST(request: Request) {
-  const ready = newsSystemReady();
+  const ready = newsLoginReady();
   if (!ready.ok) {
     return NextResponse.json(
-      { ok: false, error: "news_system_unconfigured" },
+      { ok: false, error: "news_system_unconfigured", missing: ready.missing },
       { status: 503 },
     );
   }

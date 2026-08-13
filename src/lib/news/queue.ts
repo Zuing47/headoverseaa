@@ -1,17 +1,27 @@
-import type { NewsArticleRecord, NewsQueuePayload } from "@/lib/news/types";
+import type { NewsQueuePayload } from "@/lib/news/types";
 import { getNewsSession } from "@/lib/news/auth";
-import { newsRedisConfigured, newsSystemReady } from "@/lib/news/config";
+import {
+  newsQueueReady,
+  newsRedisConfigured,
+  newsRedisDiagnostics,
+} from "@/lib/news/config";
 import { listByStatus } from "@/lib/news/store";
 
 export type { NewsQueuePayload };
 
 export async function loadNewsQueueForSession(): Promise<
   | { ok: true; data: NewsQueuePayload }
-  | { ok: false; status: number; error: string }
+  | { ok: false; status: number; error: string; missing?: string[]; diagnostics?: string[] }
 > {
-  const ready = newsSystemReady();
+  const ready = newsQueueReady();
   if (!ready.ok || !newsRedisConfigured()) {
-    return { ok: false, status: 503, error: "news_system_unconfigured" };
+    return {
+      ok: false,
+      status: 503,
+      error: "news_system_unconfigured",
+      missing: ready.missing,
+      diagnostics: newsRedisDiagnostics(),
+    };
   }
 
   const session = await getNewsSession();
@@ -35,6 +45,14 @@ export async function loadNewsQueueForSession(): Promise<
       },
     };
   } catch {
-    return { ok: false, status: 503, error: "store_error" };
+    return {
+      ok: false,
+      status: 503,
+      error: "store_error",
+      diagnostics: [
+        ...newsRedisDiagnostics(),
+        "Falha ao falar com o Redis — confira URL/TOKEN e se o banco Upstash está ativo.",
+      ],
+    };
   }
 }

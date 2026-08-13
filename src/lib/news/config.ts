@@ -141,6 +141,52 @@ export function newsIngestReady(): {
   return { ok: missing.length === 0, missing };
 }
 
+/** Admin queue / approve / reject — only needs Redis (auth is session cookie). */
+export function newsQueueReady(): {
+  ok: boolean;
+  missing: string[];
+} {
+  const missing: string[] = [];
+  if (!redisRestUrl()) {
+    missing.push("UPSTASH_REDIS_REST_URL (ou KV_REST_API_URL)");
+  }
+  if (!redisRestToken()) {
+    missing.push("UPSTASH_REDIS_REST_TOKEN (ou KV_REST_API_TOKEN)");
+  }
+  return { ok: missing.length === 0, missing };
+}
+
+/** Safe Redis diagnostics — no secret values. */
+export function newsRedisDiagnostics(): string[] {
+  const notes: string[] = [];
+  const url =
+    process.env.UPSTASH_REDIS_REST_URL?.trim() ||
+    process.env.KV_REST_API_URL?.trim();
+  const token =
+    process.env.UPSTASH_REDIS_REST_TOKEN?.trim() ||
+    process.env.KV_REST_API_TOKEN?.trim();
+
+  if (!process.env.UPSTASH_REDIS_REST_URL?.trim() && !process.env.KV_REST_API_URL?.trim()) {
+    notes.push("Redis URL: não encontrada (UPSTASH_REDIS_REST_URL ou KV_REST_API_URL)");
+  } else if (!url) {
+    notes.push("Redis URL: vazia");
+  } else if (!url.startsWith("https://")) {
+    notes.push("Redis URL: deve começar com https://");
+  } else {
+    notes.push("Redis URL: ok");
+  }
+
+  if (!process.env.UPSTASH_REDIS_REST_TOKEN?.trim() && !process.env.KV_REST_API_TOKEN?.trim()) {
+    notes.push("Redis TOKEN: não encontrado (UPSTASH_REDIS_REST_TOKEN ou KV_REST_API_TOKEN)");
+  } else if (!token) {
+    notes.push("Redis TOKEN: vazio");
+  } else {
+    notes.push(`Redis TOKEN: ok (len=${token.length})`);
+  }
+
+  return notes;
+}
+
 /** Safe diagnostics for the login page — never includes secret values. */
 export function newsAdminAuthDiagnostics(): string[] {
   const notes: string[] = [];
@@ -180,23 +226,32 @@ export function newsAdminAuthConfigured(): boolean {
   return false;
 }
 
-export function newsSystemReady(): {
+export function newsLoginReady(): {
   ok: boolean;
   missing: string[];
 } {
-  const missing: string[] = [...newsIngestReady().missing];
-
+  const missing: string[] = [];
   const session = req("NEWS_SESSION_SECRET");
   if (!session) missing.push("NEWS_SESSION_SECRET");
   else if (session.length < 32) {
     missing.push("NEWS_SESSION_SECRET (precisa ter pelo menos 32 caracteres)");
   }
-
   if (!newsAdminAuthConfigured()) {
     missing.push(
       "NEWS_ADMIN_EMAIL + NEWS_ADMIN_PASSWORD (texto da senha, mais simples)",
     );
   }
-
   return { ok: missing.length === 0, missing };
+}
+
+export function newsSystemReady(): {
+  ok: boolean;
+  missing: string[];
+} {
+  const missing = [
+    ...newsIngestReady().missing,
+    ...newsLoginReady().missing,
+  ];
+  // unique
+  return { ok: missing.length === 0, missing: [...new Set(missing)] };
 }

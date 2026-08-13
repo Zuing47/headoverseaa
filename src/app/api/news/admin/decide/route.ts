@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { rateLimit } from "@/lib/form-guard";
 import { assertSameOrigin, getNewsSession } from "@/lib/news/auth";
-import { newsRedisConfigured, newsSystemReady } from "@/lib/news/config";
+import { newsQueueReady, newsRedisConfigured } from "@/lib/news/config";
 import { NEWS_FIELD_MAX, stripToPlainText } from "@/lib/news/sanitize";
 import { decideArticle } from "@/lib/news/store";
 
@@ -18,10 +18,10 @@ type DecideBody = {
  * Approve → appears on /insights. Reject → never public.
  */
 export async function POST(request: Request) {
-  const ready = newsSystemReady();
+  const ready = newsQueueReady();
   if (!ready.ok || !newsRedisConfigured()) {
     return NextResponse.json(
-      { ok: false, error: "news_system_unconfigured" },
+      { ok: false, error: "news_system_unconfigured", missing: ready.missing },
       { status: 503 },
     );
   }

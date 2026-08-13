@@ -4,7 +4,7 @@ import { NewsLoginClient } from "@/components/admin/NewsLoginClient";
 import { getNewsSession } from "@/lib/news/auth";
 import {
   newsAdminAuthDiagnostics,
-  newsSystemReady,
+  newsLoginReady,
 } from "@/lib/news/config";
 
 export const metadata: Metadata = {
@@ -18,7 +18,7 @@ export default async function NewsAdminLoginPage() {
   const session = await getNewsSession();
   if (session) redirect("/admin/news");
 
-  const ready = newsSystemReady();
+  const ready = newsLoginReady();
   const diagnostics = newsAdminAuthDiagnostics();
 
   return (

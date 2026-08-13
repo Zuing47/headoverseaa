@@ -8,7 +8,12 @@ export async function GET() {
   const result = await loadNewsQueueForSession();
   if (!result.ok) {
     return NextResponse.json(
-      { ok: false, error: result.error },
+      {
+        ok: false,
+        error: result.error,
+        missing: result.missing,
+        diagnostics: result.diagnostics,
+      },
       { status: result.status },
     );
   }
