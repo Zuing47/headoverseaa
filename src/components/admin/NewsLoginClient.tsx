@@ -25,12 +25,11 @@ export function NewsLoginClient() {
       if (!res.ok || !data.ok) {
         setError(
           data.error === "rate_limited"
-            ? "Muitas tentativas. Aguarde alguns minutos."
-            : data.error === "news_system_unconfigured"
-              ? "Sistema de news ainda não configurado no servidor."
-              : data.error === "forbidden"
-                ? "Bloqueado por segurança (origem). Confira NEWS_SITE_URL e tente em headoversea.com."
-                : "Credenciais inválidas. Use a SENHA em texto, não o hash.",
+            ? "Muitas tentativas. Tente mais tarde."
+            : data.error === "news_system_unconfigured" ||
+                data.error === "forbidden"
+              ? "Acesso temporariamente indisponível."
+              : "E-mail ou senha incorretos.",
         );
         return;
       }
