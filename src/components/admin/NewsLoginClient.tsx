@@ -5,7 +5,7 @@ import { FormEvent, useState } from "react";
 
 export function NewsLoginClient() {
   const router = useRouter();
-  const [email, setEmail] = useState("marketing@headoversea.com");
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);

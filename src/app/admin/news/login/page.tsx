@@ -45,9 +45,6 @@ export default async function NewsAdminLoginPage() {
           </div>
         ) : (
           <div className="mt-12">
-            <p className="mb-6 text-[13px] text-black/45">
-              E-mail: <code>marketing@headoversea.com</code>
-            </p>
             <NewsLoginClient />
           </div>
         )}
