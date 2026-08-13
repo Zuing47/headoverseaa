@@ -143,3 +143,63 @@ export async function decideArticle(opts: {
 
   return next;
 }
+
+export type NewsPendingPatch = {
+  title?: string;
+  summary?: string;
+  body?: string;
+  category?: string;
+  locale?: NewsArticleRecord["locale"];
+  slug?: string;
+  sourceName?: string | null;
+  sourceUrl?: string | null;
+  imageUrl?: string | null;
+};
+
+/** Update fields on a pending article only. */
+export async function updatePendingArticle(
+  id: string,
+  patch: NewsPendingPatch,
+): Promise<NewsArticleRecord | null> {
+  const current = await getArticleById(id);
+  if (!current || current.status !== "pending") return null;
+
+  const now = new Date().toISOString();
+  const nextLocale = patch.locale ?? current.locale;
+  let nextSlug = patch.slug ?? current.slug;
+
+  if (current.locale !== nextLocale || current.slug !== nextSlug) {
+    const taken = await redis().get<string>(KEYS.slug(nextLocale, nextSlug));
+    if (taken && taken !== current.id) {
+      nextSlug = `${nextSlug}-${current.id.slice(0, 8)}`;
+    }
+  }
+
+  const next: NewsArticleRecord = {
+    ...current,
+    title: patch.title ?? current.title,
+    summary: patch.summary ?? current.summary,
+    body: patch.body ?? current.body,
+    category: patch.category ?? current.category,
+    locale: nextLocale,
+    slug: nextSlug,
+    sourceName:
+      patch.sourceName !== undefined ? patch.sourceName : current.sourceName,
+    sourceUrl:
+      patch.sourceUrl !== undefined ? patch.sourceUrl : current.sourceUrl,
+    imageUrl: patch.imageUrl !== undefined ? patch.imageUrl : current.imageUrl,
+    updatedAt: now,
+  };
+
+  const r = redis();
+  const pipe = r.pipeline();
+  pipe.set(KEYS.article(next.id), next);
+
+  if (current.locale !== next.locale || current.slug !== next.slug) {
+    pipe.del(KEYS.slug(current.locale, current.slug));
+    pipe.set(KEYS.slug(next.locale, next.slug), next.id);
+  }
+
+  await pipe.exec();
+  return next;
+}

@@ -71,15 +71,26 @@ export function BackHero({
           className="aspect-[5/4] w-full min-h-[200px] bg-[#0a0a0a] sm:aspect-[16/10] sm:min-h-0 md:aspect-[21/9] lg:aspect-[22/9]"
           immediate
         >
-          <Image
-            src={image}
-            alt={imageAlt}
-            fill
-            priority
-            sizes="100vw"
-            className="object-cover object-center"
-            quality={92}
-          />
+          {image.startsWith("https://") ? (
+            // Remote editorial images (marketing-approved) — avoid Next optimizer SSRF surface
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={image}
+              alt={imageAlt}
+              className="absolute inset-0 h-full w-full object-cover object-center"
+              referrerPolicy="no-referrer"
+            />
+          ) : (
+            <Image
+              src={image}
+              alt={imageAlt}
+              fill
+              priority
+              sizes="100vw"
+              className="object-cover object-center"
+              quality={92}
+            />
+          )}
         </ImageReveal>
       ) : null}
     </header>

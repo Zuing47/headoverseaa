@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { revalidatePath } from "next/cache";
 import { rateLimit } from "@/lib/form-guard";
 import { assertSameOrigin, getNewsSession } from "@/lib/news/auth";
 import { newsQueueReady, newsRedisConfigured } from "@/lib/news/config";
@@ -15,7 +16,7 @@ type DecideBody = {
 
 /**
  * Approve or reject a pending article.
- * Approve → appears on /insights. Reject → never public.
+ * Approve → appears on /insights (and /en/insights). Reject → never public.
  */
 export async function POST(request: Request) {
   const ready = newsQueueReady();
@@ -76,11 +77,25 @@ export async function POST(request: Request) {
     if (!article) {
       return NextResponse.json({ ok: false, error: "not_found_or_not_pending" }, { status: 404 });
     }
+
+    if (decision === "approve") {
+      revalidatePath("/insights");
+      revalidatePath("/en/insights");
+      revalidatePath(`/insights/${article.slug}`);
+      revalidatePath(`/en/insights/${article.slug}`);
+      revalidatePath("/");
+      revalidatePath("/pt");
+    }
+
     return NextResponse.json({
       ok: true,
       id: article.id,
       status: article.status,
       slug: article.slug,
+      href:
+        article.locale === "en"
+          ? `/en/insights/${article.slug}`
+          : `/insights/${article.slug}`,
     });
   } catch {
     return NextResponse.json({ ok: false, error: "store_error" }, { status: 503 });

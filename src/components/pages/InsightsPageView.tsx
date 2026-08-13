@@ -60,15 +60,25 @@ export function InsightsPageView({
               <Reveal key={item.slug ?? item.title} delay={i * 0.05} variant="fadeUp">
                 <Link href={item.href} className="group block">
                   <div className="relative aspect-[16/10] overflow-hidden rounded-xl bg-black/[0.04]">
-                    <Image
-                      src={item.image || BACK_MEDIA.pexelsField}
-                      alt={item.title}
-                      fill
-                      sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
-                      className="object-cover transition-transform duration-700 ease-out group-hover:scale-[1.03]"
-                      quality={88}
-                      priority={i < 4}
-                    />
+                    {(item.image || BACK_MEDIA.pexelsField).startsWith("https://") ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img
+                        src={item.image || BACK_MEDIA.pexelsField}
+                        alt={item.title}
+                        className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 ease-out group-hover:scale-[1.03]"
+                        referrerPolicy="no-referrer"
+                      />
+                    ) : (
+                      <Image
+                        src={item.image || BACK_MEDIA.pexelsField}
+                        alt={item.title}
+                        fill
+                        sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
+                        className="object-cover transition-transform duration-700 ease-out group-hover:scale-[1.03]"
+                        quality={88}
+                        priority={i < 4}
+                      />
+                    )}
                   </div>
                   <div className="mt-4 flex items-center gap-2.5">
                     <span className="rounded-md bg-black/[0.06] px-2.5 py-1 text-[11px] font-medium tracking-wide text-black/50">
