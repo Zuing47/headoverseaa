@@ -59,6 +59,7 @@ export function draftInsightFromRecord(
     id: "preview",
     status: "pending",
     sourceUrl: null,
+    pairId: null,
     externalId: null,
     updatedAt: article.createdAt,
     publishedAt: article.publishedAt,

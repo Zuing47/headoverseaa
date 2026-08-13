@@ -12,12 +12,8 @@ import { BreadcrumbJsonLd } from "@/components/seo/BreadcrumbJsonLd";
 
 type Props = { params: Promise<{ slug: string }> };
 
-export function generateStaticParams() {
-  return getContent("pt").insights.items.map((item) => ({ slug: item.slug }));
-}
-
+export const dynamic = "force-dynamic";
 export const dynamicParams = true;
-export const revalidate = 60;
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;

@@ -4,6 +4,7 @@ import {
   redisRestToken,
   redisRestUrl,
 } from "./config";
+import { newNewsId } from "./crypto";
 import type { NewsArticleRecord, NewsStatus } from "./types";
 
 let client: Redis | null = null;
@@ -26,13 +27,15 @@ const KEYS = {
   byStatus: (status: NewsStatus) => `news:status:${status}`,
   slug: (locale: string, slug: string) => `news:slug:${locale}:${slug}`,
   external: (externalId: string) => `news:ext:${externalId}`,
+  pair: (pairId: string) => `news:pair:${pairId}`,
 } as const;
 
 export async function getArticleById(
   id: string,
 ): Promise<NewsArticleRecord | null> {
   const raw = await redis().get<NewsArticleRecord>(KEYS.article(id));
-  return raw ?? null;
+  if (!raw || typeof raw !== "object") return null;
+  return { ...raw, pairId: raw.pairId ?? null };
 }
 
 export async function getArticleBySlug(
@@ -68,7 +71,8 @@ export async function listByStatus(
   const out: NewsArticleRecord[] = [];
   for (const row of rows) {
     if (row && typeof row === "object") {
-      out.push(row as NewsArticleRecord);
+      const a = row as NewsArticleRecord;
+      out.push({ ...a, pairId: a.pairId ?? null });
     }
   }
   return out;
@@ -123,8 +127,10 @@ export async function decideArticle(opts: {
   if (!current || current.status !== "pending") return null;
 
   const now = new Date().toISOString();
+  const pairId = current.pairId || current.id;
   const next: NewsArticleRecord = {
     ...current,
+    pairId,
     status: opts.decision === "approve" ? "published" : "rejected",
     updatedAt: now,
     publishedAt: opts.decision === "approve" ? now : null,
@@ -139,9 +145,82 @@ export async function decideArticle(opts: {
   pipe.set(KEYS.article(next.id), next);
   pipe.zrem(KEYS.byStatus("pending"), next.id);
   pipe.zadd(KEYS.byStatus(next.status), { score, member: next.id });
+  if (opts.decision === "approve") {
+    pipe.sadd(KEYS.pair(pairId), next.id);
+  }
   await pipe.exec();
 
   return next;
+}
+
+/** Create or refresh the opposite-locale twin when approving. */
+export async function publishLocaleTwin(opts: {
+  source: NewsArticleRecord;
+  locale: NewsArticleRecord["locale"];
+  title: string;
+  summary: string;
+  body: string;
+  category: string;
+  slug: string;
+  decidedBy: string;
+}): Promise<NewsArticleRecord> {
+  const pairId = opts.source.pairId || opts.source.id;
+  const r = redis();
+  const twinExt = opts.source.externalId
+    ? `${opts.source.externalId}:${opts.locale}`
+    : `pair:${pairId}:${opts.locale}`;
+
+  const existingId = await r.get<string>(KEYS.external(twinExt));
+  const existing = existingId ? await getArticleById(existingId) : null;
+
+  const now = new Date().toISOString();
+  let slug = opts.slug;
+  const taken = await r.get<string>(KEYS.slug(opts.locale, slug));
+  const id = existing?.id || newNewsId();
+  if (taken && taken !== id) {
+    slug = `${slug}-${id.slice(0, 8)}`;
+  }
+
+  const twin: NewsArticleRecord = {
+    id,
+    status: "published",
+    locale: opts.locale,
+    slug,
+    title: opts.title,
+    summary: opts.summary,
+    body: opts.body,
+    category: opts.category,
+    sourceUrl: opts.source.sourceUrl,
+    sourceName: opts.source.sourceName,
+    imageUrl: opts.source.imageUrl,
+    pairId,
+    externalId: twinExt,
+    createdAt: existing?.createdAt || opts.source.createdAt,
+    updatedAt: now,
+    publishedAt: now,
+    decidedBy: opts.decidedBy,
+    rejectReason: null,
+  };
+
+  const score = Date.parse(twin.createdAt) || Date.now();
+  const pipe = r.pipeline();
+  if (existing && existing.status !== "published") {
+    pipe.zrem(KEYS.byStatus(existing.status), existing.id);
+  }
+  if (existing && (existing.locale !== twin.locale || existing.slug !== twin.slug)) {
+    pipe.del(KEYS.slug(existing.locale, existing.slug));
+  }
+  pipe.set(KEYS.article(twin.id), twin);
+  pipe.zadd(KEYS.byStatus("published"), { score, member: twin.id });
+  pipe.set(KEYS.slug(twin.locale, twin.slug), twin.id);
+  pipe.set(KEYS.external(twinExt), twin.id);
+  pipe.sadd(KEYS.pair(pairId), twin.id);
+  // ensure source also has pairId
+  if (!opts.source.pairId) {
+    pipe.set(KEYS.article(opts.source.id), { ...opts.source, pairId });
+  }
+  await pipe.exec();
+  return twin;
 }
 
 export type NewsArticlePatch = {
@@ -231,6 +310,9 @@ export async function deleteArticle(id: string): Promise<NewsArticleRecord | nul
   pipe.del(KEYS.slug(current.locale, current.slug));
   if (current.externalId) {
     pipe.del(KEYS.external(current.externalId));
+  }
+  if (current.pairId) {
+    pipe.srem(KEYS.pair(current.pairId), current.id);
   }
   await pipe.exec();
   return current;

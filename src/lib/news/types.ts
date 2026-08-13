@@ -15,6 +15,8 @@ export type NewsArticleRecord = {
   sourceUrl: string | null;
   sourceName: string | null;
   imageUrl: string | null;
+  /** Links PT/EN twins created on approve */
+  pairId: string | null;
   /** RSS / n8n dedupe key */
   externalId: string | null;
   createdAt: string;

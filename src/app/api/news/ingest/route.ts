@@ -116,6 +116,7 @@ export async function POST(request: Request) {
     sourceUrl,
     sourceName,
     imageUrl,
+    pairId: null,
     externalId,
     createdAt: now,
     updatedAt: now,

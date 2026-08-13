@@ -3,27 +3,29 @@ import { getContent } from "@/lib/content";
 import { newsRedisConfigured } from "./config";
 import { recordToInsight } from "./map";
 import { getArticleBySlug, listPublished } from "./store";
+import type { NewsArticleRecord } from "./types";
 
 export { recordToInsight } from "./map";
 
-/** Public listing: static editorial pieces first, then approved dynamic news. */
+function publishedSortKey(a: NewsArticleRecord) {
+  return Date.parse(a.publishedAt || a.updatedAt || a.createdAt) || 0;
+}
+
+/** Public listing: newest published first (featured), then older static pieces. */
 export async function getPublicInsights(locale: Locale): Promise<Insight[]> {
   const staticItems = getContent(locale).insights.items;
   if (!newsRedisConfigured()) return staticItems;
 
   try {
-    const published = await listPublished(80);
-    const dynamic = published
+    const published = await listPublished(100);
+    const dynamicRecords = published
       .filter((a) => a.locale === locale && a.status === "published")
-      .map(recordToInsight);
-    const seen = new Set(staticItems.map((i) => i.slug));
-    const merged = [...staticItems];
-    for (const item of dynamic) {
-      if (seen.has(item.slug)) continue;
-      seen.add(item.slug);
-      merged.push(item);
-    }
-    return merged;
+      .sort((a, b) => publishedSortKey(b) - publishedSortKey(a));
+
+    const dynamic = dynamicRecords.map(recordToInsight);
+    const seen = new Set(dynamic.map((i) => i.slug));
+    const staticRest = staticItems.filter((i) => !seen.has(i.slug));
+    return [...dynamic, ...staticRest];
   } catch {
     return staticItems;
   }

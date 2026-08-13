@@ -3,8 +3,9 @@ import { revalidatePath } from "next/cache";
 import { rateLimit } from "@/lib/form-guard";
 import { assertSameOrigin, getNewsSession } from "@/lib/news/auth";
 import { newsQueueReady, newsRedisConfigured } from "@/lib/news/config";
-import { NEWS_FIELD_MAX, stripToPlainText } from "@/lib/news/sanitize";
-import { decideArticle } from "@/lib/news/store";
+import { NEWS_FIELD_MAX, slugify, stripToPlainText } from "@/lib/news/sanitize";
+import { decideArticle, publishLocaleTwin } from "@/lib/news/store";
+import { translateNewsFields } from "@/lib/news/translate";
 
 export const runtime = "nodejs";
 
@@ -14,9 +15,18 @@ type DecideBody = {
   rejectReason?: string;
 };
 
+function revalidateNews(slugPt?: string, slugEn?: string) {
+  revalidatePath("/insights");
+  revalidatePath("/en/insights");
+  revalidatePath("/");
+  revalidatePath("/pt");
+  if (slugPt) revalidatePath(`/insights/${slugPt}`);
+  if (slugEn) revalidatePath(`/en/insights/${slugEn}`);
+}
+
 /**
  * Approve or reject a pending article.
- * Approve → appears on /insights (and /en/insights). Reject → never public.
+ * Approve → publishes source locale + automatic twin in the other language.
  */
 export async function POST(request: Request) {
   const ready = newsQueueReady();
@@ -78,13 +88,48 @@ export async function POST(request: Request) {
       return NextResponse.json({ ok: false, error: "not_found_or_not_pending" }, { status: 404 });
     }
 
+    let twinSlug: string | undefined;
     if (decision === "approve") {
+      const otherLocale = article.locale === "pt" ? "en" : "pt";
+      try {
+        const translated = await translateNewsFields(
+          {
+            title: article.title,
+            summary: article.summary,
+            body: article.body,
+            category: article.category,
+          },
+          article.locale,
+          otherLocale,
+        );
+        const twin = await publishLocaleTwin({
+          source: article,
+          locale: otherLocale,
+          title: translated.title,
+          summary: translated.summary,
+          body: translated.body,
+          category: translated.category,
+          slug: slugify(translated.title),
+          decidedBy: session.email,
+        });
+        twinSlug = twin.slug;
+      } catch {
+        // Source locale still published even if twin translation fails
+      }
+
+      revalidateNews(
+        article.locale === "pt" ? article.slug : twinSlug,
+        article.locale === "en" ? article.slug : twinSlug,
+      );
+      // Always refresh both listing pages
       revalidatePath("/insights");
       revalidatePath("/en/insights");
       revalidatePath(`/insights/${article.slug}`);
       revalidatePath(`/en/insights/${article.slug}`);
-      revalidatePath("/");
-      revalidatePath("/pt");
+      if (twinSlug) {
+        revalidatePath(`/insights/${twinSlug}`);
+        revalidatePath(`/en/insights/${twinSlug}`);
+      }
     }
 
     return NextResponse.json({
@@ -92,10 +137,23 @@ export async function POST(request: Request) {
       id: article.id,
       status: article.status,
       slug: article.slug,
+      twinSlug: twinSlug ?? null,
       href:
         article.locale === "en"
           ? `/en/insights/${article.slug}`
           : `/insights/${article.slug}`,
+      hrefEn:
+        article.locale === "en"
+          ? `/en/insights/${article.slug}`
+          : twinSlug
+            ? `/en/insights/${twinSlug}`
+            : null,
+      hrefPt:
+        article.locale === "pt"
+          ? `/insights/${article.slug}`
+          : twinSlug
+            ? `/insights/${twinSlug}`
+            : null,
     });
   } catch {
     return NextResponse.json({ ok: false, error: "store_error" }, { status: 503 });

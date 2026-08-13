@@ -282,6 +282,8 @@ export function NewsQueueClient({ initial }: { initial: NewsQueuePayload }) {
         ok?: boolean;
         error?: string;
         href?: string;
+        hrefEn?: string | null;
+        hrefPt?: string | null;
       };
       if (!res.ok || !json.ok) {
         setError(json.error || "Falha ao decidir");
@@ -289,7 +291,9 @@ export function NewsQueueClient({ initial }: { initial: NewsQueuePayload }) {
       }
       setNotice(
         decision === "approve"
-          ? `Publicada${json.href ? ` · ${json.href}` : ""}.`
+          ? `Publicada em PT e EN${json.href ? ` · ${json.href}` : ""}${
+              json.hrefEn && json.hrefEn !== json.href ? ` · ${json.hrefEn}` : ""
+            }.`
           : "Recusada.",
       );
       if (decision === "approve") setFilter("published");

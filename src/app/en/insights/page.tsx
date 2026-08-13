@@ -19,7 +19,7 @@ export const metadata: Metadata = pageMeta({
   ],
 });
 
-export const revalidate = 60;
+export const dynamic = "force-dynamic";
 
 export default async function EnglishInsightsPage() {
   const items = await getPublicInsights("en");
