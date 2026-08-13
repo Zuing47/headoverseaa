@@ -9,7 +9,8 @@ import {
 } from "@/components/admin/NewsSitePreview";
 
 type DraftFields = ReturnType<typeof fieldsFromArticle>;
-type Tab = "edit" | "preview";
+type EditorTab = "edit" | "preview";
+type Filter = "all" | "pending" | "published" | "rejected";
 
 function StatusChip({ status }: { status: string }) {
   const tone =
@@ -45,6 +46,27 @@ function Field({
 const inputClass =
   "w-full border border-black/15 bg-white px-3 py-2.5 text-[14px] text-black outline-none transition-colors focus:border-black";
 
+function articleHref(a: NewsArticleRecord) {
+  return a.locale === "en"
+    ? `/en/insights/${a.slug}`
+    : `/insights/${a.slug}`;
+}
+
+function matchesQuery(a: NewsArticleRecord, q: string) {
+  if (!q) return true;
+  const hay = [
+    a.title,
+    a.summary,
+    a.category,
+    a.slug,
+    a.sourceName ?? "",
+    a.body,
+  ]
+    .join(" ")
+    .toLowerCase();
+  return hay.includes(q);
+}
+
 export function NewsQueueClient({ initial }: { initial: NewsQueuePayload }) {
   const router = useRouter();
   const [data, setData] = useState(initial);
@@ -52,29 +74,57 @@ export function NewsQueueClient({ initial }: { initial: NewsQueuePayload }) {
   const [notice, setNotice] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [pendingRefresh, startRefresh] = useTransition();
+  const [filter, setFilter] = useState<Filter>("pending");
+  const [query, setQuery] = useState("");
   const [selectedId, setSelectedId] = useState<string | null>(
-    initial.pending[0]?.id ?? null,
+    initial.pending[0]?.id ??
+      initial.published[0]?.id ??
+      null,
   );
-  const [tab, setTab] = useState<Tab>("edit");
-  const [draft, setDraft] = useState<DraftFields | null>(
-    initial.pending[0] ? fieldsFromArticle(initial.pending[0]) : null,
-  );
+  const [editorTab, setEditorTab] = useState<EditorTab>("edit");
+  const [draft, setDraft] = useState<DraftFields | null>(() => {
+    const first = initial.pending[0] ?? initial.published[0] ?? null;
+    return first ? fieldsFromArticle(first) : null;
+  });
   const [dirty, setDirty] = useState(false);
+
+  const catalog = useMemo(() => {
+    return [...data.pending, ...data.published, ...data.rejected].sort(
+      (a, b) =>
+        Date.parse(b.updatedAt || b.createdAt) -
+        Date.parse(a.updatedAt || a.createdAt),
+    );
+  }, [data]);
+
+  const filtered = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    return catalog.filter((a) => {
+      if (filter !== "all" && a.status !== filter) return false;
+      return matchesQuery(a, q);
+    });
+  }, [catalog, filter, query]);
 
   const selected = useMemo(() => {
     if (selectedId) {
-      const found = data.pending.find((a) => a.id === selectedId);
+      const found = catalog.find((a) => a.id === selectedId);
       if (found) return found;
     }
-    return data.pending[0] ?? null;
-  }, [data.pending, selectedId]);
+    return filtered[0] ?? null;
+  }, [catalog, selectedId, filtered]);
 
   const editorDraft =
     selected && draft && selected.id === (selectedId ?? selected.id)
       ? draft
-      : selected
+      : selected && selected.status !== "rejected"
         ? fieldsFromArticle(selected)
         : null;
+
+  const counts = {
+    all: catalog.length,
+    pending: data.pending.length,
+    published: data.published.length,
+    rejected: data.rejected.length,
+  };
 
   function selectArticle(article: NewsArticleRecord) {
     if (
@@ -86,9 +136,11 @@ export function NewsQueueClient({ initial }: { initial: NewsQueuePayload }) {
       return;
     }
     setSelectedId(article.id);
-    setDraft(fieldsFromArticle(article));
+    setDraft(
+      article.status === "rejected" ? null : fieldsFromArticle(article),
+    );
     setDirty(false);
-    setTab("edit");
+    setEditorTab("edit");
     setError(null);
     setNotice(null);
   }
@@ -97,9 +149,9 @@ export function NewsQueueClient({ initial }: { initial: NewsQueuePayload }) {
     key: K,
     value: DraftFields[K],
   ) {
+    if (!selected || selected.status === "rejected") return;
     const base =
-      editorDraft ?? (selected ? fieldsFromArticle(selected) : null);
-    if (!base || !selected) return;
+      editorDraft ?? fieldsFromArticle(selected);
     if (!selectedId) setSelectedId(selected.id);
     setDraft({ ...base, [key]: value });
     setDirty(true);
@@ -124,27 +176,34 @@ export function NewsQueueClient({ initial }: { initial: NewsQueuePayload }) {
       rejected?: NewsArticleRecord[];
     };
     if (!res.ok || !json.ok || !json.me) {
-      setError(json.error || "Falha ao carregar fila");
+      setError(json.error || "Falha ao carregar biblioteca");
       return;
     }
-    const pending = json.pending ?? [];
-    setData({
+    const nextData: NewsQueuePayload = {
       me: json.me,
-      pending,
+      pending: json.pending ?? [],
       published: json.published ?? [],
       rejected: json.rejected ?? [],
-    });
+    };
+    setData(nextData);
 
+    const all = [
+      ...nextData.pending,
+      ...nextData.published,
+      ...nextData.rejected,
+    ];
     const keepId = preferId === undefined ? selectedId : preferId;
-    const still = keepId ? pending.find((a) => a.id === keepId) : null;
-    const next = still ?? pending[0] ?? null;
+    const still = keepId ? all.find((a) => a.id === keepId) : null;
+    const next = still ?? nextData.pending[0] ?? nextData.published[0] ?? null;
     setSelectedId(next?.id ?? null);
-    setDraft(next ? fieldsFromArticle(next) : null);
+    setDraft(
+      next && next.status !== "rejected" ? fieldsFromArticle(next) : null,
+    );
     setDirty(false);
   }
 
   async function saveDraft() {
-    if (!selected || !editorDraft) return;
+    if (!selected || !editorDraft || selected.status === "rejected") return;
     setBusy(true);
     setError(null);
     setNotice(null);
@@ -175,7 +234,11 @@ export function NewsQueueClient({ initial }: { initial: NewsQueuePayload }) {
         setError(json.error || "Falha ao salvar");
         return;
       }
-      setNotice("Alterações salvas.");
+      setNotice(
+        json.article.status === "published"
+          ? "Salvo e atualizado no site."
+          : "Alterações salvas.",
+      );
       await refresh(json.article.id);
       startRefresh(() => router.refresh());
     } catch {
@@ -186,10 +249,10 @@ export function NewsQueueClient({ initial }: { initial: NewsQueuePayload }) {
   }
 
   async function onDecide(decision: "approve" | "reject") {
-    if (!selected) return;
+    if (!selected || selected.status !== "pending") return;
     if (dirty) {
       setError("Salve as alterações antes de aprovar ou recusar.");
-      setTab("edit");
+      setEditorTab("edit");
       return;
     }
     if (
@@ -226,13 +289,53 @@ export function NewsQueueClient({ initial }: { initial: NewsQueuePayload }) {
       }
       setNotice(
         decision === "approve"
-          ? `Publicada${json.href ? ` · ${json.href}` : ""}. Já aparece em Notícias.`
+          ? `Publicada${json.href ? ` · ${json.href}` : ""}.`
           : "Recusada.",
       );
+      if (decision === "approve") setFilter("published");
       await refresh(null);
       startRefresh(() => router.refresh());
     } catch {
       setError("Falha de rede");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function onDelete() {
+    if (!selected) return;
+    const label =
+      selected.status === "published"
+        ? "Apagar esta notícia do site permanentemente?"
+        : "Apagar esta notícia permanentemente?";
+    if (!window.confirm(label)) return;
+    if (
+      selected.status === "published" &&
+      !window.confirm("Confirma exclusão? Isso remove a página pública.")
+    ) {
+      return;
+    }
+
+    setBusy(true);
+    setError(null);
+    setNotice(null);
+    try {
+      const res = await fetch("/api/news/admin/delete", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "same-origin",
+        body: JSON.stringify({ id: selected.id }),
+      });
+      const json = (await res.json()) as { ok?: boolean; error?: string };
+      if (!res.ok || !json.ok) {
+        setError(json.error || "Falha ao apagar");
+        return;
+      }
+      setNotice("Notícia apagada.");
+      await refresh(null);
+      startRefresh(() => router.refresh());
+    } catch {
+      setError("Falha de rede ao apagar");
     } finally {
       setBusy(false);
     }
@@ -246,13 +349,20 @@ export function NewsQueueClient({ initial }: { initial: NewsQueuePayload }) {
     router.replace("/admin/news/login");
   }
 
+  const filters: { id: Filter; label: string }[] = [
+    { id: "all", label: "Todas" },
+    { id: "pending", label: "Pendentes" },
+    { id: "published", label: "No site" },
+    { id: "rejected", label: "Recusadas" },
+  ];
+
   return (
     <div>
       <div className="flex flex-wrap items-end justify-between gap-4 border-b border-black/10 pb-6">
         <div>
           <p className="label-caps text-black/40">Editorial</p>
           <h1 className="font-display mt-2 text-[clamp(1.75rem,3vw,2.5rem)] font-light">
-            Fila de notícias
+            Biblioteca de notícias
           </h1>
           <p className="mt-1 text-[14px] text-black/55">
             {data.me}
@@ -291,107 +401,219 @@ export function NewsQueueClient({ initial }: { initial: NewsQueuePayload }) {
 
       <div className="mt-8 grid gap-8 lg:grid-cols-12 lg:gap-10">
         <aside className="lg:col-span-4">
-          <p className="label-caps text-black/40">
-            Pendentes ({data.pending.length})
-          </p>
-          <div className="mt-4 divide-y divide-black/10 border-y border-black/10">
-            {data.pending.length === 0 ? (
+          <div className="flex flex-wrap gap-1">
+            {filters.map((f) => (
+              <button
+                key={f.id}
+                type="button"
+                onClick={() => setFilter(f.id)}
+                className={`px-2.5 py-1.5 text-[10px] uppercase tracking-[0.14em] ${
+                  filter === f.id
+                    ? "bg-black text-white"
+                    : "border border-black/15 text-black/55"
+                }`}
+              >
+                {f.label} ({counts[f.id]})
+              </button>
+            ))}
+          </div>
+
+          <div className="mt-4">
+            <input
+              type="search"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="Pesquisar título, categoria, texto…"
+              className={inputClass}
+            />
+          </div>
+
+          <div className="mt-4 max-h-[70vh] divide-y divide-black/10 overflow-y-auto border-y border-black/10">
+            {filtered.length === 0 ? (
               <p className="py-8 text-[14px] text-black/45">
-                Nenhuma notícia na fila.
+                Nenhuma notícia neste filtro.
               </p>
             ) : (
-              data.pending.map((a) => {
+              filtered.map((a) => {
                 const active = a.id === (selected?.id ?? "");
                 return (
-                  <button
+                  <div
                     key={a.id}
-                    type="button"
-                    onClick={() => selectArticle(a)}
-                    className={`block w-full px-0 py-4 text-left transition-colors ${
+                    className={`group flex items-stretch gap-0 ${
                       active ? "bg-black/[0.03]" : "hover:bg-black/[0.02]"
                     }`}
                   >
-                    <div className="flex items-center justify-between gap-2 px-2">
-                      <StatusChip status={a.status} />
-                      <span className="text-[11px] text-black/35">
-                        {new Date(a.createdAt).toLocaleString("pt-BR", {
-                          day: "2-digit",
-                          month: "2-digit",
-                          hour: "2-digit",
-                          minute: "2-digit",
-                        })}
-                      </span>
-                    </div>
-                    <p className="font-display mt-2 px-2 text-[1.05rem] leading-snug text-black">
-                      {a.title}
-                    </p>
-                    <p className="mt-1 line-clamp-2 px-2 text-[13px] text-black/45">
-                      {a.summary}
-                    </p>
-                  </button>
+                    <button
+                      type="button"
+                      onClick={() => selectArticle(a)}
+                      className="min-w-0 flex-1 px-2 py-4 text-left"
+                    >
+                      <div className="flex items-center justify-between gap-2">
+                        <StatusChip status={a.status} />
+                        <span className="text-[11px] text-black/35">
+                          {new Date(a.updatedAt || a.createdAt).toLocaleString(
+                            "pt-BR",
+                            {
+                              day: "2-digit",
+                              month: "2-digit",
+                              hour: "2-digit",
+                              minute: "2-digit",
+                            },
+                          )}
+                        </span>
+                      </div>
+                      <p className="font-display mt-2 text-[1.02rem] leading-snug text-black">
+                        {a.title}
+                      </p>
+                      <p className="mt-1 line-clamp-2 text-[12px] text-black/45">
+                        {a.category} · {a.locale.toUpperCase()}
+                      </p>
+                    </button>
+                    <button
+                      type="button"
+                      title="Apagar"
+                      disabled={busy}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        selectArticle(a);
+                        void (async () => {
+                          setSelectedId(a.id);
+                          setDraft(
+                            a.status === "rejected"
+                              ? null
+                              : fieldsFromArticle(a),
+                          );
+                          setDirty(false);
+                          // slight delay so selected is a; call delete with confirm for this id
+                          if (
+                            !window.confirm(
+                              a.status === "published"
+                                ? "Apagar do site permanentemente?"
+                                : "Apagar permanentemente?",
+                            )
+                          ) {
+                            return;
+                          }
+                          if (
+                            a.status === "published" &&
+                            !window.confirm(
+                              "Confirma exclusão da página pública?",
+                            )
+                          ) {
+                            return;
+                          }
+                          setBusy(true);
+                          setError(null);
+                          try {
+                            const res = await fetch("/api/news/admin/delete", {
+                              method: "POST",
+                              headers: { "Content-Type": "application/json" },
+                              credentials: "same-origin",
+                              body: JSON.stringify({ id: a.id }),
+                            });
+                            const json = (await res.json()) as {
+                              ok?: boolean;
+                              error?: string;
+                            };
+                            if (!res.ok || !json.ok) {
+                              setError(json.error || "Falha ao apagar");
+                              return;
+                            }
+                            setNotice("Notícia apagada.");
+                            await refresh(null);
+                            startRefresh(() => router.refresh());
+                          } catch {
+                            setError("Falha de rede ao apagar");
+                          } finally {
+                            setBusy(false);
+                          }
+                        })();
+                      }}
+                      className="shrink-0 border-l border-black/10 px-3 text-[11px] uppercase tracking-[0.12em] text-black/40 opacity-0 transition-opacity hover:bg-red-50 hover:text-red-700 group-hover:opacity-100 disabled:opacity-30"
+                    >
+                      Apagar
+                    </button>
+                  </div>
                 );
               })
             )}
           </div>
 
-          <div className="mt-10">
-            <p className="label-caps text-black/40">
-              Publicadas ({data.published.length})
-            </p>
-            <ul className="mt-3 space-y-3">
-              {data.published.slice(0, 6).map((a) => (
-                <li key={a.id} className="text-[13px] text-black/55">
-                  <a
-                    href={
-                      a.locale === "en"
-                        ? `/en/insights/${a.slug}`
-                        : `/insights/${a.slug}`
-                    }
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="underline-offset-2 hover:text-black hover:underline"
-                  >
-                    {a.title}
-                  </a>
-                </li>
-              ))}
-            </ul>
-          </div>
+          <p className="mt-4 text-[12px] leading-relaxed text-black/40">
+            Gerencia notícias da automação/API. Peças editoriais estáticas do
+            código não aparecem aqui.
+          </p>
         </aside>
 
         <section className="lg:col-span-8">
-          {!selected || !editorDraft ? (
+          {!selected ? (
             <div className="border border-dashed border-black/15 px-6 py-16 text-center text-[14px] text-black/45">
-              Selecione uma notícia pendente para editar e pré-visualizar.
+              Selecione uma notícia para editar, pré-visualizar ou apagar.
+            </div>
+          ) : selected.status === "rejected" ? (
+            <div className="border border-black/10 px-6 py-10">
+              <StatusChip status="rejected" />
+              <h2 className="font-display mt-4 text-[1.75rem]">{selected.title}</h2>
+              <p className="mt-3 max-w-[60ch] text-[15px] text-black/55">
+                {selected.summary}
+              </p>
+              <p className="mt-6 text-[13px] text-black/40">
+                Recusadas não são editáveis. Você pode apagá-las da biblioteca.
+              </p>
+              <button
+                type="button"
+                disabled={busy}
+                onClick={() => void onDelete()}
+                className="mt-6 border border-red-200 bg-red-50 px-4 py-2 text-[11px] uppercase tracking-[0.14em] text-red-800 disabled:opacity-40"
+              >
+                Apagar definitivamente
+              </button>
+            </div>
+          ) : !editorDraft ? (
+            <div className="border border-dashed border-black/15 px-6 py-16 text-center text-[14px] text-black/45">
+              Carregando editor…
             </div>
           ) : (
             <div>
               <div className="flex flex-wrap items-center justify-between gap-3 border-b border-black/10 pb-4">
-                <div className="flex gap-1">
-                  <button
-                    type="button"
-                    onClick={() => setTab("edit")}
-                    className={`px-3 py-2 text-[11px] uppercase tracking-[0.14em] ${
-                      tab === "edit"
-                        ? "bg-black text-white"
-                        : "border border-black/15 text-black/60"
-                    }`}
-                  >
-                    Editar
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setTab("preview")}
-                    className={`px-3 py-2 text-[11px] uppercase tracking-[0.14em] ${
-                      tab === "preview"
-                        ? "bg-black text-white"
-                        : "border border-black/15 text-black/60"
-                    }`}
-                  >
-                    Pré-visualizar
-                  </button>
+                <div className="flex flex-wrap items-center gap-2">
+                  <StatusChip status={selected.status} />
+                  <div className="flex gap-1">
+                    <button
+                      type="button"
+                      onClick={() => setEditorTab("edit")}
+                      className={`px-3 py-2 text-[11px] uppercase tracking-[0.14em] ${
+                        editorTab === "edit"
+                          ? "bg-black text-white"
+                          : "border border-black/15 text-black/60"
+                      }`}
+                    >
+                      Editar
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setEditorTab("preview")}
+                      className={`px-3 py-2 text-[11px] uppercase tracking-[0.14em] ${
+                        editorTab === "preview"
+                          ? "bg-black text-white"
+                          : "border border-black/15 text-black/60"
+                      }`}
+                    >
+                      Pré-visualizar
+                    </button>
+                  </div>
                 </div>
                 <div className="flex flex-wrap gap-2">
+                  {selected.status === "published" ? (
+                    <a
+                      href={articleHref(selected)}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="border border-black/20 px-3 py-2 text-[11px] uppercase tracking-[0.14em]"
+                    >
+                      Ver no site
+                    </a>
+                  ) : null}
                   <button
                     type="button"
                     disabled={busy || !dirty}
@@ -403,23 +625,35 @@ export function NewsQueueClient({ initial }: { initial: NewsQueuePayload }) {
                   <button
                     type="button"
                     disabled={busy}
-                    onClick={() => void onDecide("reject")}
-                    className="border border-black/20 px-3 py-2 text-[11px] uppercase tracking-[0.14em] disabled:opacity-40"
+                    onClick={() => void onDelete()}
+                    className="border border-red-200 px-3 py-2 text-[11px] uppercase tracking-[0.14em] text-red-800 disabled:opacity-40"
                   >
-                    Recusar
+                    Apagar
                   </button>
-                  <button
-                    type="button"
-                    disabled={busy}
-                    onClick={() => void onDecide("approve")}
-                    className="bg-black px-4 py-2 text-[11px] uppercase tracking-[0.14em] text-white disabled:opacity-40"
-                  >
-                    Aprovar e publicar
-                  </button>
+                  {selected.status === "pending" ? (
+                    <>
+                      <button
+                        type="button"
+                        disabled={busy}
+                        onClick={() => void onDecide("reject")}
+                        className="border border-black/20 px-3 py-2 text-[11px] uppercase tracking-[0.14em] disabled:opacity-40"
+                      >
+                        Recusar
+                      </button>
+                      <button
+                        type="button"
+                        disabled={busy}
+                        onClick={() => void onDecide("approve")}
+                        className="bg-black px-4 py-2 text-[11px] uppercase tracking-[0.14em] text-white disabled:opacity-40"
+                      >
+                        Aprovar e publicar
+                      </button>
+                    </>
+                  ) : null}
                 </div>
               </div>
 
-              {tab === "edit" ? (
+              {editorTab === "edit" ? (
                 <div className="mt-6 space-y-5">
                   <Field label="Título">
                     <input
@@ -479,7 +713,7 @@ export function NewsQueueClient({ initial }: { initial: NewsQueuePayload }) {
                   </Field>
                   <Field label="Corpo (parágrafos separados por linha em branco)">
                     <textarea
-                      className={`${inputClass} min-h-[240px] resize-y font-sans leading-relaxed`}
+                      className={`${inputClass} min-h-[240px] resize-y leading-relaxed`}
                       value={editorDraft.body}
                       onChange={(e) => patchDraft("body", e.target.value)}
                     />
@@ -509,10 +743,6 @@ export function NewsQueueClient({ initial }: { initial: NewsQueuePayload }) {
               ) : (
                 <div className="mt-6">
                   <NewsSitePreview draft={editorDraft} />
-                  <p className="mt-4 text-[13px] text-black/45">
-                    Composição do site (hero preto + corpo editorial). Ao
-                    aprovar, entra na aba Notícias após o publish.
-                  </p>
                 </div>
               )}
             </div>

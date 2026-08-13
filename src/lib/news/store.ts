@@ -144,7 +144,7 @@ export async function decideArticle(opts: {
   return next;
 }
 
-export type NewsPendingPatch = {
+export type NewsArticlePatch = {
   title?: string;
   summary?: string;
   body?: string;
@@ -156,13 +156,16 @@ export type NewsPendingPatch = {
   imageUrl?: string | null;
 };
 
-/** Update fields on a pending article only. */
-export async function updatePendingArticle(
+/** @deprecated use NewsArticlePatch */
+export type NewsPendingPatch = NewsArticlePatch;
+
+/** Update fields on pending or published articles (not rejected). */
+export async function updateArticle(
   id: string,
-  patch: NewsPendingPatch,
+  patch: NewsArticlePatch,
 ): Promise<NewsArticleRecord | null> {
   const current = await getArticleById(id);
-  if (!current || current.status !== "pending") return null;
+  if (!current || current.status === "rejected") return null;
 
   const now = new Date().toISOString();
   const nextLocale = patch.locale ?? current.locale;
@@ -202,4 +205,33 @@ export async function updatePendingArticle(
 
   await pipe.exec();
   return next;
+}
+
+/** Update fields on a pending article only. */
+export async function updatePendingArticle(
+  id: string,
+  patch: NewsArticlePatch,
+): Promise<NewsArticleRecord | null> {
+  const current = await getArticleById(id);
+  if (!current || current.status !== "pending") return null;
+  return updateArticle(id, patch);
+}
+
+/** Permanently remove an article from the store and public indexes. */
+export async function deleteArticle(id: string): Promise<NewsArticleRecord | null> {
+  const current = await getArticleById(id);
+  if (!current) return null;
+
+  const r = redis();
+  const pipe = r.pipeline();
+  pipe.del(KEYS.article(current.id));
+  pipe.zrem(KEYS.byStatus("pending"), current.id);
+  pipe.zrem(KEYS.byStatus("published"), current.id);
+  pipe.zrem(KEYS.byStatus("rejected"), current.id);
+  pipe.del(KEYS.slug(current.locale, current.slug));
+  if (current.externalId) {
+    pipe.del(KEYS.external(current.externalId));
+  }
+  await pipe.exec();
+  return current;
 }

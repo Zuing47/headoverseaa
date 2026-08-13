@@ -31,9 +31,9 @@ export async function loadNewsQueueForSession(): Promise<
 
   try {
     const [pending, published, rejected] = await Promise.all([
-      listByStatus("pending", 80),
-      listByStatus("published", 20),
-      listByStatus("rejected", 20),
+      listByStatus("pending", 100),
+      listByStatus("published", 100),
+      listByStatus("rejected", 50),
     ]);
     return {
       ok: true,

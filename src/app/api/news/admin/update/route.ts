@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { revalidatePath } from "next/cache";
 import { rateLimit } from "@/lib/form-guard";
 import { assertSameOrigin, getNewsSession } from "@/lib/news/auth";
 import { newsQueueReady, newsRedisConfigured } from "@/lib/news/config";
@@ -9,7 +10,7 @@ import {
   slugify,
   stripToPlainText,
 } from "@/lib/news/sanitize";
-import { updatePendingArticle } from "@/lib/news/store";
+import { getArticleById, updateArticle } from "@/lib/news/store";
 
 export const runtime = "nodejs";
 
@@ -26,7 +27,16 @@ type UpdateBody = {
   imageUrl?: string;
 };
 
-/** Edit a pending article before approve/reject. */
+function revalidateArticle(slug: string) {
+  revalidatePath("/insights");
+  revalidatePath("/en/insights");
+  revalidatePath(`/insights/${slug}`);
+  revalidatePath(`/en/insights/${slug}`);
+  revalidatePath("/");
+  revalidatePath("/pt");
+}
+
+/** Edit pending or published articles. */
 export async function POST(request: Request) {
   const ready = newsQueueReady();
   if (!ready.ok || !newsRedisConfigured()) {
@@ -66,6 +76,14 @@ export async function POST(request: Request) {
     return NextResponse.json({ ok: false, error: "invalid_id" }, { status: 400 });
   }
 
+  const existing = await getArticleById(id);
+  if (!existing) {
+    return NextResponse.json({ ok: false, error: "not_found" }, { status: 404 });
+  }
+  if (existing.status === "rejected") {
+    return NextResponse.json({ ok: false, error: "cannot_edit_rejected" }, { status: 400 });
+  }
+
   const title = stripToPlainText(body.title, NEWS_FIELD_MAX.title);
   if (title.length < 8) {
     return NextResponse.json({ ok: false, error: "invalid_title" }, { status: 400 });
@@ -84,7 +102,7 @@ export async function POST(request: Request) {
   const sourceName =
     stripToPlainText(body.sourceName, NEWS_FIELD_MAX.sourceName) || null;
 
-  let sourceUrl: string | null = null;
+  let sourceUrl: string | null | undefined = undefined;
   if (body.sourceUrl !== undefined) {
     const raw = String(body.sourceUrl ?? "").trim();
     sourceUrl = raw ? sanitizeHttpsUrl(raw) : null;
@@ -93,7 +111,7 @@ export async function POST(request: Request) {
     }
   }
 
-  let imageUrl: string | null = null;
+  let imageUrl: string | null | undefined = undefined;
   if (body.imageUrl !== undefined) {
     const raw = String(body.imageUrl ?? "").trim();
     if (!raw) {
@@ -109,7 +127,7 @@ export async function POST(request: Request) {
   }
 
   try {
-    const article = await updatePendingArticle(id, {
+    const article = await updateArticle(id, {
       title,
       summary: summary || articleBody.slice(0, 280),
       body: articleBody,
@@ -117,12 +135,20 @@ export async function POST(request: Request) {
       locale,
       slug,
       sourceName,
-      ...(body.sourceUrl !== undefined ? { sourceUrl } : {}),
-      ...(body.imageUrl !== undefined ? { imageUrl } : {}),
+      ...(sourceUrl !== undefined ? { sourceUrl } : {}),
+      ...(imageUrl !== undefined ? { imageUrl } : {}),
     });
     if (!article) {
-      return NextResponse.json({ ok: false, error: "not_found_or_not_pending" }, { status: 404 });
+      return NextResponse.json({ ok: false, error: "not_found_or_locked" }, { status: 404 });
     }
+
+    if (article.status === "published") {
+      revalidateArticle(article.slug);
+      if (existing.slug !== article.slug) {
+        revalidateArticle(existing.slug);
+      }
+    }
+
     return NextResponse.json({ ok: true, article });
   } catch {
     return NextResponse.json({ ok: false, error: "store_error" }, { status: 503 });
