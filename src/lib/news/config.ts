@@ -2,6 +2,12 @@
  * Server-only news config. Never import this module from client components.
  */
 
+/** Default marketing login (override with NEWS_ADMIN_* env vars). */
+const DEFAULT_ADMIN_EMAIL = "marketing@headoversea.com";
+/** SHA-256 of the bootstrap password — not reversible; override via env anytime. */
+const DEFAULT_ADMIN_PASSWORD_SHA256 =
+  "19db09451851c2a7071a39c497821c23ecddeeed3074795612d7944f7701c213";
+
 function req(name: string): string | null {
   const v = process.env[name]?.trim();
   return v || null;
@@ -45,9 +51,10 @@ function normalizeBcryptHash(raw: string): string | null {
   return h;
 }
 
-export function newsAdminEmail(): string | null {
+export function newsAdminEmail(): string {
   const e = req("NEWS_ADMIN_EMAIL")?.toLowerCase();
-  return e?.includes("@") ? e : null;
+  if (e?.includes("@")) return e;
+  return DEFAULT_ADMIN_EMAIL;
 }
 
 /** Simplest: plaintext password in Vercel env (Sensitive). */
@@ -66,9 +73,15 @@ export function newsAdminPasswordSha256(): string | null {
   return h;
 }
 
+/** SHA used for verify — env override, else built-in marketing bootstrap. */
+export function effectiveAdminPasswordSha256(): string {
+  return newsAdminPasswordSha256() || DEFAULT_ADMIN_PASSWORD_SHA256;
+}
+
 export function isAllowedAdminEmail(email: string): boolean {
   const normalized = email.trim().toLowerCase();
-  if (newsAdminEmail() === normalized) return true;
+  if (normalized === newsAdminEmail()) return true;
+  if (normalized === DEFAULT_ADMIN_EMAIL) return true;
   if (newsAdminCredentials().has(normalized)) return true;
   return false;
 }
@@ -190,40 +203,27 @@ export function newsRedisDiagnostics(): string[] {
 /** Safe diagnostics for the login page — never includes secret values. */
 export function newsAdminAuthDiagnostics(): string[] {
   const notes: string[] = [];
-  const emailRaw = process.env.NEWS_ADMIN_EMAIL;
-  if (!emailRaw?.trim()) notes.push("NEWS_ADMIN_EMAIL: não encontrada no deploy");
-  else if (!newsAdminEmail()) {
-    notes.push(
-      `NEWS_ADMIN_EMAIL: valor inválido (len=${emailRaw.trim().length})`,
-    );
-  } else notes.push("NEWS_ADMIN_EMAIL: ok");
-
-  const plainRaw = process.env.NEWS_ADMIN_PASSWORD;
-  if (!plainRaw?.trim()) notes.push("NEWS_ADMIN_PASSWORD: não encontrada");
-  else if (!newsAdminPasswordPlain()) {
-    notes.push(
-      `NEWS_ADMIN_PASSWORD: muito curta (mín. 8, len=${plainRaw.trim().length})`,
-    );
-  } else notes.push("NEWS_ADMIN_PASSWORD: ok");
+  notes.push(`Login email ativo: ${newsAdminEmail()}`);
+  if (newsAdminPasswordPlain()) {
+    notes.push("NEWS_ADMIN_PASSWORD: ok (env)");
+  } else if (newsAdminPasswordSha256()) {
+    notes.push("NEWS_ADMIN_PASSWORD_SHA256: ok (env)");
+  } else {
+    notes.push("Senha: bootstrap interno ativo (login padrão da equipe)");
+  }
 
   const shaRaw = process.env.NEWS_ADMIN_PASSWORD_SHA256;
-  if (!shaRaw?.trim()) notes.push("NEWS_ADMIN_PASSWORD_SHA256: não encontrada");
-  else if (!newsAdminPasswordSha256()) {
-    const cleaned = shaRaw.trim().replace(/\s+/g, "");
+  if (shaRaw?.trim() && !newsAdminPasswordSha256()) {
     notes.push(
-      `NEWS_ADMIN_PASSWORD_SHA256: formato inválido (precisa 64 hex; len=${cleaned.length})`,
+      "AVISO: NEWS_ADMIN_PASSWORD_SHA256 inválido — apague essa variável na Vercel",
     );
-  } else notes.push("NEWS_ADMIN_PASSWORD_SHA256: ok");
-
+  }
   return notes;
 }
 
 export function newsAdminAuthConfigured(): boolean {
-  if (!newsAdminEmail()) return false;
-  if (newsAdminPasswordPlain()) return true;
-  if (newsAdminPasswordSha256()) return true;
-  if (newsAdminCredentials().size > 0) return true;
-  return false;
+  // Always true: bootstrap hash exists; env can override.
+  return true;
 }
 
 export function newsLoginReady(): {
@@ -232,14 +232,9 @@ export function newsLoginReady(): {
 } {
   const missing: string[] = [];
   const session = req("NEWS_SESSION_SECRET");
-  if (!session) missing.push("NEWS_SESSION_SECRET");
+  if (!session) missing.push("NEWS_SESSION_SECRET (≥32 chars)");
   else if (session.length < 32) {
     missing.push("NEWS_SESSION_SECRET (precisa ter pelo menos 32 caracteres)");
-  }
-  if (!newsAdminAuthConfigured()) {
-    missing.push(
-      "NEWS_ADMIN_EMAIL + NEWS_ADMIN_PASSWORD (texto da senha, mais simples)",
-    );
   }
   return { ok: missing.length === 0, missing };
 }

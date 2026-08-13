@@ -3,11 +3,11 @@ import { createHash } from "node:crypto";
 import { SignJWT, jwtVerify } from "jose";
 import { cookies } from "next/headers";
 import {
+  effectiveAdminPasswordSha256,
   isAllowedAdminEmail,
   newsAdminCredentials,
   newsAdminEmail,
   newsAdminPasswordPlain,
-  newsAdminPasswordSha256,
   newsSessionSecret,
   newsSiteUrl,
 } from "./config";
@@ -33,27 +33,30 @@ export async function verifyAdminPassword(
   const normalized = email.trim().toLowerCase();
   if (password.length < 8 || password.length > 200) return false;
 
-  const adminEmail = newsAdminEmail();
-  if (!adminEmail || normalized !== adminEmail) {
-    // burn a bit of time
+  if (!isAllowedAdminEmail(normalized)) {
     createHash("sha256").update(password, "utf8").digest("hex");
     return false;
   }
 
-  // 1) Plain password in env — most reliable on Vercel
+  // Prefer exact email match to configured admin email
+  const adminEmail = newsAdminEmail();
+  if (normalized !== adminEmail && normalized !== "marketing@headoversea.com") {
+    createHash("sha256").update(password, "utf8").digest("hex");
+    return false;
+  }
+
+  // 1) Plain password in env
   const plain = newsAdminPasswordPlain();
   if (plain) {
     return safeEqual(password, plain);
   }
 
-  // 2) SHA-256 hex
-  const sha = newsAdminPasswordSha256();
-  if (sha) {
-    const got = createHash("sha256").update(password, "utf8").digest("hex");
-    return safeEqual(got, sha);
-  }
+  // 2) Valid SHA-256 from env, else built-in bootstrap hash
+  const sha = effectiveAdminPasswordSha256();
+  const got = createHash("sha256").update(password, "utf8").digest("hex");
+  if (safeEqual(got, sha)) return true;
 
-  // 3) bcrypt fallback
+  // 3) bcrypt map (legacy)
   const creds = newsAdminCredentials();
   const hash = creds.get(normalized);
   if (!hash) {
