@@ -67,6 +67,23 @@ async function repairTwinsBestEffort() {
   }
 }
 
+/** Prefer the other locale's cover when this twin is missing imageUrl. */
+function withInheritedCover(
+  article: NewsArticleRecord,
+  published: NewsArticleRecord[],
+): NewsArticleRecord {
+  if (article.imageUrl) return article;
+  const twin = published.find(
+    (p) =>
+      p.id !== article.id &&
+      p.status === "published" &&
+      p.slug === article.slug &&
+      Boolean(p.imageUrl),
+  );
+  if (!twin?.imageUrl) return article;
+  return { ...article, imageUrl: twin.imageUrl };
+}
+
 /** Public listing: newest published first (featured), then older static pieces. */
 export async function getPublicInsights(locale: Locale): Promise<Insight[]> {
   const staticItems = getContent(locale).insights.items;
@@ -75,7 +92,9 @@ export async function getPublicInsights(locale: Locale): Promise<Insight[]> {
   try {
     await repairTwinsBestEffort();
     const published = await listPublished(100);
-    const dynamicRecords = orderForLocale(locale, published);
+    const dynamicRecords = orderForLocale(locale, published).map((a) =>
+      withInheritedCover(a, published),
+    );
     const dynamic = dynamicRecords.map(recordToInsight);
     const seen = new Set(dynamic.map((i) => i.slug));
     const staticRest = staticItems.filter((i) => !seen.has(i.slug));
@@ -98,11 +117,13 @@ export async function getPublicInsightBySlug(
   try {
     if (locale === "en") {
       await retranslateStaleTwins(1);
+      await syncTwinListingMeta(5);
     }
 
     const article = await getArticleBySlug(locale, slug);
     if (article && article.status === "published" && article.locale === locale) {
-      return recordToInsight(article);
+      const published = await listPublished(100);
+      return recordToInsight(withInheritedCover(article, published));
     }
   } catch {
     // fall through to static
