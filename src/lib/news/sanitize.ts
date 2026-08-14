@@ -90,10 +90,12 @@ export function bodyToParagraphs(body: string): string[] {
 export function formatNewsDate(iso: string, locale: Locale): string {
   const d = new Date(iso);
   if (Number.isNaN(d.getTime())) return "";
+  // Always Brazil calendar day — Vercel UTC was shifting evening posts to the next day.
   return new Intl.DateTimeFormat(locale === "en" ? "en-US" : "pt-BR", {
     month: "short",
     year: "numeric",
     day: "numeric",
+    timeZone: "America/Sao_Paulo",
   }).format(d);
 }
 
