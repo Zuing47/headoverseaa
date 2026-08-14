@@ -71,8 +71,8 @@ export function BackHero({
           className="aspect-[5/4] w-full min-h-[200px] bg-[#0a0a0a] sm:aspect-[16/10] sm:min-h-0 md:aspect-[21/9] lg:aspect-[22/9]"
           immediate
         >
-          {image.startsWith("https://") ? (
-            // Remote editorial images (marketing-approved) — avoid Next optimizer SSRF surface
+          {image.startsWith("https://") || image.startsWith("/api/news/media/") ? (
+            // Remote / hosted editorial images — avoid Next optimizer SSRF surface
             // eslint-disable-next-line @next/next/no-img-element
             <img
               src={image}

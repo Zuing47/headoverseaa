@@ -4,12 +4,14 @@ import {
   formatNewsDate,
   sanitizeHttpsUrl,
 } from "./sanitize";
+import { isNewsMediaPath } from "./media";
 import type { NewsArticleRecord } from "./types";
 
-/** Resolve hero/list image: site path or sanitized https (approved editor content). */
+/** Resolve hero/list image: site path, hosted media, or sanitized https. */
 export function resolveNewsImage(imageUrl: string | null | undefined): string | undefined {
   if (!imageUrl) return undefined;
   if (imageUrl.startsWith("/images/")) return imageUrl;
+  if (isNewsMediaPath(imageUrl)) return imageUrl;
   return sanitizeHttpsUrl(imageUrl) ?? undefined;
 }
 

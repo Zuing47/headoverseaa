@@ -23,6 +23,16 @@ export function middleware(request: NextRequest) {
     return res;
   }
 
+  if (pathname.startsWith("/api/news/media/")) {
+    const res = NextResponse.next();
+    res.headers.set(
+      "Cache-Control",
+      "public, max-age=31536000, immutable",
+    );
+    res.headers.set("X-Content-Type-Options", "nosniff");
+    return res;
+  }
+
   if (pathname.startsWith("/api/news")) {
     const res = NextResponse.next();
     res.headers.set("Cache-Control", "no-store");

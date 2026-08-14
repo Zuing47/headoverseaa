@@ -247,6 +247,84 @@ export function NewsQueueClient({ initial }: { initial: NewsQueuePayload }) {
     }
   }
 
+  async function uploadCover(file: File) {
+    if (!selected || selected.status === "rejected") return;
+    setBusy(true);
+    setError(null);
+    setNotice(null);
+    try {
+      const form = new FormData();
+      form.append("file", file);
+      const res = await fetch("/api/news/admin/upload", {
+        method: "POST",
+        credentials: "same-origin",
+        body: form,
+      });
+      const json = (await res.json()) as {
+        ok?: boolean;
+        error?: string;
+        imageUrl?: string;
+      };
+      if (!res.ok || !json.ok || !json.imageUrl) {
+        setError(
+          json.error === "invalid_image_size"
+            ? "Imagem muito grande (máx. ~1,8 MB)."
+            : json.error === "invalid_image_type"
+              ? "Use JPG, PNG, WebP ou GIF."
+              : "Falha no upload da capa.",
+        );
+        return;
+      }
+      patchDraft("imageUrl", json.imageUrl);
+      setNotice("Capa enviada — salve para gravar na notícia.");
+      setDirty(true);
+    } catch {
+      setError("Falha de rede no upload");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function fetchCoverFromSource() {
+    if (!selected || selected.status === "rejected" || !selected.sourceUrl) {
+      return;
+    }
+    setBusy(true);
+    setError(null);
+    setNotice(null);
+    try {
+      const res = await fetch("/api/news/admin/fetch-cover", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "same-origin",
+        body: JSON.stringify({ id: selected.id }),
+      });
+      const json = (await res.json()) as {
+        ok?: boolean;
+        error?: string;
+        article?: NewsArticleRecord;
+        imageUrl?: string;
+      };
+      if (!res.ok || !json.ok || !json.imageUrl) {
+        setError(
+          json.error === "cover_not_found"
+            ? "Não achou capa na página da fonte."
+            : "Falha ao puxar capa da fonte.",
+        );
+        return;
+      }
+      patchDraft("imageUrl", json.imageUrl);
+      setNotice("Capa puxada da fonte.");
+      setDirty(false);
+      await refresh(json.article?.id || selected.id);
+      startRefresh(() => router.refresh());
+    } catch {
+      setError("Falha de rede ao puxar capa");
+    } finally {
+      setBusy(false);
+    }
+  }
+
   async function onDecide(decision: "approve" | "reject") {
     if (!selected || selected.status !== "pending") return;
     if (dirty) {
@@ -711,13 +789,66 @@ export function NewsQueueClient({ initial }: { initial: NewsQueuePayload }) {
                       onChange={(e) => patchDraft("body", e.target.value)}
                     />
                   </Field>
-                  <Field label="URL da imagem (https://… ou /images/…)">
-                    <input
-                      className={inputClass}
-                      value={editorDraft.imageUrl}
-                      placeholder="https://… ou /images/sua-foto.jpg"
-                      onChange={(e) => patchDraft("imageUrl", e.target.value)}
-                    />
+                  <Field label="Capa da notícia">
+                    <div className="space-y-3">
+                      {editorDraft.imageUrl ? (
+                        <div className="relative aspect-[16/10] max-w-md overflow-hidden border border-black/10 bg-black/[0.04]">
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                          <img
+                            src={editorDraft.imageUrl}
+                            alt=""
+                            className="absolute inset-0 h-full w-full object-cover"
+                            referrerPolicy="no-referrer"
+                          />
+                        </div>
+                      ) : (
+                        <p className="text-[13px] text-black/40">
+                          Sem capa ainda — faça upload ou cole a URL.
+                        </p>
+                      )}
+                      <div className="flex flex-wrap items-center gap-3">
+                        <label className="cursor-pointer border border-black/20 bg-white px-3 py-2 text-[11px] uppercase tracking-[0.14em] transition-colors hover:border-black">
+                          {busy ? "Enviando…" : "Upload da capa"}
+                          <input
+                            type="file"
+                            accept="image/jpeg,image/png,image/webp,image/gif"
+                            className="sr-only"
+                            disabled={busy}
+                            onChange={(e) => {
+                              const file = e.target.files?.[0];
+                              e.target.value = "";
+                              if (file) void uploadCover(file);
+                            }}
+                          />
+                        </label>
+                        {selected.sourceUrl ? (
+                          <button
+                            type="button"
+                            disabled={busy}
+                            onClick={() => void fetchCoverFromSource()}
+                            className="border border-black/20 px-3 py-2 text-[11px] uppercase tracking-[0.14em] disabled:opacity-40"
+                          >
+                            Puxar da fonte
+                          </button>
+                        ) : null}
+                        {editorDraft.imageUrl ? (
+                          <button
+                            type="button"
+                            disabled={busy}
+                            onClick={() => patchDraft("imageUrl", "")}
+                            className="text-[12px] text-black/45 underline underline-offset-2"
+                          >
+                            Remover capa
+                          </button>
+                        ) : null}
+                      </div>
+                      <input
+                        className={inputClass}
+                        value={editorDraft.imageUrl}
+                        placeholder="https://… ou /api/news/media/… (opcional)"
+                        onChange={(e) => patchDraft("imageUrl", e.target.value)}
+                      />
+                    </div>
                   </Field>
                   {selected.sourceUrl ? (
                     <p className="text-[13px] text-black/45">

@@ -11,6 +11,7 @@ import {
 } from "@/lib/news/sanitize";
 import { findByExternalId, getArticleById, updateArticle } from "@/lib/news/store";
 import { ensureOppositeTwin } from "@/lib/news/twins";
+import { sanitizeNewsImageRef } from "@/lib/news/media";
 
 export const runtime = "nodejs";
 
@@ -114,10 +115,8 @@ export async function POST(request: Request) {
     const raw = String(body.imageUrl ?? "").trim();
     if (!raw) {
       imageUrl = null;
-    } else if (raw.startsWith("/images/")) {
-      imageUrl = raw.slice(0, NEWS_FIELD_MAX.url);
     } else {
-      imageUrl = sanitizeHttpsUrl(raw);
+      imageUrl = sanitizeNewsImageRef(raw);
       if (!imageUrl) {
         return NextResponse.json({ ok: false, error: "invalid_image_url" }, { status: 400 });
       }

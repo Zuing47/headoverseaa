@@ -24,7 +24,7 @@ function CardMedia({
   sizes: string;
 }) {
   const src = item.image || BACK_MEDIA.pexelsField;
-  if (src.startsWith("https://")) {
+  if (src.startsWith("https://") || src.startsWith("/api/news/media/")) {
     return (
       // eslint-disable-next-line @next/next/no-img-element
       <img

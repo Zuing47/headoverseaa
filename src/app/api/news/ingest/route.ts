@@ -3,6 +3,7 @@ import { clientIp, rateLimit } from "@/lib/form-guard";
 import { ingestAuthorized } from "@/lib/news/auth";
 import { newsIngestKey, newsIngestReady, newsRedisConfigured } from "@/lib/news/config";
 import { newNewsId } from "@/lib/news/crypto";
+import { resolveIngestCover } from "@/lib/news/media";
 import {
   NEWS_FIELD_MAX,
   parseLocale,
@@ -14,11 +15,15 @@ import { createPendingArticle, findByExternalId } from "@/lib/news/store";
 import type { NewsArticleRecord, NewsIngestInput } from "@/lib/news/types";
 
 export const runtime = "nodejs";
+export const maxDuration = 30;
 
 /**
  * n8n / automation ingest — creates pending articles only.
  * Auth: Authorization: Bearer $NEWS_INGEST_API_KEY
  * Never publishes. Never returns secrets.
+ *
+ * Image: accepts imageUrl / image_url / image / enclosure…;
+ * if missing, scrapes og:image from sourceUrl and hosts a copy when possible.
  */
 export async function POST(request: Request) {
   const ready = newsIngestReady();
@@ -35,7 +40,6 @@ export async function POST(request: Request) {
 
   const ingestKey = newsIngestKey();
   if (!ingestKey || !ingestAuthorized(request, ingestKey)) {
-    // Uniform delay-ish response — no hint if key wrong vs missing
     return NextResponse.json({ ok: false, error: "unauthorized" }, { status: 401 });
   }
 
@@ -51,13 +55,13 @@ export async function POST(request: Request) {
     return NextResponse.json({ ok: false, error: "invalid_content_type" }, { status: 415 });
   }
 
-  let body: NewsIngestInput;
+  let body: NewsIngestInput & Record<string, unknown>;
   try {
     const text = await request.text();
     if (text.length > 100_000) {
       return NextResponse.json({ ok: false, error: "payload_too_large" }, { status: 413 });
     }
-    body = JSON.parse(text) as NewsIngestInput;
+    body = JSON.parse(text) as NewsIngestInput & Record<string, unknown>;
   } catch {
     return NextResponse.json({ ok: false, error: "invalid_json" }, { status: 400 });
   }
@@ -76,7 +80,6 @@ export async function POST(request: Request) {
     stripToPlainText(body.category, NEWS_FIELD_MAX.category) || "News";
   const sourceName = stripToPlainText(body.sourceName, NEWS_FIELD_MAX.sourceName) || null;
   const sourceUrl = sanitizeHttpsUrl(body.sourceUrl);
-  const imageUrl = sanitizeHttpsUrl(body.imageUrl);
   const locale = parseLocale(body.locale);
   const externalId =
     stripToPlainText(body.externalId, NEWS_FIELD_MAX.externalId) || null;
@@ -91,6 +94,7 @@ export async function POST(request: Request) {
           id: existing.id,
           status: existing.status,
           slug: existing.slug,
+          imageUrl: existing.imageUrl,
         });
       }
     } catch {
@@ -98,11 +102,16 @@ export async function POST(request: Request) {
     }
   }
 
+  let imageUrl: string | null = null;
+  try {
+    imageUrl = await resolveIngestCover({ body, sourceUrl });
+  } catch {
+    imageUrl = null;
+  }
+
   const id = newNewsId();
   const now = new Date().toISOString();
-  const slugBase = body.slug
-    ? slugify(String(body.slug))
-    : slugify(title);
+  const slugBase = body.slug ? slugify(String(body.slug)) : slugify(title);
 
   const record: NewsArticleRecord = {
     id,
@@ -134,6 +143,7 @@ export async function POST(request: Request) {
         id: article.id,
         status: article.status,
         slug: article.slug,
+        imageUrl: article.imageUrl,
       },
       { status: created ? 201 : 200 },
     );

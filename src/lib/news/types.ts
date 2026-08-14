@@ -34,7 +34,10 @@ export type NewsIngestInput = {
   category?: string;
   sourceUrl?: string;
   sourceName?: string;
+  /** Cover — also accepts image_url / image / enclosure from n8n */
   imageUrl?: string;
+  image_url?: string;
+  image?: string;
   externalId?: string;
   /** Optional pre-slug from n8n — still sanitized server-side */
   slug?: string;
