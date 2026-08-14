@@ -30,8 +30,6 @@ function isPair(a: NewsArticleRecord, b: NewsArticleRecord): boolean {
   const ea = externalBase(a.externalId);
   const eb = externalBase(b.externalId);
   if (ea && eb && ea === eb) return true;
-  if (a.imageUrl && b.imageUrl && a.imageUrl === b.imageUrl) return true;
-  if (a.createdAt && b.createdAt && a.createdAt === b.createdAt) return true;
   return false;
 }
 
@@ -73,16 +71,30 @@ function orderForLocale(
   return [...ordered, ...rest];
 }
 
+async function repairTwinsBestEffort() {
+  try {
+    await Promise.race([
+      (async () => {
+        await backfillMissingTwins(3);
+        await retranslateStaleTwins(1);
+        await syncTwinListingMeta(10);
+      })(),
+      new Promise<void>((resolve) => {
+        setTimeout(resolve, 4_000);
+      }),
+    ]);
+  } catch {
+    // listing must still work
+  }
+}
+
 /** Public listing: newest published first (featured), then older static pieces. */
 export async function getPublicInsights(locale: Locale): Promise<Insight[]> {
   const staticItems = getContent(locale).insights.items;
   if (!newsRedisConfigured()) return staticItems;
 
   try {
-    await backfillMissingTwins(4);
-    await retranslateStaleTwins(2);
-    await syncTwinListingMeta(20);
-
+    await repairTwinsBestEffort();
     const published = await listPublished(100);
     const dynamicRecords = orderForLocale(locale, published);
     const dynamic = dynamicRecords.map(recordToInsight);
