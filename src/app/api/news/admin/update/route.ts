@@ -9,8 +9,8 @@ import {
   slugify,
   stripToPlainText,
 } from "@/lib/news/sanitize";
-import { findByExternalId, getArticleById, publishLocaleTwin, updateArticle } from "@/lib/news/store";
-import { translateNewsFields } from "@/lib/news/translate";
+import { findByExternalId, getArticleById, updateArticle } from "@/lib/news/store";
+import { ensureOppositeTwin } from "@/lib/news/twins";
 
 export const runtime = "nodejs";
 
@@ -146,7 +146,7 @@ export async function POST(request: Request) {
         revalidateArticle(existing.slug);
       }
 
-      // Ensure opposite-locale twin exists (for articles approved before bilingual launch)
+      // Ensure opposite-locale twin exists (once)
       try {
         const otherLocale = article.locale === "pt" ? "en" : "pt";
         const twinExt = article.externalId
@@ -154,32 +154,17 @@ export async function POST(request: Request) {
           : `pair:${article.pairId || article.id}:${otherLocale}`;
         const twinExisting = await findByExternalId(twinExt);
         if (!twinExisting || twinExisting.status !== "published") {
-          const translated = await translateNewsFields(
-            {
-              title: article.title,
-              summary: article.summary,
-              body: article.body,
-              category: article.category,
-            },
-            article.locale,
-            otherLocale,
+          const twin = await ensureOppositeTwin(
+            article,
+            session.email,
+            "translate",
           );
-          const twin = await publishLocaleTwin({
-            source: article,
-            locale: otherLocale,
-            title: translated.title,
-            summary: translated.summary,
-            body: translated.body,
-            category: translated.category,
-            slug: slugify(translated.title),
-            decidedBy: session.email,
-          });
           revalidateArticle(twin.slug);
           revalidatePath("/en/insights");
           revalidatePath("/insights");
         }
       } catch {
-        // non-fatal
+        // non-fatal — public listing backfill will retry
       }
     }
 

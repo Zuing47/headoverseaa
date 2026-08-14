@@ -3,6 +3,7 @@ import { getContent } from "@/lib/content";
 import { newsRedisConfigured } from "./config";
 import { recordToInsight } from "./map";
 import { getArticleBySlug, listPublished } from "./store";
+import { backfillMissingTwins } from "./twins";
 import type { NewsArticleRecord } from "./types";
 
 export { recordToInsight } from "./map";
@@ -17,6 +18,9 @@ export async function getPublicInsights(locale: Locale): Promise<Insight[]> {
   if (!newsRedisConfigured()) return staticItems;
 
   try {
+    // Repair twins that failed during approve (common when MyMemory times out).
+    await backfillMissingTwins(4);
+
     const published = await listPublished(100);
     const dynamicRecords = published
       .filter((a) => a.locale === locale && a.status === "published")

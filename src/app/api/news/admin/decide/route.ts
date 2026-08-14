@@ -3,9 +3,9 @@ import { revalidatePath } from "next/cache";
 import { rateLimit } from "@/lib/form-guard";
 import { assertSameOrigin, getNewsSession } from "@/lib/news/auth";
 import { newsQueueReady, newsRedisConfigured } from "@/lib/news/config";
-import { NEWS_FIELD_MAX, slugify, stripToPlainText } from "@/lib/news/sanitize";
-import { decideArticle, publishLocaleTwin } from "@/lib/news/store";
-import { translateNewsFields } from "@/lib/news/translate";
+import { decideArticle } from "@/lib/news/store";
+import { ensureOppositeTwin } from "@/lib/news/twins";
+import { NEWS_FIELD_MAX, stripToPlainText } from "@/lib/news/sanitize";
 
 export const runtime = "nodejs";
 
@@ -90,38 +90,18 @@ export async function POST(request: Request) {
 
     let twinSlug: string | undefined;
     if (decision === "approve") {
-      const otherLocale = article.locale === "pt" ? "en" : "pt";
+      // Always create the opposite-locale twin (translate best-effort).
       try {
-        const translated = await translateNewsFields(
-          {
-            title: article.title,
-            summary: article.summary,
-            body: article.body,
-            category: article.category,
-          },
-          article.locale,
-          otherLocale,
-        );
-        const twin = await publishLocaleTwin({
-          source: article,
-          locale: otherLocale,
-          title: translated.title,
-          summary: translated.summary,
-          body: translated.body,
-          category: translated.category,
-          slug: slugify(translated.title),
-          decidedBy: session.email,
-        });
+        const twin = await ensureOppositeTwin(article, session.email);
         twinSlug = twin.slug;
       } catch {
-        // Source locale still published even if twin translation fails
+        // Source locale still published; listing backfill will retry twin later.
       }
 
       revalidateNews(
         article.locale === "pt" ? article.slug : twinSlug,
         article.locale === "en" ? article.slug : twinSlug,
       );
-      // Always refresh both listing pages
       revalidatePath("/insights");
       revalidatePath("/en/insights");
       revalidatePath(`/insights/${article.slug}`);

@@ -30,9 +30,27 @@ export function middleware(request: NextRequest) {
     return res;
   }
 
+  if (pathname.startsWith("/insights") || pathname.startsWith("/en/insights")) {
+    const res = NextResponse.next();
+    res.headers.set(
+      "Cache-Control",
+      "private, no-store, no-cache, must-revalidate",
+    );
+    return res;
+  }
+
   return NextResponse.next();
 }
 
 export const config = {
-  matcher: ["/en", "/en/", "/admin/:path*", "/api/news/:path*"],
+  matcher: [
+    "/en",
+    "/en/",
+    "/admin/:path*",
+    "/api/news/:path*",
+    "/insights",
+    "/insights/:path*",
+    "/en/insights",
+    "/en/insights/:path*",
+  ],
 };

@@ -35,16 +35,17 @@ export async function translateNewsFields(
 ): Promise<{ title: string; summary: string; body: string; category: string }> {
   if (from === to) return fields;
 
-  const paragraphs = fields.body.split(/\n{2,}/).map((p) => p.trim()).filter(Boolean);
-  const translatedParas: string[] = [];
-  for (const p of paragraphs.slice(0, 40)) {
-    translatedParas.push(await translateChunk(p, from, to));
-  }
+  const paragraphs = fields.body
+    .split(/\n{2,}/)
+    .map((p) => p.trim())
+    .filter(Boolean)
+    .slice(0, 24);
 
-  const [title, summary, category] = await Promise.all([
+  const [title, summary, category, ...translatedParas] = await Promise.all([
     translateChunk(fields.title, from, to),
     translateChunk(fields.summary || fields.title, from, to),
     translateChunk(fields.category || "News", from, to),
+    ...paragraphs.map((p) => translateChunk(p, from, to)),
   ]);
 
   return {
