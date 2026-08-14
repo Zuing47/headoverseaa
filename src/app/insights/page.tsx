@@ -27,9 +27,8 @@ export const fetchCache = "force-no-store";
 export default async function InsightsPage() {
   const items = await getPublicInsights("pt");
   return (
-    <>
-      {/* lead:${items[0]?.slug ?? "none"} */}
+    <div data-news-lead={items[0]?.slug ?? "none"}>
       <InsightsPageView locale="pt" items={items} />
-    </>
+    </div>
   );
 }

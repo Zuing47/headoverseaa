@@ -12,33 +12,13 @@ import type { NewsArticleRecord } from "./types";
 
 export { recordToInsight } from "./map";
 
-function pairIdOf(a: NewsArticleRecord): string {
-  return a.pairId || a.id;
-}
-
-function externalBase(ext: string | null | undefined): string | null {
-  if (!ext) return null;
-  return ext.replace(/:(pt|en)$/i, "");
-}
-
-function isPair(a: NewsArticleRecord, b: NewsArticleRecord): boolean {
-  if (a.id === b.id) return false;
-  if (pairIdOf(a) === pairIdOf(b) || a.pairId === b.id || b.pairId === a.id) {
-    return true;
-  }
-  if (a.slug && b.slug && a.slug === b.slug) return true;
-  const ea = externalBase(a.externalId);
-  const eb = externalBase(b.externalId);
-  if (ea && eb && ea === eb) return true;
-  return false;
-}
-
 function publishTime(a: NewsArticleRecord): number {
   return Date.parse(a.publishedAt || a.createdAt || "") || 0;
 }
 
 /**
- * EN listing follows PT publish order so the same story is featured in both locales.
+ * EN board mirrors PT ranking by matching the same slug across locales.
+ * (Twins keep the source slug so /insights/x ↔ /en/insights/x.)
  */
 function orderForLocale(
   locale: Locale,
@@ -50,25 +30,24 @@ function orderForLocale(
 
   if (locale === "pt") return ptOrdered;
 
+  const timeBySlug = new Map<string, number>();
+  for (const p of ptOrdered) {
+    if (p.slug) timeBySlug.set(p.slug, publishTime(p));
+  }
+
   const enAll = published.filter(
     (a) => a.locale === "en" && a.status === "published",
   );
-  const used = new Set<string>();
-  const ordered: NewsArticleRecord[] = [];
 
-  for (const pt of ptOrdered) {
-    const en = enAll.find((e) => !used.has(e.id) && isPair(pt, e));
-    if (en) {
-      ordered.push(en);
-      used.add(en.id);
-    }
-  }
-
-  const rest = enAll
-    .filter((e) => !used.has(e.id))
-    .sort((a, b) => publishTime(b) - publishTime(a));
-
-  return [...ordered, ...rest];
+  return [...enAll].sort((a, b) => {
+    const ta = timeBySlug.get(a.slug) ?? publishTime(a);
+    const tb = timeBySlug.get(b.slug) ?? publishTime(b);
+    if (tb !== ta) return tb - ta;
+    // Prefer articles that have a PT twin (same slug)
+    const al = timeBySlug.has(a.slug) ? 1 : 0;
+    const bl = timeBySlug.has(b.slug) ? 1 : 0;
+    return bl - al;
+  });
 }
 
 async function repairTwinsBestEffort() {

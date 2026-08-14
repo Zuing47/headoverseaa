@@ -8,7 +8,7 @@ import {
   MeridianLink,
 } from "@/components/back";
 import { Reveal } from "@/components/home/reveal";
-import { BACK_MEDIA } from "@/lib/back-media";
+import { NEWS_COVER_FALLBACK } from "@/lib/news/cover";
 import type { Insight, Locale, SiteContent } from "@/types/content";
 
 interface NewsArticlePageViewProps {
@@ -31,7 +31,7 @@ export function NewsArticlePageView({
       : [];
 
   // One cover only — same image as the listing card (no second stock photo).
-  const cover = article.image || BACK_MEDIA.nycFlag;
+  const cover = article.image || NEWS_COVER_FALLBACK;
 
   return (
     <BackShell content={content} locale={locale} withContact={false}>

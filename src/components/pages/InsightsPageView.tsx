@@ -4,7 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { BackLabel, BackShell, MeridianLink } from "@/components/back";
 import { Reveal } from "@/components/home/reveal";
-import { BACK_MEDIA } from "@/lib/back-media";
+import { NEWS_COVER_FALLBACK } from "@/lib/news/cover";
 import { getContent } from "@/lib/content";
 import type { Insight, Locale } from "@/types/content";
 
@@ -23,7 +23,7 @@ function CardMedia({
   priority?: boolean;
   sizes: string;
 }) {
-  const src = item.image || BACK_MEDIA.pexelsField;
+  const src = item.image || NEWS_COVER_FALLBACK;
   if (src.startsWith("https://") || src.startsWith("/api/news/media/")) {
     return (
       // eslint-disable-next-line @next/next/no-img-element
