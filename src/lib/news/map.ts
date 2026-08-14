@@ -4,7 +4,7 @@ import {
   formatNewsDate,
   sanitizeHttpsUrl,
 } from "./sanitize";
-import { isNewsMediaPath } from "./media";
+import { isNewsMediaPath } from "./media-path";
 import type { NewsArticleRecord } from "./types";
 
 /** Resolve hero/list image: site path, hosted media, or sanitized https. */

@@ -5,7 +5,17 @@ import {
   redisRestUrl,
 } from "./config";
 import { newNewsId } from "./crypto";
+import {
+  isNewsMediaPath,
+  newsMediaPublicPath,
+} from "./media-path";
 import { NEWS_FIELD_MAX, sanitizeHttpsUrl } from "./sanitize";
+
+export {
+  isNewsMediaPath,
+  newsMediaPublicPath,
+  newsMediaIdFromPath,
+} from "./media-path";
 
 const MAX_BYTES = 1_800_000; // ~1.8MB
 const ALLOWED_TYPES = new Set([
@@ -40,14 +50,6 @@ export type NewsMediaMeta = {
   createdAt: string;
   sourceUrl?: string | null;
 };
-
-export function isNewsMediaPath(path: string): boolean {
-  return /^\/api\/news\/media\/[a-f0-9]{32}$/i.test(path.trim());
-}
-
-export function newsMediaPublicPath(id: string): string {
-  return `/api/news/media/${id}`;
-}
 
 /** Accept site media path or https URL. */
 export function sanitizeNewsImageRef(raw: unknown): string | null {
