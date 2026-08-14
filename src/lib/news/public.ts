@@ -16,23 +16,38 @@ function pairIdOf(a: NewsArticleRecord): string {
   return a.pairId || a.id;
 }
 
+function externalBase(ext: string | null | undefined): string | null {
+  if (!ext) return null;
+  return ext.replace(/:(pt|en)$/i, "");
+}
+
+function findPtSibling(
+  article: NewsArticleRecord,
+  all: NewsArticleRecord[],
+): NewsArticleRecord | null {
+  if (article.locale === "pt") return article;
+  const pid = pairIdOf(article);
+  const ext = externalBase(article.externalId);
+  return (
+    all.find((p) => {
+      if (p.locale !== "pt" || p.status !== "published") return false;
+      if (pairIdOf(p) === pid || p.id === article.pairId || p.pairId === article.id) {
+        return true;
+      }
+      if (p.slug && article.slug && p.slug === article.slug) return true;
+      const pExt = externalBase(p.externalId);
+      if (ext && pExt && ext === pExt) return true;
+      return false;
+    }) ?? null
+  );
+}
+
 /** Prefer the PT sibling's publish time so EN featured matches PT. */
 function featuredSortKey(
   article: NewsArticleRecord,
   all: NewsArticleRecord[],
 ): number {
-  const pid = pairIdOf(article);
-  const pt =
-    article.locale === "pt"
-      ? article
-      : all.find(
-          (p) =>
-            p.locale === "pt" &&
-            p.status === "published" &&
-            (pairIdOf(p) === pid ||
-              p.id === article.pairId ||
-              p.pairId === article.id),
-        );
+  const pt = findPtSibling(article, all);
   const iso =
     pt?.publishedAt || pt?.createdAt || article.publishedAt || article.createdAt;
   return Date.parse(iso || "") || 0;
