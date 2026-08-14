@@ -3,7 +3,7 @@ import { getContent } from "@/lib/content";
 import { newsRedisConfigured } from "./config";
 import { recordToInsight } from "./map";
 import { getArticleBySlug, listPublished } from "./store";
-import { backfillMissingTwins } from "./twins";
+import { backfillMissingTwins, retranslateStaleTwins } from "./twins";
 import type { NewsArticleRecord } from "./types";
 
 export { recordToInsight } from "./map";
@@ -18,8 +18,9 @@ export async function getPublicInsights(locale: Locale): Promise<Insight[]> {
   if (!newsRedisConfigured()) return staticItems;
 
   try {
-    // Repair twins that failed during approve (common when MyMemory times out).
+    // Repair twins that failed during approve / were copy-only backfills.
     await backfillMissingTwins(4);
+    await retranslateStaleTwins(2);
 
     const published = await listPublished(100);
     const dynamicRecords = published
@@ -46,6 +47,11 @@ export async function getPublicInsightBySlug(
   if (!newsRedisConfigured()) return null;
 
   try {
+    // If opening an EN article that is still PT text, fix it before render.
+    if (locale === "en") {
+      await retranslateStaleTwins(1);
+    }
+
     const article = await getArticleBySlug(locale, slug);
     if (!article || article.status !== "published") return null;
     if (article.locale !== locale) return null;
