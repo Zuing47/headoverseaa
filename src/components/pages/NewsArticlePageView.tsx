@@ -1,16 +1,13 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
 import {
-  BackApproach,
   BackBand,
   BackHero,
   BackShell,
   MeridianLink,
 } from "@/components/back";
 import { Reveal } from "@/components/home/reveal";
-import { ImageReveal } from "@/components/pages/ImageReveal";
 import { BACK_MEDIA } from "@/lib/back-media";
 import type { Insight, Locale, SiteContent } from "@/types/content";
 
@@ -33,13 +30,16 @@ export function NewsArticlePageView({
       ? [article.description]
       : [];
 
+  // One cover only — same image as the listing card (no second stock photo).
+  const cover = article.image || BACK_MEDIA.nycFlag;
+
   return (
     <BackShell content={content} locale={locale} withContact={false}>
       <BackHero
         eyebrow={article.category}
         title={article.title}
         subtitle={`${article.date}${article.author ? ` · ${article.author}` : ""}`}
-        image={article.image || BACK_MEDIA.nycFlag}
+        image={cover}
         imageAlt={article.title}
       />
 
@@ -52,19 +52,6 @@ export function NewsArticlePageView({
             ← {en ? "News" : "Notícias"}
           </Link>
         </Reveal>
-
-        {!article.image ? (
-          <ImageReveal className="relative mt-12 aspect-[16/9] w-full overflow-hidden bg-[#eee]">
-            <Image
-              src={BACK_MEDIA.sunsetPoster}
-              alt=""
-              fill
-              sizes="(max-width: 1280px) 100vw, 1120px"
-              className="object-cover"
-              quality={90}
-            />
-          </ImageReveal>
-        ) : null}
 
         <div className="mx-auto mt-12 max-w-[40rem] md:mt-16">
           {paragraphs.map((p, i) => (
@@ -83,29 +70,6 @@ export function NewsArticlePageView({
           </div>
         </div>
       </BackBand>
-
-      <BackApproach
-        eyebrow={en ? "Continue" : "Continuar"}
-        title={
-          en
-            ? "Explore more from Head Oversea."
-            : "Explore mais da Head Oversea."
-        }
-        body={
-          en
-            ? "Thesis, portfolio, and how we operate across Brazil and the United States."
-            : "Tese, portfólio e como operamos entre Brasil e Estados Unidos."
-        }
-        href={indexHref}
-        cta={en ? "Back to News" : "Voltar para Notícias"}
-        image={BACK_MEDIA.chrysler}
-        imageAlt="Head Oversea"
-        quote={
-          en
-            ? "Context first. Capital second."
-            : "Contexto primeiro. Capital depois."
-        }
-      />
     </BackShell>
   );
 }

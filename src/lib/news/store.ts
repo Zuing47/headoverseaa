@@ -139,7 +139,7 @@ export async function decideArticle(opts: {
       opts.decision === "reject" ? opts.rejectReason || null : null,
   };
 
-  const score = Date.parse(current.createdAt) || Date.now();
+  const score = Date.parse(now) || Date.now();
   const r = redis();
   const pipe = r.pipeline();
   pipe.set(KEYS.article(next.id), next);
@@ -197,12 +197,15 @@ export async function publishLocaleTwin(opts: {
     externalId: twinExt,
     createdAt: existing?.createdAt || opts.source.createdAt,
     updatedAt: now,
-    publishedAt: now,
+    // Keep pair aligned — never bump publishedAt on retranslate/refresh
+    publishedAt:
+      opts.source.publishedAt || existing?.publishedAt || now,
     decidedBy: opts.decidedBy,
     rejectReason: null,
   };
 
-  const score = Date.parse(twin.createdAt) || Date.now();
+  const score =
+    Date.parse(twin.publishedAt || twin.createdAt) || Date.now();
   const pipe = r.pipeline();
   if (existing && existing.status !== "published") {
     pipe.zrem(KEYS.byStatus(existing.status), existing.id);

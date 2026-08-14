@@ -9,7 +9,7 @@ import {
   slugify,
   stripToPlainText,
 } from "@/lib/news/sanitize";
-import { findByExternalId, getArticleById, updateArticle } from "@/lib/news/store";
+import { findByExternalId, getArticleById, publishLocaleTwin, updateArticle } from "@/lib/news/store";
 import { ensureOppositeTwin } from "@/lib/news/twins";
 import { sanitizeNewsImageRef } from "@/lib/news/media";
 
@@ -145,7 +145,7 @@ export async function POST(request: Request) {
         revalidateArticle(existing.slug);
       }
 
-      // Ensure opposite-locale twin exists (once)
+      // Ensure twin exists and stays aligned (cover + publish date)
       try {
         const otherLocale = article.locale === "pt" ? "en" : "pt";
         const twinExt = article.externalId
@@ -159,9 +159,24 @@ export async function POST(request: Request) {
             "translate",
           );
           revalidateArticle(twin.slug);
-          revalidatePath("/en/insights");
-          revalidatePath("/insights");
+        } else if (
+          twinExisting.imageUrl !== article.imageUrl ||
+          twinExisting.publishedAt !== article.publishedAt
+        ) {
+          const twin = await publishLocaleTwin({
+            source: article,
+            locale: otherLocale,
+            title: twinExisting.title,
+            summary: twinExisting.summary,
+            body: twinExisting.body,
+            category: twinExisting.category,
+            slug: twinExisting.slug,
+            decidedBy: session.email,
+          });
+          revalidateArticle(twin.slug);
         }
+        revalidatePath("/en/insights");
+        revalidatePath("/insights");
       } catch {
         // non-fatal — public listing backfill will retry
       }

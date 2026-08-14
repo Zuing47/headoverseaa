@@ -148,7 +148,45 @@ export async function retranslateStaleTwins(limit = 2): Promise<number> {
         slug: twin.slug || source.slug,
         decidedBy: "system:retranslate",
       });
-      // refresh in-memory list
+      const idx = published.findIndex((p) => p.id === updated.id);
+      if (idx >= 0) published[idx] = updated;
+      fixed += 1;
+    } catch {
+      // continue
+    }
+  }
+
+  return fixed;
+}
+
+/**
+ * Align EN twin publishedAt + cover with PT source so featured order matches.
+ */
+export async function syncTwinListingMeta(limit = 20): Promise<number> {
+  const published = await listPublished(100);
+  let fixed = 0;
+
+  for (const source of published) {
+    if (fixed >= limit) break;
+    if (source.locale !== "pt" || source.status !== "published") continue;
+    const twin = findLocaleTwin(published, source, "en");
+    if (!twin) continue;
+
+    const sameDate = (twin.publishedAt || "") === (source.publishedAt || "");
+    const sameImage = (twin.imageUrl || "") === (source.imageUrl || "");
+    if (sameDate && sameImage) continue;
+
+    try {
+      const updated = await publishLocaleTwin({
+        source,
+        locale: "en",
+        title: twin.title,
+        summary: twin.summary,
+        body: twin.body,
+        category: twin.category,
+        slug: twin.slug || source.slug,
+        decidedBy: twin.decidedBy || "system:sync-meta",
+      });
       const idx = published.findIndex((p) => p.id === updated.id);
       if (idx >= 0) published[idx] = updated;
       fixed += 1;
