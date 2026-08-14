@@ -28,7 +28,7 @@ export const transition = (
 ): Transition => ({ duration, delay, ease: EASE_OUT });
 
 export const fadeUp: Variants = {
-  hidden: { opacity: 0.02, y: 64 },
+  hidden: { opacity: 1, y: 28 },
   visible: (delay: number = 0) => ({
     opacity: 1,
     y: 0,

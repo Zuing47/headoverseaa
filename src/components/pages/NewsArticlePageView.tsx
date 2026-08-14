@@ -68,18 +68,19 @@ export function NewsArticlePageView({
 
         <div className="mx-auto mt-12 max-w-[40rem] md:mt-16">
           {paragraphs.map((p, i) => (
-            <Reveal key={i} delay={0.08 + i * 0.05} variant="rise">
-              <p className="body-editorial mb-7 text-[1.05rem] leading-[1.75] text-black/65">
-                {p}
-              </p>
-            </Reveal>
+            <p
+              key={i}
+              className="body-editorial mb-7 text-[1.05rem] leading-[1.75] text-black/65"
+            >
+              {p}
+            </p>
           ))}
 
-          <Reveal delay={0.2} variant="fadeUp" className="mt-14 border-t border-black/[0.08] pt-10">
+          <div className="mt-14 border-t border-black/[0.08] pt-10">
             <MeridianLink href={indexHref}>
               {en ? "Back to News" : "Voltar para Notícias"}
             </MeridianLink>
-          </Reveal>
+          </div>
         </div>
       </BackBand>
 

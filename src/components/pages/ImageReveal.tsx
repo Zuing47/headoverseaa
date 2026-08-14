@@ -2,11 +2,12 @@
 
 import {
   motion,
+  useInView,
   useReducedMotion,
   useScroll,
   useTransform,
 } from "framer-motion";
-import { useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { DURATION, EASE_OUT, VIEWPORT } from "@/lib/motion";
 import { cn } from "@/lib/utils";
 
@@ -18,8 +19,12 @@ interface ImageRevealProps {
   immediate?: boolean;
 }
 
+const REVEALED = { y: "0%", scale: 1, clipPath: "inset(0% 0% 0% 0%)" };
+const HIDDEN = { y: "18%", scale: 1.06, clipPath: "inset(8% 0% 0% 0%)" };
+
 /**
  * Photo / media entrance — rises from below with a soft clip mask.
+ * Falls back to fully revealed quickly so mobile never strands images.
  */
 export function ImageReveal({
   children,
@@ -28,27 +33,34 @@ export function ImageReveal({
   immediate = false,
 }: ImageRevealProps) {
   const reduce = useReducedMotion();
+  const ref = useRef<HTMLDivElement>(null);
+  const inView = useInView(ref, {
+    once: true,
+    amount: VIEWPORT.amount,
+    margin: VIEWPORT.margin,
+  });
+  const [fallback, setFallback] = useState(false);
+
+  useEffect(() => {
+    const id = window.setTimeout(() => setFallback(true), 600);
+    return () => window.clearTimeout(id);
+  }, []);
 
   if (reduce) {
     return <div className={cn("relative overflow-hidden", className)}>{children}</div>;
   }
 
-  const motionProps = immediate
-    ? { animate: { y: "0%", scale: 1, clipPath: "inset(0% 0% 0% 0%)" } }
-    : {
-        whileInView: { y: "0%", scale: 1, clipPath: "inset(0% 0% 0% 0%)" },
-        viewport: VIEWPORT,
-      };
+  const show = immediate || inView || fallback;
 
   return (
-    <div className={cn("relative overflow-hidden", className)}>
+    <div ref={ref} className={cn("relative overflow-hidden", className)}>
       <motion.div
         className="absolute inset-0 will-change-transform"
-        initial={{ y: "28%", scale: 1.1, clipPath: "inset(12% 0% 0% 0%)" }}
-        {...motionProps}
+        initial={HIDDEN}
+        animate={show ? REVEALED : HIDDEN}
         transition={{
           duration: DURATION.cinematic,
-          delay,
+          delay: show && !fallback ? delay : 0,
           ease: EASE_OUT,
         }}
       >
@@ -76,7 +88,7 @@ export function MediaRise({
     <div className={cn("relative overflow-hidden", className)}>
       <motion.div
         className="absolute inset-0 will-change-transform"
-        initial={{ y: "18%", scale: 1.06, opacity: 0.5 }}
+        initial={{ y: "18%", scale: 1.06, opacity: 1 }}
         whileInView={{ y: "0%", scale: 1, opacity: 1 }}
         viewport={VIEWPORT}
         transition={{ duration: DURATION.cinematic, delay, ease: EASE_OUT }}

@@ -19,49 +19,44 @@ export type RevealVariant =
   | "slideRight";
 
 /**
- * Near-zero opacity floors — Lenis can strand whileInView if we start at
- * exactly 0, so we keep a barely-perceptible sliver instead. Movement is
- * the primary signal: every variant now rises from below with real
- * distance so the entrance reads clearly, not as a soft fade.
- *
- * A timed safety net forces full opacity if IntersectionObserver never
- * fires (some mobile browsers + route transitions), so copy never stays
- * invisible on dark bands.
+ * Motion via transform only — never hide copy with near-zero opacity.
+ * Mobile Safari / coarse pointers often strand whileInView; invisible
+ * SSR floors made published news "disappear" on phones.
  */
 const VARIANTS: Record<
   RevealVariant,
   { initial: TargetAndTransition; whileInView: TargetAndTransition }
 > = {
   fadeUp: {
-    initial: { opacity: 0.02, y: 64 },
+    initial: { opacity: 1, y: 28 },
     whileInView: { opacity: 1, y: 0 },
   },
   fade: {
-    initial: { opacity: 0.02, y: 32 },
+    initial: { opacity: 1, y: 16 },
     whileInView: { opacity: 1, y: 0 },
   },
   fadeScale: {
-    initial: { opacity: 0.03, y: 28, scale: 0.96 },
+    initial: { opacity: 1, y: 16, scale: 0.98 },
     whileInView: { opacity: 1, y: 0, scale: 1 },
   },
   rise: {
-    initial: { opacity: 0.02, y: 92 },
+    initial: { opacity: 1, y: 36 },
     whileInView: { opacity: 1, y: 0 },
   },
   slide: {
-    initial: { opacity: 0.02, x: -36 },
+    initial: { opacity: 1, x: -20 },
     whileInView: { opacity: 1, x: 0 },
   },
   slideRight: {
-    initial: { opacity: 0.02, x: 72 },
+    initial: { opacity: 1, x: 28 },
     whileInView: { opacity: 1, x: 0 },
   },
 };
 
 const STATIC: TargetAndTransition = { opacity: 1, y: 0, x: 0, scale: 1 };
 
-/** If IO never fires, force visible after this (ms). */
-const REVEAL_FALLBACK_MS = 1600;
+/** If IO never fires, settle motion after this (ms). */
+const REVEAL_FALLBACK_MS = 500;
 
 export function reveal(delay = 0, variant: RevealVariant = "fadeUp") {
   const v = VARIANTS[variant];

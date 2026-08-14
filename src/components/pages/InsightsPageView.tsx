@@ -147,27 +147,25 @@ export function InsightsPageView({
       <section className="bg-white text-black">
         <div className="page-shell py-[clamp(2.5rem,6vw,4.5rem)]">
           {featured ? (
-            <Reveal variant="fadeUp">
-              <NewsCard
-                item={featured}
-                badge={badge}
-                featured
-                index={0}
-                en={en}
-              />
-            </Reveal>
+            <NewsCard
+              item={featured}
+              badge={badge}
+              featured
+              index={0}
+              en={en}
+            />
           ) : null}
 
           {rest.length > 0 ? (
             <div className="mt-12 grid gap-x-6 gap-y-10 sm:grid-cols-2 lg:mt-14 lg:grid-cols-3 lg:gap-x-7 lg:gap-y-12">
               {rest.map((item, i) => (
-                <Reveal
+                <NewsCard
                   key={item.slug ?? item.title}
-                  delay={i * 0.05}
-                  variant="fadeUp"
-                >
-                  <NewsCard item={item} badge={badge} index={i + 1} en={en} />
-                </Reveal>
+                  item={item}
+                  badge={badge}
+                  index={i + 1}
+                  en={en}
+                />
               ))}
             </div>
           ) : null}
