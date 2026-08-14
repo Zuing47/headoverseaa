@@ -15,20 +15,41 @@ function pairKey(article: NewsArticleRecord): string {
   return article.pairId || article.id;
 }
 
+function externalBase(ext: string | null | undefined): string | null {
+  if (!ext) return null;
+  return ext.replace(/:(pt|en)$/i, "");
+}
+
+function isLocalePair(a: NewsArticleRecord, b: NewsArticleRecord): boolean {
+  if (a.id === b.id || a.locale === b.locale) return false;
+  if (
+    pairKey(a) === pairKey(b) ||
+    a.pairId === b.id ||
+    b.pairId === a.id
+  ) {
+    return true;
+  }
+  if (a.slug && b.slug && a.slug === b.slug) return true;
+  const ea = externalBase(a.externalId);
+  const eb = externalBase(b.externalId);
+  if (ea && eb && ea === eb) return true;
+  if (a.imageUrl && b.imageUrl && a.imageUrl === b.imageUrl) return true;
+  if (a.createdAt && b.createdAt && a.createdAt === b.createdAt) return true;
+  return false;
+}
+
 function findLocaleTwin(
   published: NewsArticleRecord[],
   source: NewsArticleRecord,
   locale: Locale,
 ): NewsArticleRecord | null {
   if (source.locale === locale) return source;
-  const key = pairKey(source);
   return (
     published.find(
       (p) =>
         p.locale === locale &&
         p.status === "published" &&
-        p.id !== source.id &&
-        (pairKey(p) === key || p.pairId === source.id || source.pairId === p.id),
+        isLocalePair(source, p),
     ) ?? null
   );
 }

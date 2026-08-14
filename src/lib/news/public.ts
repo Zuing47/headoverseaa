@@ -30,6 +30,8 @@ function isPair(a: NewsArticleRecord, b: NewsArticleRecord): boolean {
   const ea = externalBase(a.externalId);
   const eb = externalBase(b.externalId);
   if (ea && eb && ea === eb) return true;
+  if (a.imageUrl && b.imageUrl && a.imageUrl === b.imageUrl) return true;
+  if (a.createdAt && b.createdAt && a.createdAt === b.createdAt) return true;
   return false;
 }
 
