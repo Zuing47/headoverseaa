@@ -48,11 +48,21 @@ function CardMedia({
   );
 }
 
-/** Lead story — text-first, portal hierarchy. */
+/** Lead story — photo on top, then editorial copy. */
 function LeadStory({ item, en }: { item: Insight; en: boolean }) {
   return (
     <article className="flex h-full flex-col border-b border-black/[0.08] pb-8 lg:border-b-0 lg:border-r lg:pb-0 lg:pr-10">
-      <Link href={item.href} className="group block flex-1">
+      <Link
+        href={item.href}
+        className="group relative block aspect-[16/10] overflow-hidden bg-black/[0.04]"
+      >
+        <CardMedia
+          item={item}
+          priority
+          sizes="(max-width: 1024px) 100vw, 58vw"
+        />
+      </Link>
+      <Link href={item.href} className="group mt-6 block flex-1 md:mt-7">
         <p className="label-caps text-black/40">{item.category}</p>
         <h2 className="font-display mt-4 text-[clamp(1.85rem,3.6vw,2.85rem)] font-medium leading-[1.08] text-black transition-opacity group-hover:opacity-70">
           {item.title}
@@ -72,16 +82,6 @@ function LeadStory({ item, en }: { item: Insight; en: boolean }) {
           {en ? "Read story" : "Ler notícia"}
         </MeridianLink>
       </div>
-      <Link
-        href={item.href}
-        className="group relative mt-8 block aspect-[16/10] overflow-hidden bg-black/[0.04] lg:mt-10"
-      >
-        <CardMedia
-          item={item}
-          priority
-          sizes="(max-width: 1024px) 100vw, 58vw"
-        />
-      </Link>
     </article>
   );
 }
