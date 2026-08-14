@@ -3,13 +3,39 @@ import { getContent } from "@/lib/content";
 import { newsRedisConfigured } from "./config";
 import { recordToInsight } from "./map";
 import { getArticleBySlug, listPublished } from "./store";
-import { backfillMissingTwins, retranslateStaleTwins, syncTwinListingMeta } from "./twins";
+import {
+  backfillMissingTwins,
+  retranslateStaleTwins,
+  syncTwinListingMeta,
+} from "./twins";
 import type { NewsArticleRecord } from "./types";
 
 export { recordToInsight } from "./map";
 
-function publishedSortKey(a: NewsArticleRecord) {
-  return Date.parse(a.publishedAt || a.updatedAt || a.createdAt) || 0;
+function pairIdOf(a: NewsArticleRecord): string {
+  return a.pairId || a.id;
+}
+
+/** Prefer the PT sibling's publish time so EN featured matches PT. */
+function featuredSortKey(
+  article: NewsArticleRecord,
+  all: NewsArticleRecord[],
+): number {
+  const pid = pairIdOf(article);
+  const pt =
+    article.locale === "pt"
+      ? article
+      : all.find(
+          (p) =>
+            p.locale === "pt" &&
+            p.status === "published" &&
+            (pairIdOf(p) === pid ||
+              p.id === article.pairId ||
+              p.pairId === article.id),
+        );
+  const iso =
+    pt?.publishedAt || pt?.createdAt || article.publishedAt || article.createdAt;
+  return Date.parse(iso || "") || 0;
 }
 
 /** Public listing: newest published first (featured), then older static pieces. */
@@ -18,16 +44,16 @@ export async function getPublicInsights(locale: Locale): Promise<Insight[]> {
   if (!newsRedisConfigured()) return staticItems;
 
   try {
-    // Repair twins that failed during approve / were copy-only backfills.
     await backfillMissingTwins(4);
     await retranslateStaleTwins(2);
-    // Keep EN featured order + covers in sync with PT source
     await syncTwinListingMeta(20);
 
     const published = await listPublished(100);
     const dynamicRecords = published
       .filter((a) => a.locale === locale && a.status === "published")
-      .sort((a, b) => publishedSortKey(b) - publishedSortKey(a));
+      .sort(
+        (a, b) => featuredSortKey(b, published) - featuredSortKey(a, published),
+      );
 
     const dynamic = dynamicRecords.map(recordToInsight);
     const seen = new Set(dynamic.map((i) => i.slug));
@@ -49,7 +75,6 @@ export async function getPublicInsightBySlug(
   }
 
   try {
-    // Dynamic published wins over static editorial with the same slug
     if (locale === "en") {
       await retranslateStaleTwins(1);
     }
