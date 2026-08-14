@@ -21,36 +21,54 @@ function externalBase(ext: string | null | undefined): string | null {
   return ext.replace(/:(pt|en)$/i, "");
 }
 
-function findPtSibling(
-  article: NewsArticleRecord,
-  all: NewsArticleRecord[],
-): NewsArticleRecord | null {
-  if (article.locale === "pt") return article;
-  const pid = pairIdOf(article);
-  const ext = externalBase(article.externalId);
-  return (
-    all.find((p) => {
-      if (p.locale !== "pt" || p.status !== "published") return false;
-      if (pairIdOf(p) === pid || p.id === article.pairId || p.pairId === article.id) {
-        return true;
-      }
-      if (p.slug && article.slug && p.slug === article.slug) return true;
-      const pExt = externalBase(p.externalId);
-      if (ext && pExt && ext === pExt) return true;
-      return false;
-    }) ?? null
-  );
+function isPair(a: NewsArticleRecord, b: NewsArticleRecord): boolean {
+  if (a.id === b.id) return false;
+  if (pairIdOf(a) === pairIdOf(b) || a.pairId === b.id || b.pairId === a.id) {
+    return true;
+  }
+  if (a.slug && b.slug && a.slug === b.slug) return true;
+  const ea = externalBase(a.externalId);
+  const eb = externalBase(b.externalId);
+  if (ea && eb && ea === eb) return true;
+  return false;
 }
 
-/** Prefer the PT sibling's publish time so EN featured matches PT. */
-function featuredSortKey(
-  article: NewsArticleRecord,
-  all: NewsArticleRecord[],
-): number {
-  const pt = findPtSibling(article, all);
-  const iso =
-    pt?.publishedAt || pt?.createdAt || article.publishedAt || article.createdAt;
-  return Date.parse(iso || "") || 0;
+function publishTime(a: NewsArticleRecord): number {
+  return Date.parse(a.publishedAt || a.createdAt || "") || 0;
+}
+
+/**
+ * EN listing follows PT publish order so the same story is featured in both locales.
+ */
+function orderForLocale(
+  locale: Locale,
+  published: NewsArticleRecord[],
+): NewsArticleRecord[] {
+  const ptOrdered = published
+    .filter((a) => a.locale === "pt" && a.status === "published")
+    .sort((a, b) => publishTime(b) - publishTime(a));
+
+  if (locale === "pt") return ptOrdered;
+
+  const enAll = published.filter(
+    (a) => a.locale === "en" && a.status === "published",
+  );
+  const used = new Set<string>();
+  const ordered: NewsArticleRecord[] = [];
+
+  for (const pt of ptOrdered) {
+    const en = enAll.find((e) => !used.has(e.id) && isPair(pt, e));
+    if (en) {
+      ordered.push(en);
+      used.add(en.id);
+    }
+  }
+
+  const rest = enAll
+    .filter((e) => !used.has(e.id))
+    .sort((a, b) => publishTime(b) - publishTime(a));
+
+  return [...ordered, ...rest];
 }
 
 /** Public listing: newest published first (featured), then older static pieces. */
@@ -64,12 +82,7 @@ export async function getPublicInsights(locale: Locale): Promise<Insight[]> {
     await syncTwinListingMeta(20);
 
     const published = await listPublished(100);
-    const dynamicRecords = published
-      .filter((a) => a.locale === locale && a.status === "published")
-      .sort(
-        (a, b) => featuredSortKey(b, published) - featuredSortKey(a, published),
-      );
-
+    const dynamicRecords = orderForLocale(locale, published);
     const dynamic = dynamicRecords.map(recordToInsight);
     const seen = new Set(dynamic.map((i) => i.slug));
     const staticRest = staticItems.filter((i) => !seen.has(i.slug));
