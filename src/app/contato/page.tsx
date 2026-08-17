@@ -1,4 +1,5 @@
 import { ContactPageView } from "@/components/pages/ContactPageView";
+import { InteriorJsonLd, homeCrumb } from "@/components/seo/InteriorJsonLd";
 import { getContent } from "@/lib/content";
 import type { Metadata } from "next";
 import { pageMeta } from "@/lib/seo";
@@ -14,5 +15,17 @@ export const metadata: Metadata = pageMeta({
 });
 
 export default function ContactPage() {
-  return <ContactPageView content={getContent("pt")} locale="pt" />;
+  return (
+    <>
+      <InteriorJsonLd
+        locale="pt"
+        path="/contato"
+        name="Contato"
+        description="Fale com a equipe Head Oversea. Ownership ativo em private equity e real estate entre Brasil e Estados Unidos."
+        type="ContactPage"
+        crumbs={[homeCrumb("pt"), { name: "Contato", path: "/contato" }]}
+      />
+      <ContactPageView content={getContent("pt")} locale="pt" />
+    </>
+  );
 }

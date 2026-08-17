@@ -1,5 +1,7 @@
 export { BackLabel, BackBand, BackStat, BackListRow, MeridianLink } from "./primitives";
 export { BackHero } from "./BackHero";
+export { BackBreadcrumb } from "./BackBreadcrumb";
+export type { Crumb as BackCrumb } from "./BackBreadcrumb";
 export { BackApproach } from "./BackApproach";
 export { BackTrackGrid } from "./BackTrackGrid";
 export type { BackTrackItem } from "./BackTrackGrid";

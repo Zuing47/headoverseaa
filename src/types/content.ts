@@ -80,6 +80,8 @@ export interface Insight {
   slug: string;
   title: string;
   date: string;
+  /** ISO datetime when known (Redis publishedAt). Do not invent. */
+  dateIso?: string;
   category: string;
   href: string;
   image?: string;

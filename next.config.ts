@@ -34,6 +34,8 @@ const legacyRedirects: { source: string; destination: string }[] = [
   { source: "/equity-by-service", destination: "/private-equity" },
   { source: "/internacionalizacao", destination: "/private-equity" },
   { source: "/business-brokerage", destination: "/private-equity" },
+  { source: "/time", destination: "/sobre" },
+  { source: "/en/leadership", destination: "/en/about" },
 ];
 
 const nextConfig: NextConfig = {

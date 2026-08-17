@@ -210,6 +210,13 @@ const COPY = {
   },
 } as const;
 
+export function getWhyFaq(locale: Locale) {
+  return COPY[locale].faq.map((item) => ({
+    question: item.question,
+    answer: item.answer,
+  }));
+}
+
 interface WhyHeadOverseaPageViewProps {
   content: SiteContent;
   locale?: Locale;

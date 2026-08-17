@@ -1,12 +1,13 @@
 import { ServicesPageView } from "@/components/pages/ServicesPageView";
 import { getContent } from "@/lib/content";
 import type { Metadata } from "next";
+import { InteriorJsonLd, homeCrumb } from "@/components/seo/InteriorJsonLd";
 import { pageMeta } from "@/lib/seo";
 
 export const metadata: Metadata = pageMeta({
-  title: "How we work",
+  title: "Four fronts | Private Equity & Real Estate",
   description:
-    "Private equity and real estate with active ownership — governance, operations, and capital across the Brazil–United States corridor.",
+    "Active ownership, Brazil–U.S. corridor, value creation and liquidity, and real estate — four fronts of one Head Oversea thesis.",
   path: "/en/services",
   keywords: [
     "private equity",
@@ -18,5 +19,19 @@ export const metadata: Metadata = pageMeta({
 });
 
 export default function EnglishServicesPage() {
-  return <ServicesPageView content={getContent("en")} locale="en" />;
+  return (
+    <>
+      <InteriorJsonLd
+        locale="en"
+        path="/en/services"
+        name="Four fronts | Private Equity & Real Estate"
+        description="Active ownership, Brazil–U.S. corridor, value creation and liquidity, and real estate — four fronts of one Head Oversea thesis."
+        crumbs={[
+          homeCrumb("en"),
+          { name: "Four fronts", path: "/en/services" },
+        ]}
+      />
+      <ServicesPageView content={getContent("en")} locale="en" />
+    </>
+  );
 }

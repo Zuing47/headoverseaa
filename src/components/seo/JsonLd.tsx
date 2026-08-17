@@ -1,81 +1,77 @@
-import Script from "next/script";
+import { JsonLdScript } from "./JsonLdScript";
+import {
+  ORG,
+  absoluteUrl,
+  getPublicSiteUrl,
+  organizationId,
+  websiteId,
+} from "@/lib/site";
 
-const SITE_URL = "https://headoversea.com";
+export function organizationGraph(origin = getPublicSiteUrl()) {
+  return {
+    "@type": ["Organization", "FinancialService"],
+    "@id": organizationId(origin),
+    name: ORG.name,
+    legalName: ORG.legalName,
+    alternateName: ORG.alternateName,
+    description:
+      "Active ownership and long-term investment across private equity and real estate in Brazil and the United States.",
+    url: origin,
+    logo: {
+      "@type": "ImageObject",
+      url: absoluteUrl(ORG.logoPath, origin),
+    },
+    image: [absoluteUrl("/images/us-skyline-presence.jpg", origin)],
+    email: ORG.email,
+    telephone: ORG.telephone,
+    foundingDate: ORG.foundingDate,
+    address: {
+      "@type": "PostalAddress",
+      ...ORG.address,
+    },
+    contactPoint: {
+      "@type": "ContactPoint",
+      telephone: ORG.telephone,
+      email: ORG.email,
+      contactType: "customer service",
+      availableLanguage: ["Portuguese", "English"],
+    },
+    areaServed: [
+      { "@type": "Country", name: "Brazil" },
+      { "@type": "Country", name: "United States" },
+    ],
+    knowsAbout: [
+      "Private Equity",
+      "Real Estate",
+      "Active Ownership",
+      "Corporate Governance",
+      "Long-term Investment",
+      "Cross-border Investment",
+      "Middle Market",
+    ],
+    sameAs: [...ORG.sameAs],
+  };
+}
 
-const organizationSchema = {
-  "@context": "https://schema.org",
-  "@type": ["Organization", "FinancialService"],
-  "@id": `${SITE_URL}/#organization`,
-  name: "Head Oversea",
-  alternateName: "Head Oversea Private Equity & Real Estate",
-  description:
-    "Active ownership and long-term investment across private equity and real estate in Brazil and the United States.",
-  url: SITE_URL,
-  logo: `${SITE_URL}/logo-white.svg`,
-  image: [
-    `${SITE_URL}/og-nyc.jpg`,
-    `${SITE_URL}/images/us-skyline-presence.jpg`,
-    `${SITE_URL}/images/private-equity-team-collaboration.jpg`,
-    `${SITE_URL}/images/luxury-residential-real-estate.jpg`,
-  ],
-  email: "contact@headoversea.com",
-  telephone: "+1-689-777-1149",
-  priceRange: "$$$",
-  address: {
-    "@type": "PostalAddress",
-    streetAddress: "189 South Orange Ave, Ste 1250, South Tower",
-    addressLocality: "Orlando",
-    addressRegion: "FL",
-    postalCode: "32801",
-    addressCountry: "US",
-  },
-  contactPoint: {
-    "@type": "ContactPoint",
-    telephone: "+1-689-777-1149",
-    email: "contact@headoversea.com",
-    contactType: "sales",
-    availableLanguage: ["Portuguese", "English"],
-  },
-  areaServed: [
-    { "@type": "Country", name: "Brazil" },
-    { "@type": "Country", name: "United States" },
-  ],
-  knowsAbout: [
-    "Private Equity",
-    "Real Estate",
-    "Active Ownership",
-    "Corporate Governance",
-    "Long-term Investment",
-    "Cross-border Investment",
-    "Middle Market",
-  ],
-  foundingDate: "2022",
-  sameAs: [
-    "https://www.linkedin.com/company/headoversea",
-    "https://www.instagram.com/headoversea",
-  ],
-};
-
-const websiteSchema = {
-  "@context": "https://schema.org",
-  "@type": "WebSite",
-  "@id": `${SITE_URL}/#website`,
-  url: SITE_URL,
-  name: "Head Oversea",
-  inLanguage: ["pt-BR", "en-US"],
-  publisher: { "@id": `${SITE_URL}/#organization` },
-};
+export function websiteGraph(origin = getPublicSiteUrl()) {
+  return {
+    "@type": "WebSite",
+    "@id": websiteId(origin),
+    url: origin,
+    name: ORG.name,
+    inLanguage: ["en-US", "pt-BR"],
+    publisher: { "@id": organizationId(origin) },
+  };
+}
 
 export function JsonLd() {
+  const origin = getPublicSiteUrl();
   return (
-    <Script
+    <JsonLdScript
       id="jsonld-graph"
-      type="application/ld+json"
-      dangerouslySetInnerHTML={{
-        __html: JSON.stringify({
-          "@context": "https://schema.org",
-          "@graph": [organizationSchema, websiteSchema],
-        }),
+      data={{
+        "@context": "https://schema.org",
+        "@graph": [organizationGraph(origin), websiteGraph(origin)],
       }}
     />
   );

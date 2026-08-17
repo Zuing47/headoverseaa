@@ -1,37 +1,26 @@
-import Script from "next/script";
+import { breadcrumbList, type BreadcrumbItem } from "./InteriorJsonLd";
+import { getPublicSiteUrl } from "@/lib/site";
 
-const SITE_URL = "https://headoversea.com";
-
-export type BreadcrumbItem = {
-  name: string;
-  path: string;
-};
+export type { BreadcrumbItem };
 
 type BreadcrumbJsonLdProps = {
   items: BreadcrumbItem[];
   id?: string;
 };
 
-/** BreadcrumbList for multi-level pages (insights, cases, sections). */
+/** @deprecated Prefer InteriorJsonLd which includes WebPage + breadcrumb. Kept for existing pages. */
 export function BreadcrumbJsonLd({
   items,
   id = "jsonld-breadcrumb",
 }: BreadcrumbJsonLdProps) {
   if (items.length < 2) return null;
-
   const schema = {
     "@context": "https://schema.org",
-    "@type": "BreadcrumbList",
-    itemListElement: items.map((item, index) => ({
-      "@type": "ListItem",
-      position: index + 1,
-      name: item.name,
-      item: `${SITE_URL}${item.path === "/" ? "" : item.path}`,
-    })),
+    ...breadcrumbList(items, getPublicSiteUrl()),
   };
 
   return (
-    <Script
+    <script
       id={id}
       type="application/ld+json"
       dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }}

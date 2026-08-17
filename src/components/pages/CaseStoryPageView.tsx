@@ -1,8 +1,8 @@
 "use client";
 
-import Link from "next/link";
 import {
   BackBand,
+  BackBreadcrumb,
   BackLabel,
   BackShell,
   MeridianLink,
@@ -52,6 +52,7 @@ export function CaseStoryPageView({
   const t = UI[locale];
   const detail = item.detail;
   const casesHref = locale === "en" ? "/en/cases" : "/cases";
+  const homeHref = locale === "en" ? "/" : "/pt";
   const contactHref = locale === "en" ? "/en/contact" : "/contato";
   const about =
     detail?.summary || item.description || item.headline;
@@ -69,12 +70,13 @@ export function CaseStoryPageView({
     <BackShell content={content} locale={locale} headerSurface="light">
       <BackBand tone="white">
         <Reveal variant="rise">
-          <Link
-            href={casesHref}
-            className="label-caps text-black/40 transition-colors hover:text-black"
-          >
-            ← {t.back}
-          </Link>
+          <BackBreadcrumb
+            items={[
+              { name: "Home", href: homeHref },
+              { name: locale === "en" ? "Portfolio" : "Portfólio", href: casesHref },
+              { name: item.company, href: item.id ? (locale === "en" ? `/en/cases/${item.id}` : `/cases/${item.id}`) : casesHref },
+            ]}
+          />
         </Reveal>
 
         {/* Logo + name */}

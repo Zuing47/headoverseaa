@@ -1,6 +1,5 @@
 import { AboutPageView } from "@/components/pages/AboutPageView";
 import { AboutTeamJsonLd } from "@/components/seo/AboutTeamJsonLd";
-import { BreadcrumbJsonLd } from "@/components/seo/BreadcrumbJsonLd";
 import { getContent } from "@/lib/content";
 import type { Metadata } from "next";
 import { pageMeta } from "@/lib/seo";
@@ -27,12 +26,6 @@ export default function AboutPage() {
   return (
     <>
       <AboutTeamJsonLd team={content.about.team} locale="pt" />
-      <BreadcrumbJsonLd
-        items={[
-          { name: "Home", path: "/pt" },
-          { name: "Sobre", path: "/sobre" },
-        ]}
-      />
       <AboutPageView content={content} locale="pt" />
     </>
   );

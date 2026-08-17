@@ -12,13 +12,15 @@ import {
   PortfolioGrid,
   InsightsSignup,
 } from "@/components/home";
+import { InteriorJsonLd, homeCrumb } from "@/components/seo/InteriorJsonLd";
+import { DEFAULT_OG_IMAGE } from "@/lib/site";
 
 export const metadata: Metadata = pageMeta({
   title: "Head Oversea | Private Equity & Real Estate",
   description:
     "Firma de investimento em private equity e real estate — ownership ativo e valor de longo prazo no Brasil e nos Estados Unidos.",
   path: "/pt",
-  image: "/og-nyc.jpg",
+  image: DEFAULT_OG_IMAGE,
   imageAlt:
     "Head Oversea — Private Equity & Real Estate entre Brasil e Estados Unidos",
   keywords: [
@@ -37,16 +39,25 @@ export default function PtHomePage() {
   const content = getContent("pt");
 
   return (
-    <main className="bg-black text-white" style={{ overflowX: "clip" }}>
-      <Header content={content} locale="pt" />
-      <HomeHero content={content} locale="pt" />
-      <FirmAbout content={content} locale="pt" />
-      <InvestmentPillars locale="pt" />
-      <ApproachBand locale="pt" />
-      <PortfolioGrid content={content} locale="pt" />
-      <StoryBand locale="pt" />
-      <InsightsSignup locale="pt" />
-      <Footer content={content} locale="pt" />
-    </main>
+    <>
+      <InteriorJsonLd
+        locale="pt"
+        path="/pt"
+        name="Head Oversea | Private Equity & Real Estate"
+        description="Firma de investimento em private equity e real estate — ownership ativo e valor de longo prazo no Brasil e nos Estados Unidos."
+        crumbs={[homeCrumb("pt")]}
+      />
+      <main className="bg-black text-white" style={{ overflowX: "clip" }}>
+        <Header content={content} locale="pt" />
+        <HomeHero content={content} locale="pt" />
+        <FirmAbout content={content} locale="pt" />
+        <InvestmentPillars locale="pt" />
+        <ApproachBand locale="pt" />
+        <PortfolioGrid content={content} locale="pt" />
+        <StoryBand locale="pt" />
+        <InsightsSignup locale="pt" />
+        <Footer content={content} locale="pt" />
+      </main>
+    </>
   );
 }

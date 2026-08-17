@@ -1,4 +1,5 @@
 import { InsightsPageView } from "@/components/pages/InsightsPageView";
+import { InteriorJsonLd, homeCrumb } from "@/components/seo/InteriorJsonLd";
 import type { Metadata } from "next";
 import { getPublicInsights } from "@/lib/news/public";
 import { pageMeta } from "@/lib/seo";
@@ -28,6 +29,14 @@ export default async function InsightsPage() {
   const items = await getPublicInsights("pt");
   return (
     <div data-news-lead={items[0]?.slug ?? "none"}>
+      <InteriorJsonLd
+        locale="pt"
+        path="/insights"
+        name="Notícias"
+        description="Notícias e perspectivas da Head Oversea — firma, portfólio e mercados entre Brasil e Estados Unidos."
+        type="CollectionPage"
+        crumbs={[homeCrumb("pt"), { name: "Notícias", path: "/insights" }]}
+      />
       <InsightsPageView locale="pt" items={items} />
     </div>
   );

@@ -1,54 +1,82 @@
-import Script from "next/script";
+import { JsonLdScript } from "./JsonLdScript";
+import { breadcrumbList, homeCrumb } from "./InteriorJsonLd";
 import { getReFaqEntities } from "@/lib/content/re-learn";
 import type { Locale } from "@/types/content";
-
-const SITE_URL = "https://headoversea.com";
+import {
+  absoluteUrl,
+  getPublicSiteUrl,
+  organizationId,
+  schemaInLanguage,
+  websiteId,
+} from "@/lib/site";
 
 export function RePageJsonLd({ locale }: { locale: Locale }) {
+  const origin = getPublicSiteUrl();
   const path = locale === "en" ? "/en/real-estate" : "/real-estate";
+  const url = absoluteUrl(path, origin);
+  const inLanguage = schemaInLanguage(locale);
+  const name =
+    locale === "en"
+      ? "Real Estate — Real Assets Brazil–U.S. | Head Oversea"
+      : "Real Estate — Ativos reais Brasil–EUA | Head Oversea";
+  const description =
+    locale === "en"
+      ? "Head Oversea Real Estate: patient capital, selective origination, and active stewardship of real assets across Brazil and the United States — including Geromel and Superbloom."
+      : "Head Oversea Real Estate: capital paciente, originação seletiva e gestão presente de ativos reais entre Brasil e Estados Unidos — incluindo Geromel e Superbloom.";
+
+  const crumbs = [
+    homeCrumb(locale),
+    { name: "Real Estate", path },
+  ];
+  const breadcrumb = breadcrumbList(crumbs, origin);
+
+  const service = {
+    "@type": "Service",
+    "@id": `${url}#service`,
+    name: "Real Estate",
+    serviceType: "Real Estate",
+    provider: { "@id": organizationId(origin) },
+    areaServed: [
+      { "@type": "Country", name: "Brazil" },
+      { "@type": "Country", name: "United States" },
+    ],
+    description,
+    url,
+  };
+
   const faq = {
-    "@context": "https://schema.org",
     "@type": "FAQPage",
-    "@id": `${SITE_URL}${path}#faq`,
+    "@id": `${url}#faq`,
     mainEntity: getReFaqEntities(locale),
-    inLanguage: locale === "en" ? "en-US" : "pt-BR",
-    isPartOf: { "@id": `${SITE_URL}/#website` },
+    inLanguage,
+    isPartOf: { "@id": websiteId(origin) },
   };
 
   const page = {
-    "@context": "https://schema.org",
     "@type": "WebPage",
-    "@id": `${SITE_URL}${path}`,
-    url: `${SITE_URL}${path}`,
-    name:
-      locale === "en"
-        ? "Real Estate — Real Assets Brazil–U.S. | Head Oversea"
-        : "Real Estate — Ativos reais Brasil–EUA | Head Oversea",
-    description:
-      locale === "en"
-        ? "Head Oversea Real Estate: patient capital, selective origination, and active stewardship of real assets across Brazil and the United States — including Geromel and Superbloom."
-        : "Head Oversea Real Estate: capital paciente, originação seletiva e gestão presente de ativos reais entre Brasil e Estados Unidos — incluindo Geromel e Superbloom.",
-    inLanguage: locale === "en" ? "en-US" : "pt-BR",
+    "@id": url,
+    url,
+    name,
+    description,
+    inLanguage,
     about: [
       "Real Estate",
       "Real Assets",
-      "Cross-border Investment",
-      "Brazil United States",
       "Geromel Construction",
       "Superbloom Real Estate",
     ],
-    publisher: { "@id": `${SITE_URL}/#organization` },
+    publisher: { "@id": organizationId(origin) },
+    isPartOf: { "@id": websiteId(origin) },
+    mainEntity: { "@id": `${url}#service` },
+    breadcrumb: { "@id": breadcrumb["@id"] },
   };
 
   return (
-    <Script
+    <JsonLdScript
       id={`jsonld-re-${locale}`}
-      type="application/ld+json"
-      dangerouslySetInnerHTML={{
-        __html: JSON.stringify({
-          "@context": "https://schema.org",
-          "@graph": [page, faq],
-        }),
+      data={{
+        "@context": "https://schema.org",
+        "@graph": [page, service, faq, breadcrumb],
       }}
     />
   );

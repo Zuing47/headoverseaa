@@ -1,10 +1,12 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
+import { htmlLangFromPathname, isIndexableEnv } from "@/lib/site";
 
 /**
- * - `/en` home → `/`
- * - `/admin/news` gets noindex-ish headers + never cache
- * Admin auth is enforced in page/API handlers (defense in depth).
+ * - `/en` home → `/` (308)
+ * - locale header for `<html lang>`
+ * - `/admin` never indexed
+ * Preview/staging: X-Robots-Tag noindex
  */
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
@@ -13,8 +15,19 @@ export function middleware(request: NextRequest) {
     return NextResponse.redirect(new URL("/", request.url), 308);
   }
 
+  const requestHeaders = new Headers(request.headers);
+  requestHeaders.set("x-pathname", pathname);
+  requestHeaders.set("x-locale", htmlLangFromPathname(pathname));
+
+  const res = NextResponse.next({
+    request: { headers: requestHeaders },
+  });
+
+  if (!isIndexableEnv()) {
+    res.headers.set("X-Robots-Tag", "noindex, nofollow, noarchive");
+  }
+
   if (pathname.startsWith("/admin")) {
-    const res = NextResponse.next();
     res.headers.set("X-Robots-Tag", "noindex, nofollow, noarchive");
     res.headers.set("Cache-Control", "no-store, max-age=0");
     res.headers.set("X-Frame-Options", "DENY");
@@ -24,7 +37,6 @@ export function middleware(request: NextRequest) {
   }
 
   if (pathname.startsWith("/api/news/media/")) {
-    const res = NextResponse.next();
     res.headers.set(
       "Cache-Control",
       "public, max-age=31536000, immutable",
@@ -34,14 +46,12 @@ export function middleware(request: NextRequest) {
   }
 
   if (pathname.startsWith("/api/news")) {
-    const res = NextResponse.next();
     res.headers.set("Cache-Control", "no-store");
     res.headers.set("X-Content-Type-Options", "nosniff");
     return res;
   }
 
   if (pathname.startsWith("/insights") || pathname.startsWith("/en/insights")) {
-    const res = NextResponse.next();
     res.headers.set(
       "Cache-Control",
       "private, no-store, no-cache, must-revalidate",
@@ -49,18 +59,11 @@ export function middleware(request: NextRequest) {
     return res;
   }
 
-  return NextResponse.next();
+  return res;
 }
 
 export const config = {
   matcher: [
-    "/en",
-    "/en/",
-    "/admin/:path*",
-    "/api/news/:path*",
-    "/insights",
-    "/insights/:path*",
-    "/en/insights",
-    "/en/insights/:path*",
+    "/((?!_next/static|_next/image|favicon|images/|videos/|guides/|.*\\.(?:svg|png|jpg|jpeg|gif|webp|avif|mp4|ico|txt)$).*)",
   ],
 };

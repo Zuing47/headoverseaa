@@ -8,7 +8,6 @@ import {
   ArticleJsonLd,
   insightDatePublished,
 } from "@/components/seo/ArticleJsonLd";
-import { BreadcrumbJsonLd } from "@/components/seo/BreadcrumbJsonLd";
 
 type Props = { params: Promise<{ slug: string }> };
 
@@ -18,7 +17,7 @@ export const dynamicParams = true;
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
   const item = await getPublicInsightBySlug("en", slug);
-  if (!item) return {};
+  if (!item) return { robots: { index: false, follow: true } };
 
   return pageMeta({
     title: item.title,
@@ -27,7 +26,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     image: item.image,
     imageAlt: item.title,
     type: "article",
-    publishedTime: insightDatePublished(item.date),
+    publishedTime: insightDatePublished(item.date, item.dateIso),
   });
 }
 
@@ -41,9 +40,11 @@ export default async function EnglishNewsArticlePage({ params }: Props) {
 
   return (
     <>
-      <ArticleJsonLd article={article} locale="en" path={path} />
-      <BreadcrumbJsonLd
-        items={[
+      <ArticleJsonLd
+        article={article}
+        locale="en"
+        path={path}
+        crumbs={[
           { name: "Home", path: "/" },
           { name: "News", path: "/en/insights" },
           { name: article.title, path },

@@ -10,7 +10,7 @@ interface FooterProps {
 /** Lean footer — contact via /contato; insights signup sits above on home. */
 export function Footer({ content, locale }: FooterProps) {
   const en = locale === "en";
-  const homeHref = en ? "/en" : "/";
+  const homeHref = en ? "/" : "/pt";
   const { info } = content.contact;
 
   return (

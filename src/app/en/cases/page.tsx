@@ -1,4 +1,5 @@
 import { CasesPageView } from "@/components/pages/CasesPageView";
+import { InteriorJsonLd, homeCrumb } from "@/components/seo/InteriorJsonLd";
 import { getContent } from "@/lib/content";
 import type { Metadata } from "next";
 import { pageMeta } from "@/lib/seo";
@@ -23,10 +24,20 @@ export const metadata: Metadata = pageMeta({
 
 export default function EnglishCasesPage() {
   return (
-    <CasesPageView
-      content={getContent("en")}
-      locale="en"
-      subtitle="Ownership positions — with selected brand engagements as appendix."
-    />
+    <>
+      <InteriorJsonLd
+        locale="en"
+        path="/en/cases"
+        name="Portfolio"
+        description="Head Oversea portfolio companies in the United States — private equity and real estate with active ownership."
+        type="CollectionPage"
+        crumbs={[homeCrumb("en"), { name: "Portfolio", path: "/en/cases" }]}
+      />
+      <CasesPageView
+        content={getContent("en")}
+        locale="en"
+        subtitle="Ownership positions — with selected brand engagements as appendix."
+      />
+    </>
   );
 }

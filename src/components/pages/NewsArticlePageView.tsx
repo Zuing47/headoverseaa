@@ -1,8 +1,8 @@
 "use client";
 
-import Link from "next/link";
 import {
   BackBand,
+  BackBreadcrumb,
   BackHero,
   BackShell,
   MeridianLink,
@@ -24,6 +24,12 @@ export function NewsArticlePageView({
 }: NewsArticlePageViewProps) {
   const en = locale === "en";
   const indexHref = en ? "/en/insights" : "/insights";
+  const homeHref = en ? "/" : "/pt";
+  const crumbs = [
+    { name: "Home", href: homeHref },
+    { name: en ? "News" : "Notícias", href: indexHref },
+    { name: article.title, href: article.href },
+  ];
   const paragraphs = article.body?.length
     ? article.body
     : article.description
@@ -45,15 +51,10 @@ export function NewsArticlePageView({
 
       <BackBand tone="white">
         <Reveal variant="rise">
-          <Link
-            href={indexHref}
-            className="label-caps text-black/40 transition-colors hover:text-black"
-          >
-            ← {en ? "News" : "Notícias"}
-          </Link>
+          <BackBreadcrumb items={crumbs} />
         </Reveal>
 
-        <div className="mx-auto mt-12 max-w-[40rem] md:mt-16">
+        <article className="mx-auto mt-12 max-w-[40rem] md:mt-16">
           {paragraphs.map((p, i) => (
             <p
               key={i}
@@ -68,7 +69,7 @@ export function NewsArticlePageView({
               {en ? "Back to News" : "Voltar para Notícias"}
             </MeridianLink>
           </div>
-        </div>
+        </article>
       </BackBand>
     </BackShell>
   );

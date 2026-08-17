@@ -28,6 +28,7 @@ export function recordToInsight(article: NewsArticleRecord): Insight {
       article.publishedAt || article.createdAt,
       article.locale,
     ),
+    dateIso: article.publishedAt || article.createdAt || undefined,
     category: article.category || "News",
     href,
     image: resolveNewsImage(article.imageUrl),

@@ -1,7 +1,11 @@
 import type { Metadata } from "next";
 import { getContent } from "@/lib/content";
 import { pageMeta } from "@/lib/seo";
-import { WhyHeadOverseaPageView } from "@/components/pages/WhyHeadOverseaPageView";
+import {
+  WhyHeadOverseaPageView,
+  getWhyFaq,
+} from "@/components/pages/WhyHeadOverseaPageView";
+import { InteriorJsonLd, homeCrumb } from "@/components/seo/InteriorJsonLd";
 
 export const metadata: Metadata = pageMeta({
   title: "Why Head Oversea | For Investors",
@@ -23,6 +27,19 @@ export const metadata: Metadata = pageMeta({
 
 export default function WhyHeadOverseaPage() {
   return (
-    <WhyHeadOverseaPageView content={getContent("en")} locale="en" />
+    <>
+      <InteriorJsonLd
+        locale="en"
+        path="/en/why-head-oversea"
+        name="Why Head Oversea | For Investors"
+        description="Why invest with Head Oversea: active ownership across Brazil and the U.S., real operating presence, selective deal flow, and a track record in equity — for family offices and institutional investors."
+        crumbs={[
+          homeCrumb("en"),
+          { name: "Why Head Oversea", path: "/en/why-head-oversea" },
+        ]}
+        faq={getWhyFaq("en")}
+      />
+      <WhyHeadOverseaPageView content={getContent("en")} locale="en" />
+    </>
   );
 }

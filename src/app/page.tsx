@@ -12,13 +12,15 @@ import {
   PortfolioGrid,
   InsightsSignup,
 } from "@/components/home";
+import { InteriorJsonLd, homeCrumb } from "@/components/seo/InteriorJsonLd";
+import { DEFAULT_OG_IMAGE } from "@/lib/site";
 
 export const metadata: Metadata = pageMeta({
   title: "Head Oversea | Private Equity & Real Estate",
   description:
     "Private equity and real estate investment firm — active ownership and long-term value across Brazil and the United States.",
   path: "/",
-  image: "/og-nyc.jpg",
+  image: DEFAULT_OG_IMAGE,
   imageAlt:
     "Head Oversea — Private Equity & Real Estate across Brazil and the United States",
   keywords: [
@@ -37,16 +39,25 @@ export default function HomePage() {
   const content = getContent("en");
 
   return (
-    <main className="bg-black text-white" style={{ overflowX: "clip" }}>
-      <Header content={content} locale="en" />
-      <HomeHero content={content} locale="en" />
-      <FirmAbout content={content} locale="en" />
-      <InvestmentPillars locale="en" />
-      <ApproachBand locale="en" />
-      <PortfolioGrid content={content} locale="en" />
-      <StoryBand locale="en" />
-      <InsightsSignup locale="en" />
-      <Footer content={content} locale="en" />
-    </main>
+    <>
+      <InteriorJsonLd
+        locale="en"
+        path="/"
+        name="Head Oversea | Private Equity & Real Estate"
+        description="Private equity and real estate investment firm — active ownership and long-term value across Brazil and the United States."
+        crumbs={[homeCrumb("en")]}
+      />
+      <main className="bg-black text-white" style={{ overflowX: "clip" }}>
+        <Header content={content} locale="en" />
+        <HomeHero content={content} locale="en" />
+        <FirmAbout content={content} locale="en" />
+        <InvestmentPillars locale="en" />
+        <ApproachBand locale="en" />
+        <PortfolioGrid content={content} locale="en" />
+        <StoryBand locale="en" />
+        <InsightsSignup locale="en" />
+        <Footer content={content} locale="en" />
+      </main>
+    </>
   );
 }
