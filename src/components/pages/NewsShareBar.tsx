@@ -6,8 +6,6 @@ import type { Locale } from "@/types/content";
 type NewsShareBarProps = {
   title: string;
   path: string;
-  /** Article cover — required so Instagram’s share sheet includes Story. */
-  image?: string;
   locale?: Locale;
 };
 
@@ -15,7 +13,8 @@ const COPY = {
   pt: {
     label: "Compartilhar",
     whatsapp: "WhatsApp",
-    instagram: "Instagram",
+    instagram: "Copiar link para Instagram",
+    share: "Compartilhar",
     copy: "Copiar link",
     copied: "Link copiado",
     shareUnavailable: "Compartilhar disponível no celular",
@@ -23,7 +22,8 @@ const COPY = {
   en: {
     label: "Share",
     whatsapp: "WhatsApp",
-    instagram: "Instagram",
+    instagram: "Copy link for Instagram",
+    share: "Share",
     copy: "Copy link",
     copied: "Link copied",
     shareUnavailable: "Share is available on mobile",
@@ -36,12 +36,6 @@ function resolveShareUrl(path: string): string {
   }
   if (path.startsWith("http")) return path;
   return path;
-}
-
-function absoluteAsset(src: string): string {
-  if (src.startsWith("http://") || src.startsWith("https://")) return src;
-  if (typeof window === "undefined") return src;
-  return new URL(src, window.location.origin).href;
 }
 
 async function writeClipboard(text: string): Promise<boolean> {
@@ -69,20 +63,6 @@ async function writeClipboard(text: string): Promise<boolean> {
   }
 }
 
-/** Load cover as a File so the OS share sheet exposes Instagram Story. */
-async function coverAsFile(imageSrc: string): Promise<File | null> {
-  try {
-    const res = await fetch(absoluteAsset(imageSrc), { mode: "cors", cache: "force-cache" });
-    if (!res.ok) return null;
-    const blob = await res.blob();
-    const type = blob.type && blob.type.startsWith("image/") ? blob.type : "image/jpeg";
-    const ext = type.includes("png") ? "png" : type.includes("webp") ? "webp" : "jpg";
-    return new File([blob], `share.${ext}`, { type });
-  } catch {
-    return null;
-  }
-}
-
 function WhatsAppIcon({ className }: { className?: string }) {
   return (
     <svg viewBox="0 0 24 24" className={className} fill="currentColor" aria-hidden>
@@ -95,6 +75,25 @@ function InstagramIcon({ className }: { className?: string }) {
   return (
     <svg viewBox="0 0 24 24" className={className} fill="currentColor" aria-hidden>
       <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 1 0 0 12.324 6.162 6.162 0 0 0 0-12.324zM12 16a4 4 0 1 1 0-8 4 4 0 0 1 0 8zm6.406-11.845a1.44 1.44 0 1 0 0 2.881 1.44 1.44 0 0 0 0-2.881z" />
+    </svg>
+  );
+}
+
+function ShareIcon({ className }: { className?: string }) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      className={className}
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.5"
+      aria-hidden
+    >
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8M16 6l-4-4-4 4M12 2v13"
+      />
     </svg>
   );
 }
@@ -118,19 +117,14 @@ function LinkIcon({ className }: { className?: string }) {
   );
 }
 
-/**
- * Instagram needs an image in the share payload for Story to appear in the native sheet.
- * We send the article cover as-is (no custom JPEG) + title/url via navigator.share.
- */
+/** Icon-only: WhatsApp, copy for Instagram, native share sheet, copy link. */
 export function NewsShareBar({
   title,
   path,
-  image,
   locale = "pt",
 }: NewsShareBarProps) {
   const t = COPY[locale];
   const [status, setStatus] = useState<string | null>(null);
-  const [busy, setBusy] = useState(false);
 
   useEffect(() => {
     if (!status) return;
@@ -150,39 +144,23 @@ export function NewsShareBar({
   }, [shareUrl, title]);
 
   const onInstagram = useCallback(async () => {
+    const ok = await writeClipboard(shareUrl());
+    if (ok) setStatus(t.copied);
+  }, [shareUrl, t.copied]);
+
+  const onNativeShare = useCallback(async () => {
     const url = shareUrl();
     if (!navigator.share) {
       setStatus(t.shareUnavailable);
       return;
     }
-
-    setBusy(true);
     try {
-      // Image file → Instagram sheet shows Story / Post / Reel / Message
-      if (image) {
-        const file = await coverAsFile(image);
-        if (file) {
-          const withFile = {
-            files: [file],
-            title,
-            text: `${title}\n${url}`,
-          };
-          if (!navigator.canShare || navigator.canShare(withFile)) {
-            await navigator.share(withFile);
-            return;
-          }
-        }
-      }
-
-      // Fallback (no Story on most phones — URL-only)
-      await navigator.share({ title, text: `${title}\n${url}`, url });
+      await navigator.share({ title, text: title, url });
     } catch (err) {
       if (err instanceof DOMException && err.name === "AbortError") return;
       setStatus(t.shareUnavailable);
-    } finally {
-      setBusy(false);
     }
-  }, [image, shareUrl, t.shareUnavailable, title]);
+  }, [shareUrl, t.shareUnavailable, title]);
 
   const onCopy = useCallback(async () => {
     const ok = await writeClipboard(shareUrl());
@@ -190,7 +168,7 @@ export function NewsShareBar({
   }, [shareUrl, t.copied]);
 
   const btn =
-    "inline-flex h-10 w-10 items-center justify-center text-black/45 transition-colors hover:text-black disabled:opacity-40";
+    "inline-flex h-10 w-10 items-center justify-center text-black/45 transition-colors hover:text-black";
 
   return (
     <div className="mt-12 border-t border-black/[0.08] pt-10">
@@ -211,9 +189,17 @@ export function NewsShareBar({
           className={btn}
           aria-label={t.instagram}
           title={t.instagram}
-          disabled={busy}
         >
           <InstagramIcon className="h-5 w-5" />
+        </button>
+        <button
+          type="button"
+          onClick={onNativeShare}
+          className={btn}
+          aria-label={t.share}
+          title={t.share}
+        >
+          <ShareIcon className="h-5 w-5" />
         </button>
         <button
           type="button"
