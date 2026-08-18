@@ -6,6 +6,8 @@ import type { Locale } from "@/types/content";
 type NewsShareBarProps = {
   title: string;
   path: string;
+  /** Article cover — required so Instagram’s share sheet includes Story. */
+  image?: string;
   locale?: Locale;
 };
 
@@ -36,6 +38,12 @@ function resolveShareUrl(path: string): string {
   return path;
 }
 
+function absoluteAsset(src: string): string {
+  if (src.startsWith("http://") || src.startsWith("https://")) return src;
+  if (typeof window === "undefined") return src;
+  return new URL(src, window.location.origin).href;
+}
+
 async function writeClipboard(text: string): Promise<boolean> {
   try {
     if (navigator.clipboard?.writeText) {
@@ -58,6 +66,20 @@ async function writeClipboard(text: string): Promise<boolean> {
     return ok;
   } catch {
     return false;
+  }
+}
+
+/** Load cover as a File so the OS share sheet exposes Instagram Story. */
+async function coverAsFile(imageSrc: string): Promise<File | null> {
+  try {
+    const res = await fetch(absoluteAsset(imageSrc), { mode: "cors", cache: "force-cache" });
+    if (!res.ok) return null;
+    const blob = await res.blob();
+    const type = blob.type && blob.type.startsWith("image/") ? blob.type : "image/jpeg";
+    const ext = type.includes("png") ? "png" : type.includes("webp") ? "webp" : "jpg";
+    return new File([blob], `share.${ext}`, { type });
+  } catch {
+    return null;
   }
 }
 
@@ -96,14 +118,19 @@ function LinkIcon({ className }: { className?: string }) {
   );
 }
 
-/** Icon-only share — WhatsApp, native share sheet (Instagram Post/Story/Reel/DM), copy link. */
+/**
+ * Instagram needs an image in the share payload for Story to appear in the native sheet.
+ * We send the article cover as-is (no custom JPEG) + title/url via navigator.share.
+ */
 export function NewsShareBar({
   title,
   path,
+  image,
   locale = "pt",
 }: NewsShareBarProps) {
   const t = COPY[locale];
   const [status, setStatus] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
 
   useEffect(() => {
     if (!status) return;
@@ -122,20 +149,40 @@ export function NewsShareBar({
     );
   }, [shareUrl, title]);
 
-  /** Native OS share sheet — user picks Instagram → Post / Story / Reel / Message. */
-  const onNativeShare = useCallback(async () => {
+  const onInstagram = useCallback(async () => {
     const url = shareUrl();
     if (!navigator.share) {
       setStatus(t.shareUnavailable);
       return;
     }
+
+    setBusy(true);
     try {
-      await navigator.share({ title, text: title, url });
+      // Image file → Instagram sheet shows Story / Post / Reel / Message
+      if (image) {
+        const file = await coverAsFile(image);
+        if (file) {
+          const withFile = {
+            files: [file],
+            title,
+            text: `${title}\n${url}`,
+          };
+          if (!navigator.canShare || navigator.canShare(withFile)) {
+            await navigator.share(withFile);
+            return;
+          }
+        }
+      }
+
+      // Fallback (no Story on most phones — URL-only)
+      await navigator.share({ title, text: `${title}\n${url}`, url });
     } catch (err) {
       if (err instanceof DOMException && err.name === "AbortError") return;
       setStatus(t.shareUnavailable);
+    } finally {
+      setBusy(false);
     }
-  }, [shareUrl, t.shareUnavailable, title]);
+  }, [image, shareUrl, t.shareUnavailable, title]);
 
   const onCopy = useCallback(async () => {
     const ok = await writeClipboard(shareUrl());
@@ -143,7 +190,7 @@ export function NewsShareBar({
   }, [shareUrl, t.copied]);
 
   const btn =
-    "inline-flex h-10 w-10 items-center justify-center text-black/45 transition-colors hover:text-black";
+    "inline-flex h-10 w-10 items-center justify-center text-black/45 transition-colors hover:text-black disabled:opacity-40";
 
   return (
     <div className="mt-12 border-t border-black/[0.08] pt-10">
@@ -160,10 +207,11 @@ export function NewsShareBar({
         </button>
         <button
           type="button"
-          onClick={onNativeShare}
+          onClick={onInstagram}
           className={btn}
           aria-label={t.instagram}
           title={t.instagram}
+          disabled={busy}
         >
           <InstagramIcon className="h-5 w-5" />
         </button>

@@ -68,6 +68,7 @@ export function NewsArticlePageView({
           <NewsShareBar
             title={article.title}
             path={article.href}
+            image={cover}
             locale={locale}
           />
 
