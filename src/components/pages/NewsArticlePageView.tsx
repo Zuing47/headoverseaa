@@ -8,6 +8,7 @@ import {
   MeridianLink,
 } from "@/components/back";
 import { Reveal } from "@/components/home/reveal";
+import { NewsShareBar } from "@/components/pages/NewsShareBar";
 import { NEWS_COVER_FALLBACK } from "@/lib/news/cover";
 import type { Insight, Locale, SiteContent } from "@/types/content";
 
@@ -64,7 +65,13 @@ export function NewsArticlePageView({
             </p>
           ))}
 
-          <div className="mt-14 border-t border-black/[0.08] pt-10">
+          <NewsShareBar
+            title={article.title}
+            path={article.href}
+            locale={locale}
+          />
+
+          <div className="mt-12 border-t border-black/[0.08] pt-10">
             <MeridianLink href={indexHref}>
               {en ? "Back to News" : "Voltar para Notícias"}
             </MeridianLink>
