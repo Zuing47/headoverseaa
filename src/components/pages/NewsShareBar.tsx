@@ -6,8 +6,6 @@ import type { Locale } from "@/types/content";
 type NewsShareBarProps = {
   title: string;
   path: string;
-  /** Cover image — used to open the system share sheet (Stories on mobile). */
-  image?: string;
   locale?: Locale;
 };
 
@@ -15,20 +13,18 @@ const COPY = {
   pt: {
     label: "Compartilhar",
     whatsapp: "WhatsApp",
-    instagram: "Instagram Stories",
+    instagram: "Instagram",
     copy: "Copiar link",
     copied: "Link copiado",
-    storyOpened: "Stories aberto — cole o link como sticker",
-    storyDesktop: "No celular: abre o Stories. Link já copiado.",
+    shareUnavailable: "Compartilhar disponível no celular",
   },
   en: {
     label: "Share",
     whatsapp: "WhatsApp",
-    instagram: "Instagram Stories",
+    instagram: "Instagram",
     copy: "Copy link",
     copied: "Link copied",
-    storyOpened: "Stories opened — paste the link as a sticker",
-    storyDesktop: "On mobile this opens Stories. Link copied.",
+    shareUnavailable: "Share is available on mobile",
   },
 } as const;
 
@@ -38,12 +34,6 @@ function resolveShareUrl(path: string): string {
   }
   if (path.startsWith("http")) return path;
   return path;
-}
-
-function absoluteAsset(src: string): string {
-  if (src.startsWith("http")) return src;
-  if (typeof window === "undefined") return src;
-  return new URL(src, window.location.origin).href;
 }
 
 async function writeClipboard(text: string): Promise<boolean> {
@@ -67,70 +57,6 @@ async function writeClipboard(text: string): Promise<boolean> {
     document.body.removeChild(el);
     return ok;
   } catch {
-    return false;
-  }
-}
-
-function isMobileUa(): boolean {
-  return /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-}
-
-function isAndroid(): boolean {
-  return /Android/i.test(navigator.userAgent);
-}
-
-/** Open Instagram’s Story camera (deep link). Closest web can get to “post to Story”. */
-function openInstagramStoryCamera() {
-  if (isAndroid()) {
-    window.location.href =
-      "intent://story-camera#Intent;scheme=instagram;package=com.instagram.android;end";
-    return;
-  }
-  // iOS + others with Instagram installed
-  window.location.href = "instagram://story-camera";
-}
-
-async function tryNativeShare(opts: {
-  title: string;
-  url: string;
-  image?: string;
-}): Promise<boolean> {
-  if (typeof navigator === "undefined" || !navigator.share) return false;
-
-  // Prefer sharing the cover image — mobile share sheets often include Instagram Stories.
-  if (opts.image) {
-    try {
-      const res = await fetch(absoluteAsset(opts.image), { mode: "cors" });
-      if (res.ok) {
-        const blob = await res.blob();
-        const type = blob.type || "image/jpeg";
-        const ext = type.includes("png") ? "png" : "jpg";
-        const file = new File([blob], `story.${ext}`, { type });
-        const payload = {
-          files: [file],
-          title: opts.title,
-          text: opts.url,
-        };
-        if (!navigator.canShare || navigator.canShare(payload)) {
-          await navigator.share(payload);
-          return true;
-        }
-      }
-    } catch {
-      /* fall through to URL share */
-    }
-  }
-
-  try {
-    await navigator.share({
-      title: opts.title,
-      text: opts.title,
-      url: opts.url,
-    });
-    return true;
-  } catch (err) {
-    // User cancelled — treat as handled so we don't also deep-link.
-    if (err instanceof DOMException && err.name === "AbortError") return true;
     return false;
   }
 }
@@ -170,15 +96,10 @@ function LinkIcon({ className }: { className?: string }) {
   );
 }
 
-/**
- * Icon-only share row.
- * Instagram: copies URL, then opens Story camera (mobile) or system share sheet —
- * Instagram does not allow websites to auto-publish a Story.
- */
+/** Icon-only share — WhatsApp, native share sheet (Instagram Post/Story/Reel/DM), copy link. */
 export function NewsShareBar({
   title,
   path,
-  image,
   locale = "pt",
 }: NewsShareBarProps) {
   const t = COPY[locale];
@@ -186,7 +107,7 @@ export function NewsShareBar({
 
   useEffect(() => {
     if (!status) return;
-    const id = window.setTimeout(() => setStatus(null), 3200);
+    const id = window.setTimeout(() => setStatus(null), 2800);
     return () => window.clearTimeout(id);
   }, [status]);
 
@@ -201,26 +122,20 @@ export function NewsShareBar({
     );
   }, [shareUrl, title]);
 
-  const onInstagramStory = useCallback(async () => {
+  /** Native OS share sheet — user picks Instagram → Post / Story / Reel / Message. */
+  const onNativeShare = useCallback(async () => {
     const url = shareUrl();
-    await writeClipboard(url);
-
-    // 1) System share sheet (often lists Instagram Stories on phones)
-    const shared = await tryNativeShare({ title, url, image });
-    if (shared) {
-      setStatus(t.copied);
+    if (!navigator.share) {
+      setStatus(t.shareUnavailable);
       return;
     }
-
-    // 2) Deep-link straight into Stories camera
-    if (isMobileUa()) {
-      setStatus(t.storyOpened);
-      openInstagramStoryCamera();
-      return;
+    try {
+      await navigator.share({ title, text: title, url });
+    } catch (err) {
+      if (err instanceof DOMException && err.name === "AbortError") return;
+      setStatus(t.shareUnavailable);
     }
-
-    setStatus(t.storyDesktop);
-  }, [image, shareUrl, t.copied, t.storyDesktop, t.storyOpened, title]);
+  }, [shareUrl, t.shareUnavailable, title]);
 
   const onCopy = useCallback(async () => {
     const ok = await writeClipboard(shareUrl());
@@ -245,7 +160,7 @@ export function NewsShareBar({
         </button>
         <button
           type="button"
-          onClick={onInstagramStory}
+          onClick={onNativeShare}
           className={btn}
           aria-label={t.instagram}
           title={t.instagram}
