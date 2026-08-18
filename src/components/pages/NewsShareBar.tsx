@@ -6,6 +6,8 @@ import type { Locale } from "@/types/content";
 type NewsShareBarProps = {
   title: string;
   path: string;
+  /** Cover image — needed so Instagram offers Story in the native sheet. */
+  image?: string;
   locale?: Locale;
 };
 
@@ -13,7 +15,7 @@ const COPY = {
   pt: {
     label: "Compartilhar",
     whatsapp: "WhatsApp",
-    instagram: "Abrir Instagram",
+    instagram: "Instagram",
     share: "Compartilhar",
     copy: "Copiar link",
     copied: "Link copiado",
@@ -22,7 +24,7 @@ const COPY = {
   en: {
     label: "Share",
     whatsapp: "WhatsApp",
-    instagram: "Open Instagram",
+    instagram: "Instagram",
     share: "Share",
     copy: "Copy link",
     copied: "Link copied",
@@ -36,6 +38,12 @@ function resolveShareUrl(path: string): string {
   }
   if (path.startsWith("http")) return path;
   return path;
+}
+
+function absoluteAsset(src: string): string {
+  if (src.startsWith("http://") || src.startsWith("https://")) return src;
+  if (typeof window === "undefined") return src;
+  return new URL(src, window.location.origin).href;
 }
 
 async function writeClipboard(text: string): Promise<boolean> {
@@ -61,6 +69,39 @@ async function writeClipboard(text: string): Promise<boolean> {
   } catch {
     return false;
   }
+}
+
+async function coverAsFile(imageSrc: string): Promise<File | null> {
+  try {
+    const res = await fetch(absoluteAsset(imageSrc), {
+      mode: "cors",
+      cache: "force-cache",
+    });
+    if (!res.ok) return null;
+    const blob = await res.blob();
+    const type =
+      blob.type && blob.type.startsWith("image/") ? blob.type : "image/jpeg";
+    const ext = type.includes("png")
+      ? "png"
+      : type.includes("webp")
+        ? "webp"
+        : "jpg";
+    return new File([blob], `share.${ext}`, { type });
+  } catch {
+    return null;
+  }
+}
+
+function isAndroid(): boolean {
+  return /Android/i.test(navigator.userAgent);
+}
+
+/** Android: hand the link straight to the Instagram app share sheet. */
+function shareTextToInstagramApp(text: string) {
+  window.location.href =
+    "intent:#Intent;action=android.intent.action.SEND;type=text/plain;S.android.intent.extra.TEXT=" +
+    encodeURIComponent(text) +
+    ";package=com.instagram.android;end";
 }
 
 function WhatsAppIcon({ className }: { className?: string }) {
@@ -117,14 +158,19 @@ function LinkIcon({ className }: { className?: string }) {
   );
 }
 
-/** Icon-only: WhatsApp, copy for Instagram, native share sheet, copy link. */
+/**
+ * Instagram: opens the OS/app share flow for Instagram (Post / Story / Reel / Message).
+ * Generic share: any installed app. WhatsApp / copy stay separate.
+ */
 export function NewsShareBar({
   title,
   path,
+  image,
   locale = "pt",
 }: NewsShareBarProps) {
   const t = COPY[locale];
   const [status, setStatus] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
 
   useEffect(() => {
     if (!status) return;
@@ -143,23 +189,43 @@ export function NewsShareBar({
     );
   }, [shareUrl, title]);
 
+  /** Share into Instagram — not just open the app feed. */
   const onInstagram = useCallback(async () => {
     const url = shareUrl();
-    await writeClipboard(url);
-    setStatus(t.copied);
+    const text = `${title}\n${url}`;
 
-    const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-    if (isMobile) {
-      // Open Instagram app; if missing, browser stays / user can install.
-      window.location.href = "instagram://app";
-      window.setTimeout(() => {
-        window.open("https://www.instagram.com/", "_blank", "noopener,noreferrer");
-      }, 700);
+    // Android: send straight into Instagram’s share UI
+    if (isAndroid()) {
+      shareTextToInstagramApp(text);
       return;
     }
 
-    window.open("https://www.instagram.com/", "_blank", "noopener,noreferrer");
-  }, [shareUrl, t.copied]);
+    if (!navigator.share) {
+      setStatus(t.shareUnavailable);
+      return;
+    }
+
+    setBusy(true);
+    try {
+      // Image + text → Instagram sheet with Story / Post / Reel / Message
+      if (image) {
+        const file = await coverAsFile(image);
+        if (file) {
+          const payload = { files: [file], title, text };
+          if (!navigator.canShare || navigator.canShare(payload)) {
+            await navigator.share(payload);
+            return;
+          }
+        }
+      }
+      await navigator.share({ title, text, url });
+    } catch (err) {
+      if (err instanceof DOMException && err.name === "AbortError") return;
+      setStatus(t.shareUnavailable);
+    } finally {
+      setBusy(false);
+    }
+  }, [image, shareUrl, t.shareUnavailable, title]);
 
   const onNativeShare = useCallback(async () => {
     const url = shareUrl();
@@ -181,7 +247,7 @@ export function NewsShareBar({
   }, [shareUrl, t.copied]);
 
   const btn =
-    "inline-flex h-10 w-10 items-center justify-center text-black/45 transition-colors hover:text-black";
+    "inline-flex h-10 w-10 items-center justify-center text-black/45 transition-colors hover:text-black disabled:opacity-40";
 
   return (
     <div className="mt-12 border-t border-black/[0.08] pt-10">
@@ -202,6 +268,7 @@ export function NewsShareBar({
           className={btn}
           aria-label={t.instagram}
           title={t.instagram}
+          disabled={busy}
         >
           <InstagramIcon className="h-5 w-5" />
         </button>
