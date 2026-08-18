@@ -5,7 +5,6 @@ import type { Locale } from "@/types/content";
 
 type NewsShareBarProps = {
   title: string;
-  /** Absolute or site-relative path — resolved on the client for the live URL. */
   path: string;
   locale?: Locale;
 };
@@ -14,18 +13,16 @@ const COPY = {
   pt: {
     label: "Compartilhar",
     whatsapp: "WhatsApp",
-    instagram: "Instagram",
+    instagram: "Copiar link para Instagram",
     copy: "Copiar link",
     copied: "Link copiado",
-    instagramHint: "Link copiado — cole no post ou nos Stories",
   },
   en: {
     label: "Share",
     whatsapp: "WhatsApp",
-    instagram: "Instagram",
+    instagram: "Copy link for Instagram",
     copy: "Copy link",
     copied: "Link copied",
-    instagramHint: "Link copied — paste into a post or Story",
   },
 } as const;
 
@@ -97,92 +94,76 @@ function LinkIcon({ className }: { className?: string }) {
   );
 }
 
-/**
- * Institutional share row for news articles — WhatsApp, Instagram (copy + open), copy link.
- * Instagram has no web share-to-story API; we copy the URL and open the app/site.
- */
+/** Icon-only share row — WhatsApp opens chat; Instagram / link copy the URL. */
 export function NewsShareBar({
   title,
   path,
   locale = "pt",
 }: NewsShareBarProps) {
   const t = COPY[locale];
-  const [feedback, setFeedback] = useState<string | null>(null);
+  const [copied, setCopied] = useState(false);
 
   useEffect(() => {
-    if (!feedback) return;
-    const id = window.setTimeout(() => setFeedback(null), 2800);
+    if (!copied) return;
+    const id = window.setTimeout(() => setCopied(false), 2200);
     return () => window.clearTimeout(id);
-  }, [feedback]);
+  }, [copied]);
 
   const shareUrl = useCallback(() => resolveShareUrl(path), [path]);
 
   const onWhatsApp = useCallback(() => {
     const url = shareUrl();
-    const text = `${title}\n${url}`;
     window.open(
-      `https://wa.me/?text=${encodeURIComponent(text)}`,
+      `https://wa.me/?text=${encodeURIComponent(`${title}\n${url}`)}`,
       "_blank",
       "noopener,noreferrer",
     );
   }, [shareUrl, title]);
 
-  const onInstagram = useCallback(async () => {
-    const url = shareUrl();
-    const ok = await writeClipboard(url);
-    if (ok) setFeedback(t.instagramHint);
-    // Deep-link when possible; falls back to web profile create flow.
-    const isMobile =
-      typeof navigator !== "undefined" &&
-      /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-    if (isMobile) {
-      window.location.href = "instagram://app";
-      window.setTimeout(() => {
-        window.open("https://www.instagram.com/", "_blank", "noopener,noreferrer");
-      }, 600);
-    } else {
-      window.open("https://www.instagram.com/", "_blank", "noopener,noreferrer");
-    }
-  }, [shareUrl, t.instagramHint]);
-
   const onCopy = useCallback(async () => {
     const ok = await writeClipboard(shareUrl());
-    setFeedback(ok ? t.copied : null);
-  }, [shareUrl, t.copied]);
+    if (ok) setCopied(true);
+  }, [shareUrl]);
 
   const btn =
-    "group inline-flex items-center gap-2.5 border border-black/[0.12] bg-transparent px-4 py-2.5 text-[12px] tracking-[0.06em] text-black/60 transition-colors hover:border-black/35 hover:text-black";
+    "inline-flex h-10 w-10 items-center justify-center text-black/45 transition-colors hover:text-black";
 
   return (
     <div className="mt-12 border-t border-black/[0.08] pt-10">
       <p className="label-caps text-black/40">{t.label}</p>
-      <div className="mt-5 flex flex-wrap gap-3">
-        <button type="button" onClick={onWhatsApp} className={btn}>
-          <WhatsAppIcon className="h-3.5 w-3.5 opacity-70 transition-opacity group-hover:opacity-100" />
-          <span>{t.whatsapp}</span>
+      <div className="mt-4 flex items-center gap-1">
+        <button
+          type="button"
+          onClick={onWhatsApp}
+          className={btn}
+          aria-label={t.whatsapp}
+          title={t.whatsapp}
+        >
+          <WhatsAppIcon className="h-5 w-5" />
         </button>
-        <button type="button" onClick={onInstagram} className={btn}>
-          <InstagramIcon className="h-3.5 w-3.5 opacity-70 transition-opacity group-hover:opacity-100" />
-          <span>{t.instagram}</span>
+        <button
+          type="button"
+          onClick={onCopy}
+          className={btn}
+          aria-label={t.instagram}
+          title={t.instagram}
+        >
+          <InstagramIcon className="h-5 w-5" />
         </button>
-        <button type="button" onClick={onCopy} className={btn}>
-          <LinkIcon className="h-3.5 w-3.5 opacity-70 transition-opacity group-hover:opacity-100" />
-          <span>{feedback && feedback === t.copied ? t.copied : t.copy}</span>
+        <button
+          type="button"
+          onClick={onCopy}
+          className={btn}
+          aria-label={t.copy}
+          title={copied ? t.copied : t.copy}
+        >
+          <LinkIcon className="h-5 w-5" />
         </button>
       </div>
-      {feedback && feedback !== t.copied ? (
-        <p
-          className="mt-4 text-[13px] text-black/45"
-          role="status"
-          aria-live="polite"
-        >
-          {feedback}
-        </p>
-      ) : null}
-      {feedback === t.copied ? (
-        <span className="sr-only" role="status" aria-live="polite">
+      {copied ? (
+        <p className="mt-3 text-[12px] tracking-[0.04em] text-black/40" role="status">
           {t.copied}
-        </span>
+        </p>
       ) : null}
     </div>
   );
