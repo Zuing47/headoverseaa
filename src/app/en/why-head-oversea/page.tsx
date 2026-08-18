@@ -1,10 +1,8 @@
 import type { Metadata } from "next";
 import { getContent } from "@/lib/content";
+import { getWhyFaq } from "@/lib/content/why-faq";
 import { pageMeta } from "@/lib/seo";
-import {
-  WhyHeadOverseaPageView,
-  getWhyFaq,
-} from "@/components/pages/WhyHeadOverseaPageView";
+import { WhyHeadOverseaPageView } from "@/components/pages/WhyHeadOverseaPageView";
 import { InteriorJsonLd, homeCrumb } from "@/components/seo/InteriorJsonLd";
 
 export const metadata: Metadata = pageMeta({
