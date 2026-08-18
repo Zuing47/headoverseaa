@@ -13,7 +13,7 @@ const COPY = {
   pt: {
     label: "Compartilhar",
     whatsapp: "WhatsApp",
-    instagram: "Copiar link para Instagram",
+    instagram: "Abrir Instagram",
     share: "Compartilhar",
     copy: "Copiar link",
     copied: "Link copiado",
@@ -22,7 +22,7 @@ const COPY = {
   en: {
     label: "Share",
     whatsapp: "WhatsApp",
-    instagram: "Copy link for Instagram",
+    instagram: "Open Instagram",
     share: "Share",
     copy: "Copy link",
     copied: "Link copied",
@@ -144,8 +144,21 @@ export function NewsShareBar({
   }, [shareUrl, title]);
 
   const onInstagram = useCallback(async () => {
-    const ok = await writeClipboard(shareUrl());
-    if (ok) setStatus(t.copied);
+    const url = shareUrl();
+    await writeClipboard(url);
+    setStatus(t.copied);
+
+    const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+    if (isMobile) {
+      // Open Instagram app; if missing, browser stays / user can install.
+      window.location.href = "instagram://app";
+      window.setTimeout(() => {
+        window.open("https://www.instagram.com/", "_blank", "noopener,noreferrer");
+      }, 700);
+      return;
+    }
+
+    window.open("https://www.instagram.com/", "_blank", "noopener,noreferrer");
   }, [shareUrl, t.copied]);
 
   const onNativeShare = useCallback(async () => {
