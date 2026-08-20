@@ -24,11 +24,11 @@ export function ApproachBand({ locale = "pt" }: ApproachBandProps) {
       }
       href={en ? "/en/why-head-oversea" : "/por-que-head-oversea"}
       cta={en ? "Why Head Oversea" : "Por que Head Oversea"}
-      image="/images/dillon-kydd-2keCPb73aQY-unsplash.jpg"
+      image="/images/15958319-btc-5019625.jpg"
       imageAlt={
         en
-          ? "Head Oversea — perspective across markets"
-          : "Head Oversea — perspectiva entre mercados"
+          ? "Head Oversea — Brazil and United States corridor"
+          : "Head Oversea — corredor Brasil e Estados Unidos"
       }
       quote={
         en
