@@ -1,5 +1,6 @@
 import { breadcrumbList, type BreadcrumbItem } from "./InteriorJsonLd";
 import { getPublicSiteUrl } from "@/lib/site";
+import { safeJsonLdStringify } from "@/lib/news/sanitize";
 
 export type { BreadcrumbItem };
 
@@ -23,7 +24,7 @@ export function BreadcrumbJsonLd({
     <script
       id={id}
       type="application/ld+json"
-      dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }}
+      dangerouslySetInnerHTML={{ __html: safeJsonLdStringify(schema) }}
     />
   );
 }

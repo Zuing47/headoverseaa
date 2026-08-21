@@ -1,13 +1,13 @@
 import { NextResponse } from "next/server";
 import {
   checkSpam,
+  clampField,
   clientIp,
   isEmail,
   rateLimit,
 } from "@/lib/form-guard";
 import {
   NOTIFY_SITE,
-  NOTIFY_TO,
   sendBrandedNotify,
 } from "@/lib/notify-email";
 
@@ -19,9 +19,19 @@ type Body = {
 };
 
 export async function POST(request: Request) {
+  let rawText: string;
+  try {
+    rawText = await request.text();
+    if (rawText.length > 4_000) {
+      return NextResponse.json({ ok: false, error: "payload_too_large" }, { status: 413 });
+    }
+  } catch {
+    return NextResponse.json({ ok: false, error: "invalid_json" }, { status: 400 });
+  }
+
   let body: Body;
   try {
-    body = (await request.json()) as Body;
+    body = JSON.parse(rawText) as Body;
   } catch {
     return NextResponse.json({ ok: false, error: "invalid_json" }, { status: 400 });
   }
@@ -42,8 +52,8 @@ export async function POST(request: Request) {
     return NextResponse.json({ ok: false, error: "rate_limited" }, { status: 429 });
   }
 
-  const email = String(body.email ?? "").trim().toLowerCase();
-  const locale = String(body.locale ?? "pt").trim();
+  const email = clampField(body.email, 254).toLowerCase();
+  const locale = clampField(body.locale ?? "pt", 8) || "pt";
 
   if (!email || !isEmail(email)) {
     return NextResponse.json({ ok: false, error: "invalid_fields" }, { status: 400 });
@@ -72,7 +82,7 @@ export async function POST(request: Request) {
   const apiKey = process.env.RESEND_API_KEY?.trim();
   if (!apiKey) {
     return NextResponse.json(
-      { ok: false, error: "missing_resend_key" },
+      { ok: false, error: "delivery_unavailable" },
       { status: 502 },
     );
   }
@@ -91,7 +101,6 @@ export async function POST(request: Request) {
 
   if (!list.ok) {
     console.error("[newsletter] audience failed", email, list.detail);
-    // Still notify the team — signup shouldn't hard-fail if the key can't manage Audience
   }
 
   const localeLabel = locale === "en" ? "English" : "Português";
@@ -101,7 +110,7 @@ export async function POST(request: Request) {
       ? "Adicionado ao segmento"
       : list.ok
         ? "Contato criado"
-        : `Falha na lista: ${(list.detail || "erro").slice(0, 120)}`;
+        : "Falha na lista";
 
   const delivered = await sendBrandedNotify({
     subject: `Cadastro newsletter — ${email}`,
@@ -123,14 +132,9 @@ export async function POST(request: Request) {
   });
 
   if (!delivered.ok && !list.ok) {
-    console.info("[newsletter] both failed", email, delivered.detail, list.detail);
+    console.info("[newsletter] both failed", email);
     return NextResponse.json(
-      {
-        ok: false,
-        error: "delivery_failed",
-        hint: list.detail || delivered.detail,
-        to: NOTIFY_TO,
-      },
+      { ok: false, error: "delivery_failed" },
       { status: 502 },
     );
   }
@@ -140,8 +144,6 @@ export async function POST(request: Request) {
     listed: list.ok,
     segmented: list.segmented,
     notified: delivered.ok,
-    audienceHint: list.ok ? undefined : list.detail,
-    to: delivered.to ?? NOTIFY_TO,
   });
 }
 
@@ -187,7 +189,6 @@ async function addToNewsletterList(opts: {
     };
   }
 
-  // Contact exists — ensure they're on the newsletter segment
   if (!opts.segmentId) {
     return { ok: true, segmented: false };
   }

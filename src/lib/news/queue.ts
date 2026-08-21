@@ -13,6 +13,12 @@ export async function loadNewsQueueForSession(): Promise<
   | { ok: true; data: NewsQueuePayload }
   | { ok: false; status: number; error: string; missing?: string[]; diagnostics?: string[] }
 > {
+  // Auth first — never leak Redis diagnostics to anonymous callers.
+  const session = await getNewsSession();
+  if (!session) {
+    return { ok: false, status: 401, error: "unauthorized" };
+  }
+
   const ready = newsQueueReady();
   if (!ready.ok || !newsRedisConfigured()) {
     return {
@@ -22,11 +28,6 @@ export async function loadNewsQueueForSession(): Promise<
       missing: ready.missing,
       diagnostics: newsRedisDiagnostics(),
     };
-  }
-
-  const session = await getNewsSession();
-  if (!session) {
-    return { ok: false, status: 401, error: "unauthorized" };
   }
 
   try {

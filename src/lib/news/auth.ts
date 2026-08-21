@@ -3,11 +3,12 @@ import { createHash } from "node:crypto";
 import { SignJWT, jwtVerify } from "jose";
 import { cookies } from "next/headers";
 import {
-  effectiveAdminPasswordSha256,
   isAllowedAdminEmail,
   newsAdminCredentials,
   newsAdminEmail,
+  newsAdminPasswordConfigured,
   newsAdminPasswordPlain,
+  newsAdminPasswordSha256,
   newsSessionSecret,
   newsSiteUrl,
 } from "./config";
@@ -33,6 +34,12 @@ export async function verifyAdminPassword(
   const normalized = email.trim().toLowerCase();
   if (password.length < 8 || password.length > 200) return false;
 
+  // No hardcoded bootstrap — password must come from env.
+  if (!newsAdminPasswordConfigured()) {
+    createHash("sha256").update(password, "utf8").digest("hex");
+    return false;
+  }
+
   if (!isAllowedAdminEmail(normalized)) {
     createHash("sha256").update(password, "utf8").digest("hex");
     return false;
@@ -51,12 +58,14 @@ export async function verifyAdminPassword(
     return safeEqual(password, plain);
   }
 
-  // 2) Valid SHA-256 from env, else built-in bootstrap hash
-  const sha = effectiveAdminPasswordSha256();
-  const got = createHash("sha256").update(password, "utf8").digest("hex");
-  if (safeEqual(got, sha)) return true;
+  // 2) SHA-256 from env only (never a repo-baked default)
+  const sha = newsAdminPasswordSha256();
+  if (sha) {
+    const got = createHash("sha256").update(password, "utf8").digest("hex");
+    if (safeEqual(got, sha)) return true;
+  }
 
-  // 3) bcrypt map (legacy)
+  // 3) bcrypt map
   const creds = newsAdminCredentials();
   const hash = creds.get(normalized);
   if (!hash) {
@@ -103,13 +112,20 @@ export async function getNewsSession(): Promise<NewsSession | null> {
   return readSessionFromToken(jar.get(NEWS_SESSION_COOKIE)?.value);
 }
 
+function cookieSecure(): boolean {
+  // Always Secure on Vercel (incl. preview); local http needs Secure=false.
+  if (process.env.VERCEL) return true;
+  return process.env.NODE_ENV === "production";
+}
+
 export function sessionCookieOptions(token: string) {
   return {
     name: NEWS_SESSION_COOKIE,
     value: token,
     httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
+    secure: cookieSecure(),
     sameSite: "strict" as const,
+    // Must be "/" so /api/news/admin/* receives the cookie (not only /admin UI).
     path: "/",
     maxAge: SESSION_TTL_SEC,
   };
@@ -120,7 +136,7 @@ export function clearSessionCookieOptions() {
     name: NEWS_SESSION_COOKIE,
     value: "",
     httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
+    secure: cookieSecure(),
     sameSite: "strict" as const,
     path: "/",
     maxAge: 0,

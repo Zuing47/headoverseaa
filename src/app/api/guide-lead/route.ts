@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import {
   checkSpam,
+  clampField,
   clientIp,
   isEmail,
   isValidPhone,
@@ -9,7 +10,6 @@ import {
 } from "@/lib/form-guard";
 import {
   NOTIFY_SITE,
-  NOTIFY_TO,
   sendBrandedNotify,
 } from "@/lib/notify-email";
 
@@ -25,9 +25,19 @@ type LeadBody = {
 };
 
 export async function POST(request: Request) {
+  let rawText: string;
+  try {
+    rawText = await request.text();
+    if (rawText.length > 12_000) {
+      return NextResponse.json({ ok: false, error: "payload_too_large" }, { status: 413 });
+    }
+  } catch {
+    return NextResponse.json({ ok: false, error: "invalid_json" }, { status: 400 });
+  }
+
   let body: LeadBody;
   try {
-    body = (await request.json()) as LeadBody;
+    body = JSON.parse(rawText) as LeadBody;
   } catch {
     return NextResponse.json({ ok: false, error: "invalid_json" }, { status: 400 });
   }
@@ -37,7 +47,6 @@ export async function POST(request: Request) {
     formStartedAt: body.formStartedAt,
   });
   if (spam.spam) {
-    // Honeypot / missing timing: fake OK so bots stop. Too-fast: ask human to retry.
     if (spam.reason === "too_fast") {
       return NextResponse.json({ ok: false, error: "too_fast" }, { status: 429 });
     }
@@ -49,12 +58,12 @@ export async function POST(request: Request) {
     return NextResponse.json({ ok: false, error: "rate_limited" }, { status: 429 });
   }
 
-  const name = String(body.name ?? "").trim();
+  const name = clampField(body.name, 120);
   const phone = sanitizePhoneInput(String(body.phone ?? ""));
-  const email = String(body.email ?? "").trim();
-  const guideId = String(body.guideId ?? "").trim();
-  const guideTitle = String(body.guideTitle ?? "").trim();
-  const locale = String(body.locale ?? "pt").trim();
+  const email = clampField(body.email, 254);
+  const guideId = clampField(body.guideId, 80);
+  const guideTitle = clampField(body.guideTitle, 200);
+  const locale = clampField(body.locale ?? "pt", 8) || "pt";
 
   if (!name || !email || !isEmail(email) || !guideId) {
     return NextResponse.json({ ok: false, error: "invalid_fields" }, { status: 400 });
@@ -124,18 +133,9 @@ export async function POST(request: Request) {
   });
 
   if (!delivered.ok) {
-    console.info("[guide-lead] undelivered", JSON.stringify(lead), delivered.detail);
-    return NextResponse.json({
-      ok: true,
-      notified: false,
-      hint: delivered.detail,
-      to: NOTIFY_TO,
-    });
+    console.info("[guide-lead] undelivered", JSON.stringify({ ...lead, phone: phone ? "[set]" : "" }));
+    return NextResponse.json({ ok: true, notified: false });
   }
 
-  return NextResponse.json({
-    ok: true,
-    notified: true,
-    to: delivered.to ?? NOTIFY_TO,
-  });
+  return NextResponse.json({ ok: true, notified: true });
 }

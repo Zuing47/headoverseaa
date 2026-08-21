@@ -45,8 +45,70 @@ export function slugify(raw: string): string {
   return base || "noticia";
 }
 
-/** Only https absolute URLs — blocks javascript:, data:, http, SSRF to metadata IPs is still possible; we never server-fetch these. */
+function isBlockedHostname(host: string): boolean {
+  const h = host.toLowerCase().replace(/^\[|\]$/g, "");
+
+  if (
+    h === "localhost" ||
+    h === "127.0.0.1" ||
+    h === "0.0.0.0" ||
+    h === "::1" ||
+    h === "::" ||
+    h.endsWith(".local") ||
+    h.endsWith(".internal") ||
+    h.endsWith(".localhost") ||
+    h === "metadata.google.internal" ||
+    h === "metadata" ||
+    h === "169.254.169.254" ||
+    h === "metadata.aws.internal"
+  ) {
+    return true;
+  }
+
+  // IPv4 private / link-local / loopback / CGNAT
+  if (/^\d{1,3}(\.\d{1,3}){3}$/.test(h)) {
+    const parts = h.split(".").map(Number);
+    if (parts.some((n) => n > 255)) return true;
+    const [a, b] = parts;
+    if (a === 10) return true;
+    if (a === 127) return true;
+    if (a === 0) return true;
+    if (a === 169 && b === 254) return true;
+    if (a === 192 && b === 168) return true;
+    if (a === 172 && b >= 16 && b <= 31) return true;
+    if (a === 100 && b >= 64 && b <= 127) return true; // CGNAT
+    if (a === 192 && b === 0 && parts[2] === 0) return true;
+  }
+
+  // IPv6 truncated / unique-local / link-local
+  if (h.includes(":")) {
+    if (
+      h === "::1" ||
+      h.startsWith("fc") ||
+      h.startsWith("fd") ||
+      h.startsWith("fe80") ||
+      h.startsWith("::ffff:127.") ||
+      h.startsWith("::ffff:10.") ||
+      h.startsWith("::ffff:192.168.") ||
+      /^::ffff:172\.(1[6-9]|2\d|3[0-1])\./.test(h)
+    ) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
+/**
+ * Only https absolute URLs — blocks javascript:, data:, http, userinfo,
+ * and obvious private/metadata hosts. Callers that fetch must also
+ * refuse open redirects (see safeFetchHttps).
+ */
 export function sanitizeHttpsUrl(raw: unknown): string | null {
+  // Reject non-strings (NoSQL-style object injection into URL fields)
+  if (raw !== null && raw !== undefined && typeof raw !== "string") {
+    return null;
+  }
   const s = String(raw ?? "").trim();
   if (!s || s.length > MAX.url) return null;
   let url: URL;
@@ -57,21 +119,54 @@ export function sanitizeHttpsUrl(raw: unknown): string | null {
   }
   if (url.protocol !== "https:") return null;
   if (url.username || url.password) return null;
-  // Block obvious localhost / private hostnames (defense in depth; we don't fetch)
-  const host = url.hostname.toLowerCase();
-  if (
-    host === "localhost" ||
-    host === "127.0.0.1" ||
-    host === "::1" ||
-    host.endsWith(".local") ||
-    host.endsWith(".internal") ||
-    /^(10\.|192\.168\.|172\.(1[6-9]|2\d|3[0-1])\.)/.test(host) ||
-    host === "169.254.169.254" ||
-    host === "metadata.google.internal"
-  ) {
-    return null;
-  }
+  if (isBlockedHostname(url.hostname)) return null;
   return url.toString();
+}
+
+/**
+ * Fetch HTTPS with SSRF hardening: re-validate every redirect Location
+ * and never follow to private/metadata hosts.
+ */
+export async function safeFetchHttps(
+  pageUrl: string,
+  init?: RequestInit & { maxRedirects?: number },
+): Promise<Response | null> {
+  const maxRedirects = init?.maxRedirects ?? 3;
+  let current = sanitizeHttpsUrl(pageUrl);
+  if (!current) return null;
+
+  const { maxRedirects: _m, ...rest } = init || {};
+  void _m;
+
+  for (let i = 0; i <= maxRedirects; i++) {
+    let res: Response;
+    try {
+      res = await fetch(current, {
+        ...rest,
+        redirect: "manual",
+        signal: rest.signal ?? AbortSignal.timeout(10_000),
+      });
+    } catch {
+      return null;
+    }
+
+    if (res.status >= 300 && res.status < 400) {
+      const loc = res.headers.get("location");
+      if (!loc) return null;
+      let next: string;
+      try {
+        next = new URL(loc, current).toString();
+      } catch {
+        return null;
+      }
+      current = sanitizeHttpsUrl(next);
+      if (!current) return null;
+      continue;
+    }
+
+    return res;
+  }
+  return null;
 }
 
 export function parseLocale(raw: unknown): Locale {
@@ -97,6 +192,11 @@ export function formatNewsDate(iso: string, locale: Locale): string {
     day: "numeric",
     timeZone: "America/Sao_Paulo",
   }).format(d);
+}
+
+/** Escape JSON for embedding in <script type="application/ld+json">. */
+export function safeJsonLdStringify(data: unknown): string {
+  return JSON.stringify(data).replace(/</g, "\\u003c").replace(/>/g, "\\u003e");
 }
 
 export { MAX as NEWS_FIELD_MAX };

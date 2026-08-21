@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import {
   checkSpam,
+  clampField,
   clientIp,
   isEmail,
   isValidPhone,
@@ -9,7 +10,6 @@ import {
 } from "@/lib/form-guard";
 import {
   NOTIFY_SITE,
-  NOTIFY_TO,
   sendBrandedNotify,
 } from "@/lib/notify-email";
 
@@ -25,10 +25,29 @@ type ContactBody = {
   formStartedAt?: number | string;
 };
 
+const FIELD_MAX = {
+  name: 120,
+  email: 254,
+  company: 160,
+  objective: 200,
+  message: 4000,
+  locale: 8,
+} as const;
+
 export async function POST(request: Request) {
+  let rawText: string;
+  try {
+    rawText = await request.text();
+    if (rawText.length > 20_000) {
+      return NextResponse.json({ ok: false, error: "payload_too_large" }, { status: 413 });
+    }
+  } catch {
+    return NextResponse.json({ ok: false, error: "invalid_json" }, { status: 400 });
+  }
+
   let body: ContactBody;
   try {
-    body = (await request.json()) as ContactBody;
+    body = JSON.parse(rawText) as ContactBody;
   } catch {
     return NextResponse.json({ ok: false, error: "invalid_json" }, { status: 400 });
   }
@@ -49,13 +68,13 @@ export async function POST(request: Request) {
     return NextResponse.json({ ok: false, error: "rate_limited" }, { status: 429 });
   }
 
-  const name = String(body.name ?? "").trim();
-  const email = String(body.email ?? "").trim();
+  const name = clampField(body.name, FIELD_MAX.name);
+  const email = clampField(body.email, FIELD_MAX.email);
   const phone = sanitizePhoneInput(String(body.phone ?? ""));
-  const company = String(body.company ?? "").trim();
-  const objective = String(body.objective ?? "").trim();
-  const message = String(body.message ?? "").trim();
-  const locale = String(body.locale ?? "pt").trim();
+  const company = clampField(body.company, FIELD_MAX.company);
+  const objective = clampField(body.objective, FIELD_MAX.objective);
+  const message = clampField(body.message, FIELD_MAX.message);
+  const locale = clampField(body.locale ?? "pt", FIELD_MAX.locale) || "pt";
 
   if (!name || !email || !isEmail(email)) {
     return NextResponse.json({ ok: false, error: "invalid_fields" }, { status: 400 });
@@ -74,7 +93,6 @@ export async function POST(request: Request) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           source: "contact-form",
-          to: NOTIFY_TO,
           name,
           email,
           phone,
@@ -93,11 +111,7 @@ export async function POST(request: Request) {
   if (!process.env.RESEND_API_KEY?.trim()) {
     console.error("[contact] RESEND_API_KEY missing on server");
     return NextResponse.json(
-      {
-        ok: false,
-        error: "missing_resend_key",
-        hint: "Add RESEND_API_KEY in Vercel and Redeploy",
-      },
+      { ok: false, error: "delivery_unavailable" },
       { status: 502 },
     );
   }
@@ -135,19 +149,13 @@ export async function POST(request: Request) {
   if (!delivered.ok) {
     console.info(
       "[contact] undelivered",
-      JSON.stringify({ name, email, phone, company, objective, message, locale }),
-      delivered.detail,
+      JSON.stringify({ name, email, phone, company, objective, locale }),
     );
     return NextResponse.json(
-      {
-        ok: false,
-        error: "delivery_failed",
-        hint: delivered.detail,
-        to: NOTIFY_TO,
-      },
+      { ok: false, error: "delivery_failed" },
       { status: 502 },
     );
   }
 
-  return NextResponse.json({ ok: true, to: delivered.to ?? NOTIFY_TO });
+  return NextResponse.json({ ok: true });
 }

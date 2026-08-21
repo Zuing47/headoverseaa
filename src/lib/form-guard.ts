@@ -3,7 +3,7 @@
  */
 
 export function isEmail(v: string) {
-  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v);
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v) && v.length <= 254;
 }
 
 /** Keep only digits (and a leading + for intl). */
@@ -20,6 +20,14 @@ export function isValidPhone(phone: string) {
   if (!phone.trim()) return true;
   const digits = phone.replace(/\D/g, "");
   return digits.length >= 8 && digits.length <= 15;
+}
+
+/** Clamp free-text lead fields — reject oversized payloads early. */
+export function clampField(raw: unknown, max: number): string {
+  return String(raw ?? "")
+    .replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F]/g, "")
+    .trim()
+    .slice(0, max);
 }
 
 export type SpamCheck =
@@ -43,6 +51,11 @@ export function checkSpam(opts: {
   if (Date.now() - started < minMs) {
     return { spam: true, reason: "too_fast" };
   }
+  // Reject absurd ancient timestamps (replay / clock abuse)
+  const age = Date.now() - started;
+  if (age > 24 * 60 * 60 * 1000) {
+    return { spam: true, reason: "missing_timing" };
+  }
   return { spam: false };
 }
 
@@ -63,12 +76,21 @@ export function rateLimit(key: string, limit = 8, windowMs = 10 * 60 * 1000) {
   return { ok: true as const };
 }
 
+/**
+ * Client IP for rate limits. Prefer platform headers Vercel/CF set;
+ * fall back to first X-Forwarded-For hop (platform-managed on Vercel).
+ */
 export function clientIp(request: Request) {
+  const vercel = request.headers.get("x-vercel-forwarded-for")?.trim();
+  if (vercel) return vercel.split(",")[0]?.trim() || "unknown";
+
+  const cf = request.headers.get("cf-connecting-ip")?.trim();
+  if (cf) return cf;
+
+  const real = request.headers.get("x-real-ip")?.trim();
+  if (real) return real;
+
   const fwd = request.headers.get("x-forwarded-for");
   if (fwd) return fwd.split(",")[0]?.trim() || "unknown";
-  return (
-    request.headers.get("x-real-ip")?.trim() ||
-    request.headers.get("cf-connecting-ip")?.trim() ||
-    "unknown"
-  );
+  return "unknown";
 }

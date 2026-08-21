@@ -1,4 +1,6 @@
 /** SSR JSON-LD — present in the initial HTML for crawlers (no next/script delay). */
+import { safeJsonLdStringify } from "@/lib/news/sanitize";
+
 export function JsonLdScript({
   id,
   data,
@@ -10,7 +12,7 @@ export function JsonLdScript({
     <script
       id={id}
       type="application/ld+json"
-      dangerouslySetInnerHTML={{ __html: JSON.stringify(data) }}
+      dangerouslySetInnerHTML={{ __html: safeJsonLdStringify(data) }}
     />
   );
 }

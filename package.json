@@ -7,6 +7,7 @@
     "build": "next build --webpack",
     "start": "next start",
     "lint": "eslint",
+    "test:security": "npx tsx --test tests/security/*.test.ts",
     "guides:generate": "node scripts/generate-guides.mjs",
     "news:hash-password": "node scripts/hash-news-password.mjs"
   },

@@ -2,11 +2,8 @@
  * Server-only news config. Never import this module from client components.
  */
 
-/** Default marketing login (override with NEWS_ADMIN_* env vars). */
+/** Default marketing login email (override with NEWS_ADMIN_EMAIL). */
 const DEFAULT_ADMIN_EMAIL = "marketing@headoversea.com";
-/** SHA-256 of the bootstrap password — not reversible; override via env anytime. */
-const DEFAULT_ADMIN_PASSWORD_SHA256 =
-  "19db09451851c2a7071a39c497821c23ecddeeed3074795612d7944f7701c213";
 
 function req(name: string): string | null {
   const v = process.env[name]?.trim();
@@ -73,19 +70,6 @@ export function newsAdminPasswordSha256(): string | null {
   return h;
 }
 
-/** SHA used for verify — env override, else built-in marketing bootstrap. */
-export function effectiveAdminPasswordSha256(): string {
-  return newsAdminPasswordSha256() || DEFAULT_ADMIN_PASSWORD_SHA256;
-}
-
-export function isAllowedAdminEmail(email: string): boolean {
-  const normalized = email.trim().toLowerCase();
-  if (normalized === newsAdminEmail()) return true;
-  if (normalized === DEFAULT_ADMIN_EMAIL) return true;
-  if (newsAdminCredentials().has(normalized)) return true;
-  return false;
-}
-
 /**
  * bcrypt map — B64 wins over legacy vars.
  */
@@ -125,6 +109,22 @@ export function newsAdminCredentials(): Map<string, string> {
   }
 
   return map;
+}
+
+/** True when at least one server-side password source is configured (no hardcoded bootstrap). */
+export function newsAdminPasswordConfigured(): boolean {
+  if (newsAdminPasswordPlain()) return true;
+  if (newsAdminPasswordSha256()) return true;
+  if (newsAdminCredentials().size > 0) return true;
+  return false;
+}
+
+export function isAllowedAdminEmail(email: string): boolean {
+  const normalized = email.trim().toLowerCase();
+  if (normalized === newsAdminEmail()) return true;
+  if (normalized === DEFAULT_ADMIN_EMAIL) return true;
+  if (newsAdminCredentials().has(normalized)) return true;
+  return false;
 }
 
 export function newsSiteUrl(): string {
@@ -169,7 +169,7 @@ export function newsQueueReady(): {
   return { ok: missing.length === 0, missing };
 }
 
-/** Safe Redis diagnostics — no secret values. */
+/** Safe Redis diagnostics — no secret values. Authenticated admin only. */
 export function newsRedisDiagnostics(): string[] {
   const notes: string[] = [];
   const url =
@@ -208,8 +208,12 @@ export function newsAdminAuthDiagnostics(): string[] {
     notes.push("NEWS_ADMIN_PASSWORD: ok (env)");
   } else if (newsAdminPasswordSha256()) {
     notes.push("NEWS_ADMIN_PASSWORD_SHA256: ok (env)");
+  } else if (newsAdminCredentials().size > 0) {
+    notes.push("NEWS_ADMIN_CREDENTIALS / HASH: ok (env)");
   } else {
-    notes.push("Senha: bootstrap interno ativo (login padrão da equipe)");
+    notes.push(
+      "Senha: NÃO configurada — defina NEWS_ADMIN_PASSWORD ou NEWS_ADMIN_PASSWORD_SHA256 na Vercel",
+    );
   }
 
   const shaRaw = process.env.NEWS_ADMIN_PASSWORD_SHA256;
@@ -222,8 +226,7 @@ export function newsAdminAuthDiagnostics(): string[] {
 }
 
 export function newsAdminAuthConfigured(): boolean {
-  // Always true: bootstrap hash exists; env can override.
-  return true;
+  return newsAdminPasswordConfigured();
 }
 
 export function newsLoginReady(): {
@@ -236,6 +239,11 @@ export function newsLoginReady(): {
   else if (session.length < 32) {
     missing.push("NEWS_SESSION_SECRET (precisa ter pelo menos 32 caracteres)");
   }
+  if (!newsAdminPasswordConfigured()) {
+    missing.push(
+      "NEWS_ADMIN_PASSWORD ou NEWS_ADMIN_PASSWORD_SHA256 ou NEWS_ADMIN_CREDENTIALS",
+    );
+  }
   return { ok: missing.length === 0, missing };
 }
 
@@ -247,6 +255,5 @@ export function newsSystemReady(): {
     ...newsIngestReady().missing,
     ...newsLoginReady().missing,
   ];
-  // unique
   return { ok: missing.length === 0, missing: [...new Set(missing)] };
 }

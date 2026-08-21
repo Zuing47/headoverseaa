@@ -56,7 +56,7 @@ export async function GET(request: Request) {
         slug: a.slug,
         title: a.title,
         summary: a.summary,
-        body: a.body,
+        // Deliberately omit full body — LinkedIn posts use title/summary/url.
         category: a.category,
         imageUrl: a.imageUrl
           ? a.imageUrl.startsWith("http")

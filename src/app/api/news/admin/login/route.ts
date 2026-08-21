@@ -63,9 +63,17 @@ export async function POST(request: Request) {
 
   const ok = await verifyAdminPassword(email, password);
   if (!ok) {
+    console.info(
+      "[news-login] failure",
+      JSON.stringify({ email, ip, at: new Date().toISOString() }),
+    );
     return NextResponse.json({ ok: false, error: "invalid_credentials" }, { status: 401 });
   }
 
+  console.info(
+    "[news-login] success",
+    JSON.stringify({ email, ip, at: new Date().toISOString() }),
+  );
   const token = await createSessionToken(email);
   const res = NextResponse.json({ ok: true });
   res.cookies.set(sessionCookieOptions(token));

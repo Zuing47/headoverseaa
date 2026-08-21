@@ -9,7 +9,7 @@ import {
   isNewsMediaPath,
   newsMediaPublicPath,
 } from "./media-path";
-import { NEWS_FIELD_MAX, sanitizeHttpsUrl } from "./sanitize";
+import { NEWS_FIELD_MAX, sanitizeHttpsUrl, safeFetchHttps } from "./sanitize";
 
 export {
   isNewsMediaPath,
@@ -109,21 +109,20 @@ function extractMetaContent(html: string, property: string): string | null {
   return m?.[1]?.trim() || null;
 }
 
-/** Fetch article page and read og:image / twitter:image (SSRF-hardened URL only). */
+/** Fetch article page and read og:image / twitter:image (SSRF-hardened). */
 export async function fetchOgImage(pageUrl: string): Promise<string | null> {
   const safe = sanitizeHttpsUrl(pageUrl);
   if (!safe) return null;
   try {
-    const res = await fetch(safe, {
+    const res = await safeFetchHttps(safe, {
       method: "GET",
-      redirect: "follow",
       signal: AbortSignal.timeout(8_000),
       headers: {
         "User-Agent": "HeadOverseaBot/1.0 (+https://headoversea.com)",
         Accept: "text/html,application/xhtml+xml",
       },
     });
-    if (!res.ok) return null;
+    if (!res || !res.ok) return null;
     const ctype = (res.headers.get("content-type") || "").toLowerCase();
     if (!ctype.includes("text/html") && !ctype.includes("application/xhtml")) {
       return null;
@@ -135,7 +134,6 @@ export async function fetchOgImage(pageUrl: string): Promise<string | null> {
       extractMetaContent(html, "twitter:image") ||
       extractMetaContent(html, "twitter:image:src");
     if (!raw) return null;
-    // Resolve relative URLs against the page
     try {
       const abs = new URL(raw, safe).toString();
       return sanitizeHttpsUrl(abs);
@@ -205,9 +203,8 @@ export async function persistRemoteImage(
   const safe = sanitizeHttpsUrl(imageUrl);
   if (!safe) return null;
   try {
-    const res = await fetch(safe, {
+    const res = await safeFetchHttps(safe, {
       method: "GET",
-      redirect: "follow",
       signal: AbortSignal.timeout(10_000),
       headers: {
         "User-Agent": "HeadOverseaBot/1.0 (+https://headoversea.com)",
@@ -215,7 +212,7 @@ export async function persistRemoteImage(
         Referer: new URL(safe).origin + "/",
       },
     });
-    if (!res.ok) return null;
+    if (!res || !res.ok) return null;
     let contentType = (res.headers.get("content-type") || "")
       .toLowerCase()
       .split(";")[0]
