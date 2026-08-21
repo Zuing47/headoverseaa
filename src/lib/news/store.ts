@@ -30,12 +30,20 @@ const KEYS = {
   pair: (pairId: string) => `news:pair:${pairId}`,
 } as const;
 
+function normalizeArticle(raw: NewsArticleRecord): NewsArticleRecord {
+  return {
+    ...raw,
+    pairId: raw.pairId ?? null,
+    linkedinPostedAt: raw.linkedinPostedAt ?? null,
+  };
+}
+
 export async function getArticleById(
   id: string,
 ): Promise<NewsArticleRecord | null> {
   const raw = await redis().get<NewsArticleRecord>(KEYS.article(id));
   if (!raw || typeof raw !== "object") return null;
-  return { ...raw, pairId: raw.pairId ?? null };
+  return normalizeArticle(raw);
 }
 
 export async function getArticleBySlug(
@@ -71,8 +79,7 @@ export async function listByStatus(
   const out: NewsArticleRecord[] = [];
   for (const row of rows) {
     if (row && typeof row === "object") {
-      const a = row as NewsArticleRecord;
-      out.push({ ...a, pairId: a.pairId ?? null });
+      out.push(normalizeArticle(row as NewsArticleRecord));
     }
   }
   return out;
@@ -80,6 +87,47 @@ export async function listByStatus(
 
 export async function listPublished(limit = 100): Promise<NewsArticleRecord[]> {
   return listByStatus("published", limit);
+}
+
+/**
+ * Published articles not yet posted to LinkedIn.
+ * Prefer one locale (default pt) so PT/EN twins are not double-posted.
+ */
+export async function listPublishedForLinkedIn(opts?: {
+  locale?: NewsArticleRecord["locale"];
+  limit?: number;
+}): Promise<NewsArticleRecord[]> {
+  const locale = opts?.locale ?? "pt";
+  const limit = opts?.limit ?? 20;
+  const published = await listByStatus("published", 200);
+  return published
+    .filter(
+      (a) =>
+        a.locale === locale &&
+        !a.linkedinPostedAt &&
+        a.status === "published",
+    )
+    .slice(0, limit);
+}
+
+/** Mark a published article as posted on LinkedIn (idempotent). */
+export async function markLinkedInPosted(
+  id: string,
+): Promise<NewsArticleRecord | null> {
+  const current = await getArticleById(id);
+  if (!current || current.status !== "published") return null;
+
+  if (current.linkedinPostedAt) return current;
+
+  const now = new Date().toISOString();
+  const next: NewsArticleRecord = {
+    ...current,
+    linkedinPostedAt: now,
+    updatedAt: now,
+  };
+
+  await redis().set(KEYS.article(next.id), next);
+  return next;
 }
 
 /**
@@ -202,6 +250,7 @@ export async function publishLocaleTwin(opts: {
       opts.source.publishedAt || existing?.publishedAt || now,
     decidedBy: opts.decidedBy,
     rejectReason: null,
+    linkedinPostedAt: existing?.linkedinPostedAt ?? null,
   };
 
   const score =

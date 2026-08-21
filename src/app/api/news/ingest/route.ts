@@ -132,6 +132,7 @@ export async function POST(request: Request) {
     publishedAt: null,
     decidedBy: null,
     rejectReason: null,
+    linkedinPostedAt: null,
   };
 
   try {

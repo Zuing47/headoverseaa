@@ -68,6 +68,7 @@ export function draftInsightFromRecord(
     publishedAt: article.publishedAt,
     decidedBy: null,
     rejectReason: null,
+    linkedinPostedAt: null,
   } as NewsArticleRecord);
 }
 

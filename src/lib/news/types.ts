@@ -24,6 +24,8 @@ export type NewsArticleRecord = {
   publishedAt: string | null;
   decidedBy: string | null;
   rejectReason: string | null;
+  /** ISO timestamp when n8n posted this article to LinkedIn (null = not posted). */
+  linkedinPostedAt: string | null;
 };
 
 export type NewsIngestInput = {
