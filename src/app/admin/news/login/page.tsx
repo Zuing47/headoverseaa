@@ -29,9 +29,21 @@ export default async function NewsAdminLoginPage() {
         </p>
 
         {!ready.ok ? (
-          <p className="mt-10 max-w-md text-[14px] text-black/55">
-            Acesso temporariamente indisponível.
-          </p>
+          <div className="mt-10 max-w-lg space-y-3 text-[14px] text-black/55">
+            <p>Acesso temporariamente indisponível.</p>
+            <p>
+              Falta configurar variáveis no Vercel (Production) e fazer{" "}
+              <span className="text-black/80">Redeploy</span>. Só alterar a
+              variável sem redeploy não atualiza o site.
+            </p>
+            {ready.missing.length > 0 ? (
+              <ul className="list-disc space-y-1 pl-5 font-mono text-[12px] text-black/70">
+                {ready.missing.map((m) => (
+                  <li key={m}>{m}</li>
+                ))}
+              </ul>
+            ) : null}
+          </div>
         ) : (
           <div className="mt-12">
             <NewsLoginClient />
