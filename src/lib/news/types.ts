@@ -15,6 +15,8 @@ export type NewsArticleRecord = {
   sourceUrl: string | null;
   sourceName: string | null;
   imageUrl: string | null;
+  /** Team member who posts/owns the byline (see authors.ts). */
+  authorId: string | null;
   /** Links PT/EN twins created on approve */
   pairId: string | null;
   /** RSS / n8n dedupe key */
@@ -50,4 +52,6 @@ export type NewsQueuePayload = {
   pending: NewsArticleRecord[];
   published: NewsArticleRecord[];
   rejected: NewsArticleRecord[];
+  /** How many pending items were auto-purged (>2 days) on this load. */
+  purgedStale?: number;
 };

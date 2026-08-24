@@ -5,7 +5,8 @@ import {
   newsRedisConfigured,
   newsRedisDiagnostics,
 } from "@/lib/news/config";
-import { listByStatus } from "@/lib/news/store";
+import { listByStatus, purgeStalePendingArticles } from "@/lib/news/store";
+import { PENDING_NEWS_TTL_MS } from "@/lib/news/authors";
 
 export type { NewsQueuePayload };
 
@@ -31,6 +32,7 @@ export async function loadNewsQueueForSession(): Promise<
   }
 
   try {
+    const purgedStale = await purgeStalePendingArticles(PENDING_NEWS_TTL_MS);
     const [pending, published, rejected] = await Promise.all([
       listByStatus("pending", 100),
       listByStatus("published", 100),
@@ -43,6 +45,7 @@ export async function loadNewsQueueForSession(): Promise<
         pending,
         published,
         rejected,
+        purgedStale,
       },
     };
   } catch {

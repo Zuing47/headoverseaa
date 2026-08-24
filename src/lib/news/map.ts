@@ -1,4 +1,5 @@
 import type { Insight, Locale } from "@/types/content";
+import { authorRole, getNewsAuthor } from "./authors";
 import {
   bodyToParagraphs,
   formatNewsDate,
@@ -21,6 +22,10 @@ export function recordToInsight(article: NewsArticleRecord): Insight {
       ? `/en/insights/${article.slug}`
       : `/insights/${article.slug}`;
   const paragraphs = bodyToParagraphs(article.body);
+  const team = getNewsAuthor(article.authorId);
+  const authorName =
+    team?.name || article.sourceName?.trim() || "Head Oversea";
+
   return {
     slug: article.slug,
     title: article.title,
@@ -38,7 +43,10 @@ export function recordToInsight(article: NewsArticleRecord): Insight {
       : article.summary
         ? [article.summary]
         : [],
-    author: article.sourceName || "Head Oversea",
+    author: authorName,
+    authorId: team?.id,
+    authorPhoto: team?.photo,
+    authorRole: team ? authorRole(team, article.locale) : undefined,
   };
 }
 
@@ -53,6 +61,7 @@ export function draftInsightFromRecord(
     | "category"
     | "imageUrl"
     | "sourceName"
+    | "authorId"
     | "createdAt"
     | "publishedAt"
   >,
@@ -64,6 +73,7 @@ export function draftInsightFromRecord(
     sourceUrl: null,
     pairId: null,
     externalId: null,
+    authorId: article.authorId ?? null,
     updatedAt: article.createdAt,
     publishedAt: article.publishedAt,
     decidedBy: null,

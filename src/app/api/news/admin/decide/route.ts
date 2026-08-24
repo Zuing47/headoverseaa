@@ -3,9 +3,10 @@ import { revalidatePath } from "next/cache";
 import { rateLimit } from "@/lib/form-guard";
 import { assertSameOrigin, getNewsSession } from "@/lib/news/auth";
 import { newsQueueReady, newsRedisConfigured } from "@/lib/news/config";
-import { decideArticle } from "@/lib/news/store";
+import { decideArticle, getArticleById } from "@/lib/news/store";
 import { ensureOppositeTwin } from "@/lib/news/twins";
 import { NEWS_FIELD_MAX, stripToPlainText } from "@/lib/news/sanitize";
+import { isNewsAuthorId } from "@/lib/news/authors";
 
 export const runtime = "nodejs";
 
@@ -76,6 +77,19 @@ export async function POST(request: Request) {
     decision === "reject"
       ? stripToPlainText(body.rejectReason, NEWS_FIELD_MAX.rejectReason) || null
       : null;
+
+  if (decision === "approve") {
+    const existing = await getArticleById(id);
+    if (!existing) {
+      return NextResponse.json({ ok: false, error: "not_found_or_not_pending" }, { status: 404 });
+    }
+    if (!isNewsAuthorId(existing.authorId)) {
+      return NextResponse.json(
+        { ok: false, error: "author_required" },
+        { status: 400 },
+      );
+    }
+  }
 
   try {
     const article = await decideArticle({

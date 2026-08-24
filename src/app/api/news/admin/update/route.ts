@@ -12,6 +12,7 @@ import {
 import { findByExternalId, getArticleById, publishLocaleTwin, updateArticle } from "@/lib/news/store";
 import { ensureOppositeTwin } from "@/lib/news/twins";
 import { sanitizeNewsImageRef } from "@/lib/news/media";
+import { getNewsAuthor, isNewsAuthorId } from "@/lib/news/authors";
 
 export const runtime = "nodejs";
 
@@ -25,6 +26,7 @@ type UpdateBody = {
   sourceName?: string;
   sourceUrl?: string;
   imageUrl?: string;
+  authorId?: string | null;
 };
 
 function revalidateArticle(slug: string) {
@@ -123,6 +125,27 @@ export async function POST(request: Request) {
     }
   }
 
+  let authorId: string | null | undefined = undefined;
+  if (body.authorId !== undefined) {
+    if (body.authorId === null || body.authorId === "") {
+      authorId = null;
+    } else if (isNewsAuthorId(body.authorId)) {
+      authorId = body.authorId;
+      // Keep sourceName aligned with team byline for legacy displays.
+      const team = getNewsAuthor(body.authorId);
+      if (team) {
+        // sourceName set below via allowlist
+      }
+    } else {
+      return NextResponse.json({ ok: false, error: "invalid_author" }, { status: 400 });
+    }
+  }
+
+  const resolvedSourceName =
+    authorId && getNewsAuthor(authorId)
+      ? getNewsAuthor(authorId)!.name
+      : sourceName;
+
   try {
     // Locale is fixed at ingest; approve always publishes PT + EN twin.
     const article = await updateArticle(id, {
@@ -131,9 +154,10 @@ export async function POST(request: Request) {
       body: articleBody,
       category,
       slug,
-      sourceName,
+      sourceName: resolvedSourceName,
       ...(sourceUrl !== undefined ? { sourceUrl } : {}),
       ...(imageUrl !== undefined ? { imageUrl } : {}),
+      ...(authorId !== undefined ? { authorId } : {}),
     });
     if (!article) {
       return NextResponse.json({ ok: false, error: "not_found_or_locked" }, { status: 404 });

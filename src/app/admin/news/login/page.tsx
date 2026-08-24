@@ -5,7 +5,7 @@ import { getNewsSession } from "@/lib/news/auth";
 import { newsLoginReady } from "@/lib/news/config";
 
 export const metadata: Metadata = {
-  title: "Login · News Admin",
+  title: "Login · News Studio",
   robots: { index: false, follow: false },
 };
 
@@ -18,37 +18,42 @@ export default async function NewsAdminLoginPage() {
   const ready = newsLoginReady();
 
   return (
-    <main className="min-h-screen bg-white text-black">
-      <div className="page-shell py-20 md:py-28">
-        <p className="label-caps text-black/40">Head Oversea</p>
-        <h1 className="font-display mt-4 text-[clamp(2rem,4vw,3rem)] font-light">
-          News — acesso
-        </h1>
-        <p className="mt-3 max-w-[44ch] text-[15px] text-black/55">
-          Área restrita da equipe.
-        </p>
+    <main className="flex min-h-screen items-center justify-center bg-[#F0F2F5] px-4 py-16 text-[#050505]">
+      <div className="w-full max-w-[420px] overflow-hidden rounded-2xl border border-[#E4E6EB] bg-white shadow-[0_2px_12px_rgba(0,0,0,0.08)]">
+        <div className="border-b border-[#E4E6EB] bg-[#1877F2] px-6 py-5 text-white">
+          <p className="text-[12px] font-semibold uppercase tracking-[0.14em] text-white/80">
+            Head Oversea
+          </p>
+          <h1 className="mt-1 text-[22px] font-bold tracking-tight">
+            News Studio
+          </h1>
+          <p className="mt-1 text-[13px] text-white/85">
+            Área restrita da equipe editorial
+          </p>
+        </div>
 
-        {!ready.ok ? (
-          <div className="mt-10 max-w-lg space-y-3 text-[14px] text-black/55">
-            <p>Acesso temporariamente indisponível.</p>
-            <p>
-              Falta configurar variáveis no Vercel (Production) e fazer{" "}
-              <span className="text-black/80">Redeploy</span>. Só alterar a
-              variável sem redeploy não atualiza o site.
-            </p>
-            {ready.missing.length > 0 ? (
-              <ul className="list-disc space-y-1 pl-5 font-mono text-[12px] text-black/70">
-                {ready.missing.map((m) => (
-                  <li key={m}>{m}</li>
-                ))}
-              </ul>
-            ) : null}
-          </div>
-        ) : (
-          <div className="mt-12">
+        <div className="px-6 py-6">
+          {!ready.ok ? (
+            <div className="space-y-3 text-[14px] text-[#65676B]">
+              <p className="font-semibold text-[#050505]">
+                Acesso temporariamente indisponível.
+              </p>
+              <p>
+                Falta configurar variáveis no Vercel (Production) e fazer{" "}
+                <span className="font-semibold text-[#050505]">Redeploy</span>.
+              </p>
+              {ready.missing.length > 0 ? (
+                <ul className="list-disc space-y-1 pl-5 font-mono text-[12px] text-[#E41E3F]">
+                  {ready.missing.map((m) => (
+                    <li key={m}>{m}</li>
+                  ))}
+                </ul>
+              ) : null}
+            </div>
+          ) : (
             <NewsLoginClient />
-          </div>
-        )}
+          )}
+        </div>
       </div>
     </main>
   );

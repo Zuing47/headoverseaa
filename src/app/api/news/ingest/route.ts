@@ -11,7 +11,8 @@ import {
   slugify,
   stripToPlainText,
 } from "@/lib/news/sanitize";
-import { createPendingArticle, findByExternalId } from "@/lib/news/store";
+import { createPendingArticle, findByExternalId, purgeStalePendingArticles } from "@/lib/news/store";
+import { PENDING_NEWS_TTL_MS } from "@/lib/news/authors";
 import type { NewsArticleRecord, NewsIngestInput } from "@/lib/news/types";
 
 export const runtime = "nodejs";
@@ -42,6 +43,9 @@ export async function POST(request: Request) {
   if (!ingestKey || !ingestAuthorized(request, ingestKey)) {
     return NextResponse.json({ ok: false, error: "unauthorized" }, { status: 401 });
   }
+
+  // Keep the approval queue clean even if nobody opens /admin/news.
+  void purgeStalePendingArticles(PENDING_NEWS_TTL_MS).catch(() => undefined);
 
   const ip = clientIp(request);
   const limitedIp = rateLimit(`news-ingest-ip:${ip}`, 40, 60 * 60 * 1000);
@@ -125,6 +129,7 @@ export async function POST(request: Request) {
     sourceUrl,
     sourceName,
     imageUrl,
+    authorId: null,
     pairId: null,
     externalId,
     createdAt: now,

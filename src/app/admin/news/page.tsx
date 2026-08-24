@@ -5,7 +5,7 @@ import { loadNewsQueueForSession } from "@/lib/news/queue";
 import { getNewsSession } from "@/lib/news/auth";
 
 export const metadata: Metadata = {
-  title: "Fila · News Admin",
+  title: "News Studio · Head Oversea",
   robots: { index: false, follow: false },
 };
 
@@ -19,48 +19,42 @@ export default async function NewsAdminPage() {
   if (!queue.ok) {
     if (queue.status === 401) redirect("/admin/news/login");
     return (
-      <main className="min-h-screen bg-white text-black">
-        <div className="page-shell py-16 md:py-20">
-          <p className="text-[15px] font-medium text-red-700">
-            Não foi possível carregar a fila ({queue.error}).
-          </p>
-          <p className="mt-2 max-w-xl text-[14px] text-black/60">
-            A fila vive no Redis (Upstash). Confira as variáveis na Vercel
-            (Production) e faça Redeploy.
-          </p>
-          {queue.missing?.length ? (
-            <ul className="mt-4 list-disc space-y-1 pl-5 text-[13px] text-red-800">
-              {queue.missing.map((m) => (
-                <li key={m}>
-                  <code>{m}</code>
-                </li>
-              ))}
-            </ul>
-          ) : null}
-          {queue.diagnostics?.length ? (
-            <>
-              <p className="mt-6 text-[13px] font-medium text-black/70">
-                Diagnóstico deste deploy:
-              </p>
-              <ul className="mt-2 list-disc space-y-1 pl-5 text-[12px] text-black/55">
+      <main className="min-h-screen bg-[#F0F2F5] text-[#050505]">
+        <div className="mx-auto max-w-xl px-6 py-20">
+          <div className="rounded-2xl border border-[#E4E6EB] bg-white p-8 shadow-sm">
+            <p className="text-[17px] font-bold text-[#E41E3F]">
+              Não foi possível carregar a fila
+            </p>
+            <p className="mt-2 text-[14px] text-[#65676B]">
+              ({queue.error}) Confira Redis na Vercel e faça Redeploy.
+            </p>
+            {queue.missing?.length ? (
+              <ul className="mt-4 list-disc space-y-1 pl-5 text-[13px] text-[#E41E3F]">
+                {queue.missing.map((m) => (
+                  <li key={m}>
+                    <code>{m}</code>
+                  </li>
+                ))}
+              </ul>
+            ) : null}
+            {queue.diagnostics?.length ? (
+              <ul className="mt-4 list-disc space-y-1 pl-5 text-[12px] text-[#65676B]">
                 {queue.diagnostics.map((d) => (
                   <li key={d}>
                     <code>{d}</code>
                   </li>
                 ))}
               </ul>
-            </>
-          ) : null}
+            ) : null}
+          </div>
         </div>
       </main>
     );
   }
 
   return (
-    <main className="min-h-screen bg-white text-black">
-      <div className="page-shell py-16 md:py-20">
-        <NewsQueueClient initial={queue.data} />
-      </div>
+    <main className="min-h-screen bg-[#F0F2F5]">
+      <NewsQueueClient initial={queue.data} />
     </main>
   );
 }

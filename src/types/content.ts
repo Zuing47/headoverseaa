@@ -88,6 +88,10 @@ export interface Insight {
   description?: string;
   body?: string[];
   author?: string;
+  /** Team byline photo (About Us). */
+  authorPhoto?: string;
+  authorRole?: string;
+  authorId?: string;
   categoryColor?: string;
 }
 

@@ -115,9 +115,21 @@ export function ArticleJsonLd({
   const published = insightDatePublished(article.date, article.dateIso);
   const inLanguage = schemaInLanguage(locale);
   const authorName = article.author?.trim() || "Head Oversea";
-  const isWire = authorName.toLowerCase() !== "head oversea";
+  const isPerson = Boolean(article.authorPhoto && article.author);
+  const isWire = !isPerson && authorName.toLowerCase() !== "head oversea";
 
   const breadcrumb = crumbs.length >= 2 ? breadcrumbList(crumbs, origin) : null;
+
+  const authorSchema = isPerson
+    ? {
+        "@type": "Person" as const,
+        name: authorName,
+        ...(article.authorRole ? { jobTitle: article.authorRole } : {}),
+        image: absoluteUrl(article.authorPhoto!, origin),
+      }
+    : isWire
+      ? { "@type": "Organization" as const, name: authorName }
+      : { "@id": organizationId(origin) };
 
   const schema = {
     "@type": isWire ? "NewsArticle" : "BlogPosting",
@@ -126,9 +138,7 @@ export function ArticleJsonLd({
     description: article.description ?? article.title,
     image: [image],
     ...(published ? { datePublished: published, dateModified: published } : {}),
-    author: isWire
-      ? { "@type": "Organization", name: authorName }
-      : { "@id": organizationId(origin) },
+    author: authorSchema,
     publisher: { "@id": organizationId(origin) },
     mainEntityOfPage: { "@id": url },
     inLanguage,

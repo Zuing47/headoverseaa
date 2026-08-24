@@ -1,11 +1,11 @@
 "use client";
 
-import { BACK_MEDIA } from "@/lib/back-media";
+import { getNewsAuthor } from "@/lib/news/authors";
 import { draftInsightFromRecord } from "@/lib/news/map";
 import { bodyToParagraphs, formatNewsDate } from "@/lib/news/sanitize";
 import type { NewsArticleRecord } from "@/lib/news/types";
 
-type DraftFields = {
+export type DraftFields = {
   title: string;
   summary: string;
   body: string;
@@ -13,10 +13,11 @@ type DraftFields = {
   locale: "pt" | "en";
   slug: string;
   sourceName: string;
+  authorId: string;
   imageUrl: string;
 };
 
-/** Site-faithful preview of a news article (Back hero + editorial body). */
+/** Site-faithful preview — G1-style editorial with team byline. */
 export function NewsSitePreview({ draft }: { draft: DraftFields }) {
   const insight = draftInsightFromRecord({
     locale: draft.locale,
@@ -27,72 +28,90 @@ export function NewsSitePreview({ draft }: { draft: DraftFields }) {
     category: draft.category || "News",
     imageUrl: draft.imageUrl || null,
     sourceName: draft.sourceName || "Head Oversea",
+    authorId: draft.authorId || null,
     createdAt: new Date().toISOString(),
     publishedAt: new Date().toISOString(),
   });
 
-  const image = insight.image || BACK_MEDIA.nycFlag;
+  const image = insight.image || "/images/15958319-btc-5019625.jpg";
   const paragraphs = bodyToParagraphs(draft.body).length
     ? bodyToParagraphs(draft.body)
     : draft.summary
       ? [draft.summary]
       : ["(corpo da notícia)"];
+  const lead = draft.summary || paragraphs[0];
+  const bodyParas =
+    lead && paragraphs[0] === lead ? paragraphs.slice(1) : paragraphs;
   const date = formatNewsDate(new Date().toISOString(), draft.locale);
   const en = draft.locale === "en";
+  const team = getNewsAuthor(draft.authorId);
 
   return (
     <div className="overflow-hidden border border-black/10 bg-white shadow-[0_24px_80px_rgba(0,0,0,0.08)]">
-      <div className="border-b border-white/10 bg-black px-5 py-3 text-[11px] uppercase tracking-[0.16em] text-white/45">
-        Pré-visualização · /insights + /en/insights
+      <div className="border-b border-black/10 bg-black/[0.03] px-5 py-3 text-[11px] uppercase tracking-[0.16em] text-black/45">
+        Pré-visualização · estilo editorial
       </div>
 
-      <div className="bg-black text-white">
-        <div className="px-6 pb-8 pt-10 md:px-10 md:pb-10 md:pt-12">
-          <p className="text-[11px] font-medium uppercase tracking-[0.18em] text-white/45">
-            {insight.category}
-            <span className="ml-3 inline-block h-px w-10 translate-y-[-3px] bg-white/25" />
+      <div className="bg-white px-6 py-8 md:px-10 md:py-10">
+        <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[#c00]">
+          {insight.category}
+        </p>
+        <h1 className="font-display mt-3 text-[clamp(1.6rem,3.5vw,2.4rem)] font-medium leading-[1.12] text-black">
+          {insight.title}
+        </h1>
+        {lead ? (
+          <p className="mt-4 text-[15px] font-medium leading-relaxed text-black/70">
+            {lead}
           </p>
-          <h1 className="font-display mt-6 text-[clamp(1.75rem,4vw,2.75rem)] font-light leading-[1.08]">
-            {insight.title}
-          </h1>
-          <p className="mt-4 text-[14px] text-white/50">
-            {date}
-            {insight.author ? ` · ${insight.author}` : ""}
-          </p>
-        </div>
-        <div className="relative aspect-[21/9] w-full bg-[#111]">
-          {image.startsWith("https://") ? (
+        ) : null}
+
+        <div className="mt-5 flex items-center gap-3 border-y border-black/[0.08] py-3">
+          {team?.photo ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img
-              src={image}
+              src={team.photo}
               alt=""
-              className="absolute inset-0 h-full w-full object-cover"
-              referrerPolicy="no-referrer"
+              className="h-10 w-10 rounded-full object-cover object-top ring-1 ring-black/10"
             />
           ) : (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
-              src={image}
-              alt=""
-              className="absolute inset-0 h-full w-full object-cover"
-            />
+            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-black text-[10px] font-semibold text-white">
+              HO
+            </div>
           )}
+          <div>
+            <p className="text-[13px] font-semibold text-black">
+              {team?.name || insight.author || "Selecione o responsável"}
+            </p>
+            <p className="text-[11px] text-black/45">
+              {team
+                ? `${en ? team.roleEn : team.rolePt} · ${date}`
+                : date}
+            </p>
+          </div>
         </div>
-      </div>
 
-      <div className="bg-white px-6 py-10 md:px-10 md:py-12">
-        <p className="label-caps text-black/35">
-          ← {en ? "News" : "Notícias"}
-        </p>
+        <div className="relative mt-6 aspect-[16/10] w-full overflow-hidden bg-black/[0.04]">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={image}
+            alt=""
+            className="absolute inset-0 h-full w-full object-cover"
+            referrerPolicy="no-referrer"
+          />
+        </div>
+
         <div className="mx-auto mt-8 max-w-[40rem]">
-          {paragraphs.map((p, i) => (
+          {bodyParas.map((p, i) => (
             <p
               key={i}
-              className="mb-6 text-[1.02rem] leading-[1.75] text-black/65"
+              className="mb-5 text-[1.02rem] leading-[1.75] text-black/65"
             >
               {p}
             </p>
           ))}
+          {!bodyParas.length ? (
+            <p className="text-[14px] text-black/35">(corpo da notícia)</p>
+          ) : null}
         </div>
       </div>
     </div>
@@ -108,6 +127,7 @@ export function fieldsFromArticle(article: NewsArticleRecord): DraftFields {
     locale: article.locale,
     slug: article.slug,
     sourceName: article.sourceName || "",
+    authorId: article.authorId || "",
     imageUrl: article.imageUrl || "",
   };
 }

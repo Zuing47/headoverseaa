@@ -34,6 +34,7 @@ function normalizeArticle(raw: NewsArticleRecord): NewsArticleRecord {
   return {
     ...raw,
     pairId: raw.pairId ?? null,
+    authorId: raw.authorId ?? null,
     linkedinPostedAt: raw.linkedinPostedAt ?? null,
   };
 }
@@ -241,6 +242,7 @@ export async function publishLocaleTwin(opts: {
     sourceUrl: opts.source.sourceUrl,
     sourceName: opts.source.sourceName,
     imageUrl: opts.source.imageUrl,
+    authorId: opts.source.authorId ?? null,
     pairId,
     externalId: twinExt,
     createdAt: existing?.createdAt || opts.source.createdAt,
@@ -285,6 +287,7 @@ export type NewsArticlePatch = {
   sourceName?: string | null;
   sourceUrl?: string | null;
   imageUrl?: string | null;
+  authorId?: string | null;
 };
 
 /** @deprecated use NewsArticlePatch */
@@ -322,6 +325,8 @@ export async function updateArticle(
     sourceUrl:
       patch.sourceUrl !== undefined ? patch.sourceUrl : current.sourceUrl,
     imageUrl: patch.imageUrl !== undefined ? patch.imageUrl : current.imageUrl,
+    authorId:
+      patch.authorId !== undefined ? patch.authorId : current.authorId,
     updatedAt: now,
   };
 
@@ -368,4 +373,23 @@ export async function deleteArticle(id: string): Promise<NewsArticleRecord | nul
   }
   await pipe.exec();
   return current;
+}
+
+/**
+ * Hard-delete pending articles older than maxAgeMs (default 2 days).
+ * Called from admin queue load and ingest so stale items don't pile up.
+ */
+export async function purgeStalePendingArticles(
+  maxAgeMs = 2 * 24 * 60 * 60 * 1000,
+): Promise<number> {
+  const pending = await listByStatus("pending", 200);
+  const cutoff = Date.now() - maxAgeMs;
+  let removed = 0;
+  for (const article of pending) {
+    const created = Date.parse(article.createdAt);
+    if (!Number.isFinite(created) || created > cutoff) continue;
+    const deleted = await deleteArticle(article.id);
+    if (deleted) removed += 1;
+  }
+  return removed;
 }

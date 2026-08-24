@@ -72,9 +72,19 @@ function LeadStory({ item, en }: { item: Insight; en: boolean }) {
             {item.description}
           </p>
         ) : null}
-        <p className="mt-5 text-[12px] tracking-wide text-black/35">
-          {item.date}
-          {item.author ? ` · ${item.author}` : ""}
+        <p className="mt-5 flex items-center gap-2.5 text-[12px] tracking-wide text-black/35">
+          {item.authorPhoto ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={item.authorPhoto}
+              alt=""
+              className="h-6 w-6 rounded-full object-cover object-top"
+            />
+          ) : null}
+          <span>
+            {item.date}
+            {item.author ? ` · ${item.author}` : ""}
+          </span>
         </p>
       </Link>
       <div className="mt-8">
@@ -131,7 +141,18 @@ function FeedRow({ item }: { item: Insight }) {
       <div className="min-w-0 self-center">
         <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
           <p className="label-caps text-black/40">{item.category}</p>
-          <span className="text-[12px] text-black/30">{item.date}</span>
+          <span className="inline-flex items-center gap-1.5 text-[12px] text-black/30">
+            {item.authorPhoto ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={item.authorPhoto}
+                alt=""
+                className="h-4 w-4 rounded-full object-cover object-top"
+              />
+            ) : null}
+            {item.date}
+            {item.author ? ` · ${item.author}` : ""}
+          </span>
         </div>
         <h3 className="font-display mt-2 text-[clamp(1.05rem,1.5vw,1.25rem)] leading-snug text-black transition-opacity group-hover:opacity-65">
           {item.title}
