@@ -9,6 +9,7 @@ import {
   parseLocale,
   sanitizeHttpsUrl,
   slugify,
+  stripToEditorialText,
   stripToPlainText,
 } from "@/lib/news/sanitize";
 import { createPendingArticle, findByExternalId, purgeStalePendingArticles } from "@/lib/news/store";
@@ -76,7 +77,7 @@ export async function POST(request: Request) {
   }
 
   const summary = stripToPlainText(body.summary, NEWS_FIELD_MAX.summary);
-  const articleBody = stripToPlainText(
+  const articleBody = stripToEditorialText(
     body.body || body.summary || title,
     NEWS_FIELD_MAX.body,
   );

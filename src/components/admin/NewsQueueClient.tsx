@@ -387,6 +387,65 @@ export function NewsQueueClient({ initial }: { initial: NewsQueuePayload }) {
     }
   }
 
+  async function improveWithAi() {
+    if (!selected || !editorDraft || selected.status === "rejected") return;
+    setBusy(true);
+    setError(null);
+    setNotice(null);
+    try {
+      const res = await fetch("/api/news/admin/improve", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "same-origin",
+        body: JSON.stringify({
+          title: editorDraft.title,
+          summary: editorDraft.summary,
+          body: editorDraft.body,
+          category: editorDraft.category,
+          locale: editorDraft.locale,
+          sourceName: editorDraft.sourceName,
+          imageUrl: editorDraft.imageUrl,
+        }),
+      });
+      const json = (await res.json()) as {
+        ok?: boolean;
+        error?: string;
+        hint?: string;
+        title?: string;
+        summary?: string;
+        body?: string;
+      };
+      if (!res.ok || !json.ok || !json.body) {
+        if (json.error === "ai_unconfigured") {
+          setError(
+            json.hint ||
+              "Configure OPENAI_API_KEY na Vercel e faça Redeploy.",
+          );
+        } else if (json.error === "rate_limited") {
+          setError("Limite de melhorias com IA atingido. Tente mais tarde.");
+        } else {
+          setError("A IA não conseguiu melhorar o texto. Tente de novo.");
+        }
+        return;
+      }
+      setDraft({
+        ...editorDraft,
+        title: json.title || editorDraft.title,
+        summary: json.summary || editorDraft.summary,
+        body: json.body,
+      });
+      setDirty(true);
+      setEditorTab("edit");
+      setNotice(
+        "Texto expandido pela IA (com destaques em negrito). Revise e clique em Salvar.",
+      );
+    } catch {
+      setError("Falha de rede ao chamar a IA");
+    } finally {
+      setBusy(false);
+    }
+  }
+
   async function onDecide(decision: "approve" | "reject") {
     if (!selected || selected.status !== "pending") return;
     if (dirty) {
@@ -958,8 +1017,21 @@ export function NewsQueueClient({ initial }: { initial: NewsQueuePayload }) {
 
                     <Field
                       label="Corpo"
-                      hint="Parágrafos separados por linha em branco"
+                      hint="Parágrafos separados por linha em branco · use **texto** para negrito"
                     >
+                      <div className="mb-2 flex flex-wrap gap-2">
+                        <button
+                          type="button"
+                          disabled={busy}
+                          onClick={() => void improveWithAi()}
+                          className={btnPrimary}
+                        >
+                          {busy ? "Melhorando…" : "Melhorar com IA"}
+                        </button>
+                        <span className="self-center text-[12px] text-[#65676B]">
+                          Expande o texto, adiciona contexto e destaques
+                        </span>
+                      </div>
                       <textarea
                         className={`${inputClass} min-h-[260px] resize-y leading-relaxed`}
                         value={editorDraft.body}

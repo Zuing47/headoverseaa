@@ -2,8 +2,8 @@ import type { Locale } from "@/types/content";
 
 const MAX = {
   title: 200,
-  summary: 600,
-  body: 20_000,
+  summary: 800,
+  body: 40_000,
   category: 80,
   sourceName: 120,
   slug: 120,
@@ -12,12 +12,10 @@ const MAX = {
   rejectReason: 500,
 } as const;
 
-/** Strip tags / control chars — articles are plain text only (no HTML render). */
+/** Strip tags / control chars — plain text (no markdown). */
 export function stripToPlainText(raw: unknown, max: number): string {
   let s = String(raw ?? "");
-  // Remove HTML tags
   s = s.replace(/<[^>]*>/g, " ");
-  // Decode a few common entities without introducing HTML
   s = s
     .replace(/&nbsp;/gi, " ")
     .replace(/&amp;/gi, "&")
@@ -25,11 +23,40 @@ export function stripToPlainText(raw: unknown, max: number): string {
     .replace(/&gt;/gi, ">")
     .replace(/&quot;/gi, '"')
     .replace(/&#39;/gi, "'");
-  // Kill other entities / null bytes / control chars (keep \n\t)
   s = s.replace(/&#?\w+;/g, " ");
   s = s.replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F]/g, "");
   s = s.replace(/[ \t]+\n/g, "\n").replace(/\n{3,}/g, "\n\n");
   s = s.replace(/[ \t]{2,}/g, " ").trim();
+  if (s.length > max) s = s.slice(0, max).trim();
+  return s;
+}
+
+/**
+ * Editorial body — allows **bold** and blank-line paragraphs.
+ * Strips HTML; keeps markdown bold and image lines ![alt](https://...).
+ */
+export function stripToEditorialText(raw: unknown, max: number): string {
+  let s = String(raw ?? "");
+  s = s.replace(/<script[\s\S]*?>[\s\S]*?<\/script>/gi, " ");
+  s = s.replace(/<style[\s\S]*?>[\s\S]*?<\/style>/gi, " ");
+  s = s.replace(/<[^>]*>/g, " ");
+  s = s
+    .replace(/&nbsp;/gi, " ")
+    .replace(/&amp;/gi, "&")
+    .replace(/&lt;/gi, "<")
+    .replace(/&gt;/gi, ">")
+    .replace(/&quot;/gi, '"')
+    .replace(/&#39;/gi, "'");
+  s = s.replace(/&#?\w+;/g, " ");
+  s = s.replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F]/g, "");
+  // Normalize bold markers
+  s = s.replace(/\*{3,}/g, "**");
+  s = s.replace(/[ \t]+\n/g, "\n").replace(/\n{3,}/g, "\n\n");
+  s = s
+    .split("\n")
+    .map((line) => line.replace(/[ \t]{2,}/g, " ").trimEnd())
+    .join("\n")
+    .trim();
   if (s.length > max) s = s.slice(0, max).trim();
   return s;
 }

@@ -9,6 +9,7 @@ import {
 } from "@/components/back";
 import { Reveal } from "@/components/home/reveal";
 import { NewsShareBar } from "@/components/pages/NewsShareBar";
+import { EditorialBody } from "@/components/pages/EditorialBody";
 import { NEWS_COVER_FALLBACK } from "@/lib/news/cover";
 import type { Insight, Locale, SiteContent } from "@/types/content";
 
@@ -196,16 +197,7 @@ export function NewsArticlePageView({
             </figure>
           </Reveal>
 
-          <div className="mt-10 md:mt-12">
-            {bodyParas.map((p, i) => (
-              <p
-                key={i}
-                className="mb-6 text-[1.0625rem] leading-[1.8] text-black/70 first:mt-0 md:text-[1.1rem] md:leading-[1.85]"
-              >
-                {p}
-              </p>
-            ))}
-          </div>
+          <EditorialBody paragraphs={bodyParas} className="mt-10 md:mt-12" />
 
           {showSource ? (
             <SourceCard

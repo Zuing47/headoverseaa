@@ -7,6 +7,7 @@ import {
   NEWS_FIELD_MAX,
   sanitizeHttpsUrl,
   slugify,
+  stripToEditorialText,
   stripToPlainText,
 } from "@/lib/news/sanitize";
 import { findByExternalId, getArticleById, publishLocaleTwin, updateArticle } from "@/lib/news/store";
@@ -93,7 +94,7 @@ export async function POST(request: Request) {
   }
 
   const summary = stripToPlainText(body.summary, NEWS_FIELD_MAX.summary);
-  const articleBody = stripToPlainText(body.body, NEWS_FIELD_MAX.body);
+  const articleBody = stripToEditorialText(body.body, NEWS_FIELD_MAX.body);
   if (articleBody.length < 20) {
     return NextResponse.json({ ok: false, error: "invalid_body" }, { status: 400 });
   }

@@ -3,6 +3,7 @@
 import { getNewsAuthor } from "@/lib/news/authors";
 import { draftInsightFromRecord } from "@/lib/news/map";
 import { bodyToParagraphs, formatNewsDate } from "@/lib/news/sanitize";
+import { EditorialBody } from "@/components/pages/EditorialBody";
 import type { NewsArticleRecord } from "@/lib/news/types";
 
 export type DraftFields = {
@@ -105,14 +106,7 @@ export function NewsSitePreview({ draft }: { draft: DraftFields }) {
         </div>
 
         <div className="mx-auto mt-8 max-w-[40rem]">
-          {bodyParas.map((p, i) => (
-            <p
-              key={i}
-              className="mb-5 text-[1.02rem] leading-[1.75] text-black/65"
-            >
-              {p}
-            </p>
-          ))}
+          <EditorialBody paragraphs={bodyParas.length ? bodyParas : ["(corpo da notícia)"]} />
         </div>
 
         {showSource ? (
