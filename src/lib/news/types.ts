@@ -14,6 +14,8 @@ export type NewsArticleRecord = {
   category: string;
   sourceUrl: string | null;
   sourceName: string | null;
+  /** Optional favicon/logo for the wire source card at article end. */
+  sourceLogoUrl: string | null;
   imageUrl: string | null;
   /** Team member who posts/owns the byline (see authors.ts). */
   authorId: string | null;

@@ -35,6 +35,7 @@ function normalizeArticle(raw: NewsArticleRecord): NewsArticleRecord {
     ...raw,
     pairId: raw.pairId ?? null,
     authorId: raw.authorId ?? null,
+    sourceLogoUrl: raw.sourceLogoUrl ?? null,
     linkedinPostedAt: raw.linkedinPostedAt ?? null,
   };
 }
@@ -241,6 +242,7 @@ export async function publishLocaleTwin(opts: {
     category: opts.category,
     sourceUrl: opts.source.sourceUrl,
     sourceName: opts.source.sourceName,
+    sourceLogoUrl: opts.source.sourceLogoUrl ?? null,
     imageUrl: opts.source.imageUrl,
     authorId: opts.source.authorId ?? null,
     pairId,
@@ -286,6 +288,7 @@ export type NewsArticlePatch = {
   slug?: string;
   sourceName?: string | null;
   sourceUrl?: string | null;
+  sourceLogoUrl?: string | null;
   imageUrl?: string | null;
   authorId?: string | null;
 };
@@ -324,6 +327,10 @@ export async function updateArticle(
       patch.sourceName !== undefined ? patch.sourceName : current.sourceName,
     sourceUrl:
       patch.sourceUrl !== undefined ? patch.sourceUrl : current.sourceUrl,
+    sourceLogoUrl:
+      patch.sourceLogoUrl !== undefined
+        ? patch.sourceLogoUrl
+        : current.sourceLogoUrl,
     imageUrl: patch.imageUrl !== undefined ? patch.imageUrl : current.imageUrl,
     authorId:
       patch.authorId !== undefined ? patch.authorId : current.authorId,

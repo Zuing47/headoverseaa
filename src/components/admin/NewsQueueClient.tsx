@@ -281,7 +281,8 @@ export function NewsQueueClient({ initial }: { initial: NewsQueuePayload }) {
           slug: editorDraft.slug,
           sourceName: editorDraft.sourceName,
           authorId: editorDraft.authorId || null,
-          sourceUrl: selected.sourceUrl ?? "",
+          sourceUrl: editorDraft.sourceUrl || "",
+          sourceLogoUrl: editorDraft.sourceLogoUrl || "",
           imageUrl: editorDraft.imageUrl,
         }),
       });
@@ -844,13 +845,12 @@ export function NewsQueueClient({ initial }: { initial: NewsQueuePayload }) {
                                 const base =
                                   editorDraft ?? fieldsFromArticle(selected);
                                 if (!selectedId) setSelectedId(selected.id);
-                                setDraft({
-                                  ...base,
-                                  authorId: author.id,
-                                  sourceName: author.name,
-                                });
-                                setDirty(true);
-                              }}
+                              setDraft({
+                                ...base,
+                                authorId: author.id,
+                              });
+                              setDirty(true);
+                            }}
                               className={`flex items-center gap-3 rounded-xl border px-3 py-2.5 text-left transition ${
                                 active
                                   ? "border-[#1877F2] bg-[#E7F3FF] ring-2 ring-[#1877F2]/25"
@@ -902,16 +902,50 @@ export function NewsQueueClient({ initial }: { initial: NewsQueuePayload }) {
                     </div>
 
                     <Field
-                      label="Fonte original (RSS)"
-                      hint="Opcional — ex. pehub.com"
+                      label="Fonte da notícia"
+                      hint="Nome, link e logo opcional — aparece no final da matéria"
                     >
-                      <input
-                        className={inputClass}
-                        value={editorDraft.sourceName}
-                        onChange={(e) =>
-                          patchDraft("sourceName", e.target.value)
-                        }
-                      />
+                      <div className="space-y-3 rounded-2xl border border-[#E4E6EB] bg-[#F7F8FA] p-4">
+                        <input
+                          className={inputClass}
+                          value={editorDraft.sourceName}
+                          placeholder="Nome do site — ex. PE Hub"
+                          onChange={(e) =>
+                            patchDraft("sourceName", e.target.value)
+                          }
+                        />
+                        <input
+                          className={inputClass}
+                          value={editorDraft.sourceUrl}
+                          placeholder="https://… link da matéria original"
+                          onChange={(e) =>
+                            patchDraft("sourceUrl", e.target.value)
+                          }
+                        />
+                        <div className="flex flex-wrap items-center gap-3">
+                          {editorDraft.sourceLogoUrl ? (
+                            // eslint-disable-next-line @next/next/no-img-element
+                            <img
+                              src={editorDraft.sourceLogoUrl}
+                              alt=""
+                              className="h-11 w-11 rounded-xl bg-white object-contain p-1 ring-1 ring-[#E4E6EB]"
+                              referrerPolicy="no-referrer"
+                            />
+                          ) : (
+                            <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-white text-[10px] font-bold text-[#65676B] ring-1 ring-[#E4E6EB]">
+                              LOGO
+                            </div>
+                          )}
+                          <input
+                            className={`${inputClass} flex-1`}
+                            value={editorDraft.sourceLogoUrl}
+                            placeholder="URL do logo (opcional)"
+                            onChange={(e) =>
+                              patchDraft("sourceLogoUrl", e.target.value)
+                            }
+                          />
+                        </div>
+                      </div>
                     </Field>
 
                     <Field label="Resumo / lead">
@@ -996,20 +1030,6 @@ export function NewsQueueClient({ initial }: { initial: NewsQueuePayload }) {
                         />
                       </div>
                     </Field>
-
-                    {selected.sourceUrl ? (
-                      <p className="text-[13px] text-[#65676B]">
-                        Fonte:{" "}
-                        <a
-                          href={selected.sourceUrl}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="font-medium text-[#1877F2] hover:underline"
-                        >
-                          {selected.sourceUrl}
-                        </a>
-                      </p>
-                    ) : null}
                   </div>
                 ) : (
                   <div className="bg-[#F0F2F5] p-4 md:p-6">

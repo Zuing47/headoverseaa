@@ -128,6 +128,7 @@ export async function POST(request: Request) {
     category,
     sourceUrl,
     sourceName,
+    sourceLogoUrl: null,
     imageUrl,
     authorId: null,
     pairId: null,

@@ -13,6 +13,8 @@ export type DraftFields = {
   locale: "pt" | "en";
   slug: string;
   sourceName: string;
+  sourceUrl: string;
+  sourceLogoUrl: string;
   authorId: string;
   imageUrl: string;
 };
@@ -27,7 +29,9 @@ export function NewsSitePreview({ draft }: { draft: DraftFields }) {
     body: draft.body,
     category: draft.category || "News",
     imageUrl: draft.imageUrl || null,
-    sourceName: draft.sourceName || "Head Oversea",
+    sourceName: draft.sourceName || null,
+    sourceUrl: draft.sourceUrl || null,
+    sourceLogoUrl: draft.sourceLogoUrl || null,
     authorId: draft.authorId || null,
     createdAt: new Date().toISOString(),
     publishedAt: new Date().toISOString(),
@@ -45,15 +49,17 @@ export function NewsSitePreview({ draft }: { draft: DraftFields }) {
   const date = formatNewsDate(new Date().toISOString(), draft.locale);
   const en = draft.locale === "en";
   const team = getNewsAuthor(draft.authorId);
+  const sourceLabel = draft.sourceName.trim();
+  const showSource = Boolean(sourceLabel || draft.sourceUrl);
 
   return (
-    <div className="overflow-hidden border border-black/10 bg-white shadow-[0_24px_80px_rgba(0,0,0,0.08)]">
-      <div className="border-b border-black/10 bg-black/[0.03] px-5 py-3 text-[11px] uppercase tracking-[0.16em] text-black/45">
+    <div className="overflow-hidden rounded-2xl border border-[#E4E6EB] bg-white shadow-[0_1px_2px_rgba(0,0,0,0.06)]">
+      <div className="border-b border-[#E4E6EB] bg-[#F7F8FA] px-5 py-3 text-[11px] font-semibold uppercase tracking-[0.14em] text-[#65676B]">
         Pré-visualização · estilo editorial
       </div>
 
       <div className="bg-white px-6 py-8 md:px-10 md:py-10">
-        <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[#c00]">
+        <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[#0a2540]">
           {insight.category}
         </p>
         <h1 className="font-display mt-3 text-[clamp(1.6rem,3.5vw,2.4rem)] font-medium leading-[1.12] text-black">
@@ -71,7 +77,7 @@ export function NewsSitePreview({ draft }: { draft: DraftFields }) {
             <img
               src={team.photo}
               alt=""
-              className="h-10 w-10 rounded-full object-cover object-top ring-1 ring-black/10"
+              className="h-10 w-10 rounded-full object-cover object-top"
             />
           ) : (
             <div className="flex h-10 w-10 items-center justify-center rounded-full bg-black text-[10px] font-semibold text-white">
@@ -83,9 +89,7 @@ export function NewsSitePreview({ draft }: { draft: DraftFields }) {
               {team?.name || insight.author || "Selecione o responsável"}
             </p>
             <p className="text-[11px] text-black/45">
-              {team
-                ? `${en ? team.roleEn : team.rolePt} · ${date}`
-                : date}
+              {team ? `${en ? team.roleEn : team.rolePt} · ${date}` : date}
             </p>
           </div>
         </div>
@@ -109,10 +113,35 @@ export function NewsSitePreview({ draft }: { draft: DraftFields }) {
               {p}
             </p>
           ))}
-          {!bodyParas.length ? (
-            <p className="text-[14px] text-black/35">(corpo da notícia)</p>
-          ) : null}
         </div>
+
+        {showSource ? (
+          <div className="mt-8 flex items-center gap-3 rounded-2xl border border-black/[0.08] bg-[#f7f8fa] px-4 py-3">
+            <div className="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-white ring-1 ring-black/10">
+              {draft.sourceLogoUrl ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={draft.sourceLogoUrl}
+                  alt=""
+                  className="h-full w-full object-contain p-1"
+                  referrerPolicy="no-referrer"
+                />
+              ) : (
+                <span className="text-[10px] font-bold text-black/35">
+                  {(sourceLabel || "SR").slice(0, 2).toUpperCase()}
+                </span>
+              )}
+            </div>
+            <div className="min-w-0">
+              <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-black/40">
+                {en ? "Source" : "Fonte"}
+              </p>
+              <p className="truncate text-[14px] font-semibold">
+                {sourceLabel || draft.sourceUrl}
+              </p>
+            </div>
+          </div>
+        ) : null}
       </div>
     </div>
   );
@@ -127,6 +156,8 @@ export function fieldsFromArticle(article: NewsArticleRecord): DraftFields {
     locale: article.locale,
     slug: article.slug,
     sourceName: article.sourceName || "",
+    sourceUrl: article.sourceUrl || "",
+    sourceLogoUrl: article.sourceLogoUrl || "",
     authorId: article.authorId || "",
     imageUrl: article.imageUrl || "",
   };

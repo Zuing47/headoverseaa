@@ -43,6 +43,72 @@ function CoverImage({ src, alt }: { src: string; alt: string }) {
   );
 }
 
+function SourceCard({
+  name,
+  url,
+  logo,
+  en,
+}: {
+  name: string;
+  url?: string;
+  logo?: string;
+  en: boolean;
+}) {
+  const inner = (
+    <>
+      <div className="relative flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-black/[0.04] ring-1 ring-black/[0.08]">
+        {logo ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={logo}
+            alt=""
+            className="h-full w-full object-contain p-1.5"
+            referrerPolicy="no-referrer"
+          />
+        ) : (
+          <span className="text-[11px] font-bold uppercase tracking-wide text-black/40">
+            {name.slice(0, 2)}
+          </span>
+        )}
+      </div>
+      <div className="min-w-0 flex-1">
+        <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-black/40">
+          {en ? "Source" : "Fonte"}
+        </p>
+        <p className="mt-0.5 truncate text-[15px] font-semibold text-black">
+          {name}
+        </p>
+        {url ? (
+          <p className="mt-0.5 truncate text-[12px] text-black/45">{url}</p>
+        ) : null}
+      </div>
+      {url ? (
+        <span className="shrink-0 text-[18px] text-black/30" aria-hidden>
+          →
+        </span>
+      ) : null}
+    </>
+  );
+
+  const className =
+    "mt-10 flex items-center gap-4 rounded-2xl border border-black/[0.08] bg-[#f7f8fa] px-4 py-4 transition-colors";
+
+  if (url) {
+    return (
+      <a
+        href={url}
+        target="_blank"
+        rel="noopener noreferrer"
+        className={`${className} hover:border-black/20 hover:bg-[#f0f2f5]`}
+      >
+        {inner}
+      </a>
+    );
+  }
+
+  return <div className={className}>{inner}</div>;
+}
+
 /** G1-inspired editorial article — HO typography, white plane, byline with team photo. */
 export function NewsArticlePageView({
   content,
@@ -67,9 +133,16 @@ export function NewsArticlePageView({
     lead && paragraphs[0] === lead ? paragraphs.slice(1) : paragraphs;
 
   const cover = article.image || NEWS_COVER_FALLBACK;
+  const sourceLabel = article.sourceName?.trim();
+  const showSource = Boolean(sourceLabel || article.sourceUrl);
 
   return (
-    <BackShell content={content} locale={locale} withContact={false}>
+    <BackShell
+      content={content}
+      locale={locale}
+      withContact={false}
+      headerSurface="light"
+    >
       <BackBand tone="white" className="!pt-8 md:!pt-12">
         <Reveal variant="rise">
           <BackBreadcrumb items={crumbs} />
@@ -77,7 +150,7 @@ export function NewsArticlePageView({
 
         <article className="mx-auto mt-8 max-w-[46rem] md:mt-10">
           <Reveal variant="rise">
-            <p className="text-[12px] font-semibold uppercase tracking-[0.16em] text-[#c00]">
+            <p className="text-[12px] font-semibold uppercase tracking-[0.16em] text-[#0a2540]">
               {article.category}
             </p>
             <h1 className="font-display mt-4 text-[clamp(1.85rem,4.2vw,3.15rem)] font-medium leading-[1.12] tracking-[-0.02em] text-black">
@@ -133,6 +206,15 @@ export function NewsArticlePageView({
               </p>
             ))}
           </div>
+
+          {showSource ? (
+            <SourceCard
+              name={sourceLabel || (en ? "Original source" : "Fonte original")}
+              url={article.sourceUrl}
+              logo={article.sourceLogoUrl}
+              en={en}
+            />
+          ) : null}
 
           <NewsShareBar
             title={article.title}

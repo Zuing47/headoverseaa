@@ -224,7 +224,7 @@ export function InsightsPageView({
   const { lead, side, feed, also } = splitBoard(insights);
 
   return (
-    <BackShell content={content} locale={locale} headerSurface="dark">
+    <BackShell content={content} locale={locale} headerSurface="light">
       <section className="border-b border-black/[0.06] bg-black text-white">
         <div className="page-shell pb-10 pt-24 md:pb-14 md:pt-28 lg:pb-16 lg:pt-32">
           <Reveal variant="rise">

@@ -23,8 +23,7 @@ export function recordToInsight(article: NewsArticleRecord): Insight {
       : `/insights/${article.slug}`;
   const paragraphs = bodyToParagraphs(article.body);
   const team = getNewsAuthor(article.authorId);
-  const authorName =
-    team?.name || article.sourceName?.trim() || "Head Oversea";
+  const authorName = team?.name || "Head Oversea";
 
   return {
     slug: article.slug,
@@ -47,6 +46,9 @@ export function recordToInsight(article: NewsArticleRecord): Insight {
     authorId: team?.id,
     authorPhoto: team?.photo,
     authorRole: team ? authorRole(team, article.locale) : undefined,
+    sourceName: article.sourceName || undefined,
+    sourceUrl: article.sourceUrl || undefined,
+    sourceLogoUrl: resolveNewsImage(article.sourceLogoUrl) || undefined,
   };
 }
 
@@ -61,6 +63,8 @@ export function draftInsightFromRecord(
     | "category"
     | "imageUrl"
     | "sourceName"
+    | "sourceUrl"
+    | "sourceLogoUrl"
     | "authorId"
     | "createdAt"
     | "publishedAt"
@@ -70,7 +74,8 @@ export function draftInsightFromRecord(
     ...article,
     id: "preview",
     status: "pending",
-    sourceUrl: null,
+    sourceUrl: article.sourceUrl ?? null,
+    sourceLogoUrl: article.sourceLogoUrl ?? null,
     pairId: null,
     externalId: null,
     authorId: article.authorId ?? null,

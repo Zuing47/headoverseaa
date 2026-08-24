@@ -92,6 +92,10 @@ export interface Insight {
   authorPhoto?: string;
   authorRole?: string;
   authorId?: string;
+  /** Original wire / outlet attribution */
+  sourceName?: string;
+  sourceUrl?: string;
+  sourceLogoUrl?: string;
   categoryColor?: string;
 }
 

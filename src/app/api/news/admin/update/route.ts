@@ -12,7 +12,7 @@ import {
 import { findByExternalId, getArticleById, publishLocaleTwin, updateArticle } from "@/lib/news/store";
 import { ensureOppositeTwin } from "@/lib/news/twins";
 import { sanitizeNewsImageRef } from "@/lib/news/media";
-import { getNewsAuthor, isNewsAuthorId } from "@/lib/news/authors";
+import { isNewsAuthorId } from "@/lib/news/authors";
 
 export const runtime = "nodejs";
 
@@ -25,6 +25,7 @@ type UpdateBody = {
   slug?: string;
   sourceName?: string;
   sourceUrl?: string;
+  sourceLogoUrl?: string;
   imageUrl?: string;
   authorId?: string | null;
 };
@@ -125,26 +126,29 @@ export async function POST(request: Request) {
     }
   }
 
+  let sourceLogoUrl: string | null | undefined = undefined;
+  if (body.sourceLogoUrl !== undefined) {
+    const raw = String(body.sourceLogoUrl ?? "").trim();
+    if (!raw) {
+      sourceLogoUrl = null;
+    } else {
+      sourceLogoUrl = sanitizeNewsImageRef(raw);
+      if (!sourceLogoUrl) {
+        return NextResponse.json({ ok: false, error: "invalid_source_logo" }, { status: 400 });
+      }
+    }
+  }
+
   let authorId: string | null | undefined = undefined;
   if (body.authorId !== undefined) {
     if (body.authorId === null || body.authorId === "") {
       authorId = null;
     } else if (isNewsAuthorId(body.authorId)) {
       authorId = body.authorId;
-      // Keep sourceName aligned with team byline for legacy displays.
-      const team = getNewsAuthor(body.authorId);
-      if (team) {
-        // sourceName set below via allowlist
-      }
     } else {
       return NextResponse.json({ ok: false, error: "invalid_author" }, { status: 400 });
     }
   }
-
-  const resolvedSourceName =
-    authorId && getNewsAuthor(authorId)
-      ? getNewsAuthor(authorId)!.name
-      : sourceName;
 
   try {
     // Locale is fixed at ingest; approve always publishes PT + EN twin.
@@ -154,8 +158,9 @@ export async function POST(request: Request) {
       body: articleBody,
       category,
       slug,
-      sourceName: resolvedSourceName,
+      sourceName,
       ...(sourceUrl !== undefined ? { sourceUrl } : {}),
+      ...(sourceLogoUrl !== undefined ? { sourceLogoUrl } : {}),
       ...(imageUrl !== undefined ? { imageUrl } : {}),
       ...(authorId !== undefined ? { authorId } : {}),
     });
