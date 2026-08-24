@@ -41,10 +41,9 @@ export function ProtectedAvatar({
         sizes={`${size}px`}
         draggable={false}
         className={cn(
-          "pointer-events-none select-none",
+          "pointer-events-none select-none [-webkit-user-drag:none]",
           objectPosition === "top" ? "object-cover object-top" : "object-cover",
         )}
-        style={{ WebkitUserDrag: "none" }}
       />
       {/* Invisible shield over the bitmap */}
       <span
@@ -87,8 +86,7 @@ export function ProtectedPhoto({
         sizes={sizes}
         priority={priority}
         draggable={false}
-        className="pointer-events-none select-none object-cover object-top"
-        style={{ WebkitUserDrag: "none" }}
+        className="pointer-events-none select-none object-cover object-top [-webkit-user-drag:none]"
       />
       <span
         className="absolute inset-0 z-[1] cursor-default"
