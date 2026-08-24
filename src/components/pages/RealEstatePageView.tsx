@@ -78,7 +78,7 @@ const COPY = {
     learnBody:
       "Como a tese de ativos reais da Head Oversea equilibra capital paciente no Brasil e nos Estados Unidos — e o que isso muda na forma de investir.",
     learnCta: "Abrir artigo",
-    learnHref: "/insights/real-estate-dois-mercados",
+    learnHref: "/news/real-estate-dois-mercados",
     phrase:
       "O ciclo passa. O ativo bem escolhido — e bem governado — permanece.",
     phraseMark: "Brasil — USA",
@@ -144,7 +144,7 @@ const COPY = {
     learnBody:
       "How Head Oversea’s real-asset thesis balances patient capital in Brazil and the United States — and what that changes in how we invest.",
     learnCta: "Open article",
-    learnHref: "/en/insights/real-estate-two-markets",
+    learnHref: "/en/news/real-estate-two-markets",
     phrase:
       "Cycles pass. A well-chosen — and well-governed — asset remains.",
     phraseMark: "Brazil — USA",

@@ -16,13 +16,13 @@ export const dynamicParams = true;
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
-  const item = await getPublicInsightBySlug("pt", slug);
+  const item = await getPublicInsightBySlug("en", slug);
   if (!item) return { robots: { index: false, follow: true } };
 
   return pageMeta({
     title: item.title,
     description: item.description ?? item.title,
-    path: `/insights/${slug}`,
+    path: `/en/news/${slug}`,
     image: item.image,
     imageAlt: item.title,
     type: "article",
@@ -30,27 +30,27 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   });
 }
 
-export default async function NewsArticlePage({ params }: Props) {
+export default async function EnglishNewsArticlePage({ params }: Props) {
   const { slug } = await params;
-  const content = getContent("pt");
-  const article = await getPublicInsightBySlug("pt", slug);
+  const content = getContent("en");
+  const article = await getPublicInsightBySlug("en", slug);
   if (!article) notFound();
 
-  const path = `/insights/${slug}`;
+  const path = `/en/news/${slug}`;
 
   return (
     <>
       <ArticleJsonLd
         article={article}
-        locale="pt"
+        locale="en"
         path={path}
         crumbs={[
-          { name: "Home", path: "/pt" },
-          { name: "Notícias", path: "/insights" },
+          { name: "Home", path: "/" },
+          { name: "News", path: "/en/news" },
           { name: article.title, path },
         ]}
       />
-      <NewsArticlePageView content={content} locale="pt" article={article} />
+      <NewsArticlePageView content={content} locale="en" article={article} />
     </>
   );
 }

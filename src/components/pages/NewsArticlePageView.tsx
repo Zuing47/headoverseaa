@@ -10,6 +10,7 @@ import {
 import { Reveal } from "@/components/home/reveal";
 import { NewsShareBar } from "@/components/pages/NewsShareBar";
 import { EditorialBody } from "@/components/pages/EditorialBody";
+import { ProtectedAvatar } from "@/components/ui/ProtectedAvatar";
 import { NEWS_COVER_FALLBACK } from "@/lib/news/cover";
 import type { Insight, Locale, SiteContent } from "@/types/content";
 
@@ -118,7 +119,7 @@ export function NewsArticlePageView({
   article,
 }: NewsArticlePageViewProps) {
   const en = locale === "en";
-  const indexHref = en ? "/en/insights" : "/insights";
+  const indexHref = en ? "/en/news" : "/news";
   const homeHref = en ? "/" : "/pt";
   const crumbs = [
     { name: "Home", href: homeHref },
@@ -170,15 +171,11 @@ export function NewsArticlePageView({
 
               <div className="mt-6 flex flex-wrap items-center gap-3">
                 {article.authorPhoto ? (
-                  <div className="relative h-10 w-10 shrink-0 overflow-hidden rounded-full bg-black/[0.06]">
-                    <Image
-                      src={article.authorPhoto}
-                      alt={bylineName}
-                      fill
-                      sizes="40px"
-                      className="object-cover object-top"
-                    />
-                  </div>
+                  <ProtectedAvatar
+                    src={article.authorPhoto}
+                    alt={bylineName}
+                    size={40}
+                  />
                 ) : null}
                 <div className="min-w-0 text-[13px] leading-snug text-[#666]">
                   <p>

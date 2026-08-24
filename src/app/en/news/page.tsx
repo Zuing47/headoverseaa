@@ -8,7 +8,7 @@ export const metadata: Metadata = pageMeta({
   title: "News",
   description:
     "News and perspectives from Head Oversea — firm, portfolio, and markets across Brazil and the United States.",
-  path: "/en/insights",
+  path: "/en/news",
   image: "/images/nyc-chrysler-building-midtown.jpg",
   imageAlt: "Midtown Manhattan — Head Oversea news",
   keywords: [
@@ -30,11 +30,11 @@ export default async function EnglishInsightsPage() {
     <div data-news-lead={items[0]?.slug ?? "none"}>
       <InteriorJsonLd
         locale="en"
-        path="/en/insights"
+        path="/en/news"
         name="News"
         description="News and perspectives from Head Oversea — firm, portfolio, and markets across Brazil and the United States."
         type="CollectionPage"
-        crumbs={[homeCrumb("en"), { name: "News", path: "/en/insights" }]}
+        crumbs={[homeCrumb("en"), { name: "News", path: "/en/news" }]}
       />
       <InsightsPageView locale="en" items={items} />
     </div>

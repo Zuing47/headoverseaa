@@ -31,7 +31,7 @@ English is the default site language at ${origin}/. Portuguese lives at ${origin
 - [Real Estate](${origin}/en/real-estate): Patient capital in real assets, including Geromel and Superbloom.
 - [Four fronts](${origin}/en/services): Active ownership, Brazil–U.S. corridor, value creation & liquidity, real estate.
 - [Portfolio](${origin}/en/cases): Portfolio companies with active ownership.
-- [News](${origin}/en/insights): Firm, portfolio, and market news.
+- [News](${origin}/en/news): Firm, portfolio, and market news.
 - [Materials](${origin}/en/materials): Study guides for download.
 - [About](${origin}/en/about): Firm and leadership.
 - [For Founders](${origin}/en/founders): Operating partner for validated businesses.
@@ -48,7 +48,7 @@ English is the default site language at ${origin}/. Portuguese lives at ${origin
 - [Real Estate](${origin}/real-estate): Capital paciente em ativos reais, incluindo Geromel e Superbloom.
 - [Quatro frentes](${origin}/servicos): Ownership ativo, corredor Brasil–EUA, criação de valor e liquidez, real estate.
 - [Portfólio](${origin}/cases): Empresas do portfólio com ownership ativo.
-- [Notícias](${origin}/insights): Notícias da firma, portfólio e mercados.
+- [Notícias](${origin}/news): Notícias da firma, portfólio e mercados.
 - [Materiais](${origin}/materiais): Guias de estudo para download.
 - [Sobre](${origin}/sobre): Firma e liderança.
 - [Para Fundadores](${origin}/fundadores): Sócio operacional para negócios validados.

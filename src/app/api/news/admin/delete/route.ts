@@ -58,10 +58,10 @@ export async function POST(request: Request) {
     }
 
     if (article.status === "published") {
-      revalidatePath("/insights");
-      revalidatePath("/en/insights");
-      revalidatePath(`/insights/${article.slug}`);
-      revalidatePath(`/en/insights/${article.slug}`);
+      revalidatePath("/news");
+      revalidatePath("/en/news");
+      revalidatePath(`/news/${article.slug}`);
+      revalidatePath(`/en/news/${article.slug}`);
       revalidatePath("/");
       revalidatePath("/pt");
     }

@@ -32,10 +32,10 @@ type UpdateBody = {
 };
 
 function revalidateArticle(slug: string) {
-  revalidatePath("/insights");
-  revalidatePath("/en/insights");
-  revalidatePath(`/insights/${slug}`);
-  revalidatePath(`/en/insights/${slug}`);
+  revalidatePath("/news");
+  revalidatePath("/en/news");
+  revalidatePath(`/news/${slug}`);
+  revalidatePath(`/en/news/${slug}`);
   revalidatePath("/");
   revalidatePath("/pt");
 }
@@ -205,8 +205,8 @@ export async function POST(request: Request) {
           });
           revalidateArticle(twin.slug);
         }
-        revalidatePath("/en/insights");
-        revalidatePath("/insights");
+        revalidatePath("/en/news");
+        revalidatePath("/news");
       } catch {
         // non-fatal — public listing backfill will retry
       }

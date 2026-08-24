@@ -11,7 +11,7 @@ export const pt: SiteContent = {
     { label: "Private Equity", href: "/private-equity" },
     { label: "Real Estate", href: "/real-estate" },
     { label: "Portfólio", href: "/cases" },
-    { label: "Notícias", href: "/insights" },
+    { label: "Notícias", href: "/news" },
   ],
   cta: {
     primary: "Falar conosco",
@@ -110,7 +110,7 @@ export const pt: SiteContent = {
       eyebrow: "Notícias",
       title: "Notícias e perspectivas do nosso mercado.",
       viewAll: "Saiba mais",
-      viewAllHref: "/insights",
+      viewAllHref: "/news",
     },
     finalCta: {
       title: "Valor duradouro começa com a parceria certa.",
@@ -611,7 +611,7 @@ export const pt: SiteContent = {
         category: "Empresa",
         categoryColor: "#3a3f4a",
         author: "Head Oversea",
-        href: "/insights/presenca-operacional-eua",
+        href: "/news/presenca-operacional-eua",
         image: "/images/ft.jpg",
         body: [
           "A Head Oversea reforça sua presença operacional nos Estados Unidos com base em Orlando — ponto de apoio para governança, relacionamentos e execução junto às empresas do portfólio.",
@@ -628,7 +628,7 @@ export const pt: SiteContent = {
         category: "Portfólio",
         categoryColor: "#c85e18",
         author: "Head Oversea",
-        href: "/insights/riolaser-mercado-americano",
+        href: "/news/riolaser-mercado-americano",
         image: "/images/empresas/riolaser.jpg",
         body: [
           "A Riolaser ilustra o modelo de ownership ativo da Head Oversea: entrada na liderança, estruturação de governança e disciplina operacional desde o início do ciclo.",
@@ -645,7 +645,7 @@ export const pt: SiteContent = {
         category: "Real Estate",
         categoryColor: "#26476f",
         author: "Head Oversea",
-        href: "/insights/real-estate-dois-mercados",
+        href: "/news/real-estate-dois-mercados",
         image: "/images/philadelphia-skyline-us-real-estate.jpg",
         body: [
           "Em real estate, a Head Oversea investe com disciplina estratégica e capital paciente — sem pressa por liquidez de curto prazo.",
@@ -662,7 +662,7 @@ export const pt: SiteContent = {
         category: "Tese",
         categoryColor: "#2f3a34",
         author: "Head Oversea",
-        href: "/insights/governanca-ativa-ownership",
+        href: "/news/governanca-ativa-ownership",
         image: "/images/private-equity-team-collaboration.jpg",
         body: [
           "Aportar capital sem presença na decisão é uma tese diferente de ownership ativo. A Head Oversea escolhe a segunda.",
@@ -818,7 +818,7 @@ export const pt: SiteContent = {
         title: "Portfólio & Notícias",
         links: [
           { label: "Portfólio", href: "/cases" },
-          { label: "Notícias", href: "/insights" },
+          { label: "Notícias", href: "/news" },
           { label: "Materiais", href: "/materiais" },
         ],
       },

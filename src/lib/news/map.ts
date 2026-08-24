@@ -19,8 +19,8 @@ export function resolveNewsImage(imageUrl: string | null | undefined): string | 
 export function recordToInsight(article: NewsArticleRecord): Insight {
   const href =
     article.locale === "en"
-      ? `/en/insights/${article.slug}`
-      : `/insights/${article.slug}`;
+      ? `/en/news/${article.slug}`
+      : `/news/${article.slug}`;
   const paragraphs = bodyToParagraphs(article.body);
   const team = getNewsAuthor(article.authorId);
   const authorName = team?.name || "Head Oversea";
@@ -88,5 +88,5 @@ export function draftInsightFromRecord(
 }
 
 export function previewHref(locale: Locale, slug: string) {
-  return locale === "en" ? `/en/insights/${slug}` : `/insights/${slug}`;
+  return locale === "en" ? `/en/news/${slug}` : `/news/${slug}`;
 }

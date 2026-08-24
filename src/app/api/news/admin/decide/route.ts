@@ -17,12 +17,12 @@ type DecideBody = {
 };
 
 function revalidateNews(slugPt?: string, slugEn?: string) {
-  revalidatePath("/insights");
-  revalidatePath("/en/insights");
+  revalidatePath("/news");
+  revalidatePath("/en/news");
   revalidatePath("/");
   revalidatePath("/pt");
-  if (slugPt) revalidatePath(`/insights/${slugPt}`);
-  if (slugEn) revalidatePath(`/en/insights/${slugEn}`);
+  if (slugPt) revalidatePath(`/news/${slugPt}`);
+  if (slugEn) revalidatePath(`/en/news/${slugEn}`);
 }
 
 /**
@@ -116,13 +116,13 @@ export async function POST(request: Request) {
         article.locale === "pt" ? article.slug : twinSlug,
         article.locale === "en" ? article.slug : twinSlug,
       );
-      revalidatePath("/insights");
-      revalidatePath("/en/insights");
-      revalidatePath(`/insights/${article.slug}`);
-      revalidatePath(`/en/insights/${article.slug}`);
+      revalidatePath("/news");
+      revalidatePath("/en/news");
+      revalidatePath(`/news/${article.slug}`);
+      revalidatePath(`/en/news/${article.slug}`);
       if (twinSlug) {
-        revalidatePath(`/insights/${twinSlug}`);
-        revalidatePath(`/en/insights/${twinSlug}`);
+        revalidatePath(`/news/${twinSlug}`);
+        revalidatePath(`/en/news/${twinSlug}`);
       }
     }
 
@@ -134,19 +134,19 @@ export async function POST(request: Request) {
       twinSlug: twinSlug ?? null,
       href:
         article.locale === "en"
-          ? `/en/insights/${article.slug}`
-          : `/insights/${article.slug}`,
+          ? `/en/news/${article.slug}`
+          : `/news/${article.slug}`,
       hrefEn:
         article.locale === "en"
-          ? `/en/insights/${article.slug}`
+          ? `/en/news/${article.slug}`
           : twinSlug
-            ? `/en/insights/${twinSlug}`
+            ? `/en/news/${twinSlug}`
             : null,
       hrefPt:
         article.locale === "pt"
-          ? `/insights/${article.slug}`
+          ? `/news/${article.slug}`
           : twinSlug
-            ? `/insights/${twinSlug}`
+            ? `/news/${twinSlug}`
             : null,
     });
   } catch {

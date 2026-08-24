@@ -76,7 +76,7 @@ async function fieldsForTwin(
 
 /**
  * Create/refresh opposite-locale twin.
- * Slug stays aligned with the source so /insights/x ↔ /en/insights/x works.
+ * Slug stays aligned with the source so /news/x ↔ /en/news/x works.
  */
 export async function ensureOppositeTwin(
   source: NewsArticleRecord,

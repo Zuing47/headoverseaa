@@ -76,7 +76,7 @@ export function middleware(request: NextRequest) {
     return res;
   }
 
-  if (pathname.startsWith("/insights") || pathname.startsWith("/en/insights")) {
+  if (pathname.startsWith("/news") || pathname.startsWith("/en/news")) {
     res.headers.set(
       "Cache-Control",
       "private, no-store, no-cache, must-revalidate",

@@ -125,14 +125,14 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       },
     ]),
     {
-      path: "/insights",
-      altPath: "/en/insights",
+      path: "/news",
+      altPath: "/en/news",
       priority: 0.8,
       changeFrequency: "daily",
     },
     {
-      path: "/en/insights",
-      altPath: "/insights",
+      path: "/en/news",
+      altPath: "/news",
       priority: 0.8,
       changeFrequency: "daily",
     },
@@ -249,8 +249,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const newsRoutes: Route[] = [];
   for (const [slug, lastModified] of insightByLocale.pt) {
     newsRoutes.push({
-      path: `/insights/${slug}`,
-      altPath: alternateLocalePath(`/insights/${slug}`),
+      path: `/news/${slug}`,
+      altPath: alternateLocalePath(`/news/${slug}`),
       priority: 0.7,
       changeFrequency: "weekly",
       lastModified,
@@ -258,8 +258,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   }
   for (const [slug, lastModified] of insightByLocale.en) {
     newsRoutes.push({
-      path: `/en/insights/${slug}`,
-      altPath: alternateLocalePath(`/en/insights/${slug}`),
+      path: `/en/news/${slug}`,
+      altPath: alternateLocalePath(`/en/news/${slug}`),
       priority: 0.7,
       changeFrequency: "weekly",
       lastModified,

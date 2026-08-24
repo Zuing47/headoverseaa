@@ -257,7 +257,7 @@ export function ActiveOwnership({ locale = "pt" }: { locale?: Locale }) {
 export function FeaturedStories({ content, locale = "pt" }: { content: SiteContent; locale?: Locale }) {
   const en = locale === "en";
   const items = content.insights.items.slice(0, 4);
-  const insightsHref = en ? "/en/insights" : "/insights";
+  const insightsHref = en ? "/en/news" : "/news";
   const t = en
     ? { eyebrow: "News & Insights", title: "Featured Stories", viewAll: "View all" }
     : { eyebrow: "Notícias", title: "Destaques", viewAll: "Ver todos" };
@@ -592,7 +592,7 @@ export function LeadershipGrid({ content, locale = "pt" }: { content: SiteConten
 export function InsightsEditorial({ content, locale = "pt" }: { content: SiteContent; locale?: Locale }) {
   const items = content.insights.items.slice(0, 3);
   const [lead, ...rest] = items;
-  const insightsHref = locale === "en" ? "/en/insights" : "/insights";
+  const insightsHref = locale === "en" ? "/en/news" : "/news";
   const title = "Insights";
   const readLabel = locale === "en" ? "Read insight" : "Ler insight";
 

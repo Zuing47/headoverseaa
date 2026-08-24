@@ -80,7 +80,7 @@ const btnDanger =
   "inline-flex items-center justify-center rounded-lg border border-[#FEC9C9] bg-[#FFF1F1] px-3.5 py-2 text-[13px] font-semibold text-[#E41E3F] transition hover:bg-[#FFE3E3] disabled:opacity-40";
 
 function articleHref(a: NewsArticleRecord) {
-  return a.locale === "en" ? `/en/insights/${a.slug}` : `/insights/${a.slug}`;
+  return a.locale === "en" ? `/en/news/${a.slug}` : `/news/${a.slug}`;
 }
 
 function matchesQuery(a: NewsArticleRecord, q: string) {
@@ -463,7 +463,7 @@ export function NewsQueueClient({ initial }: { initial: NewsQueuePayload }) {
     if (
       decision === "approve" &&
       !window.confirm(
-        "Aprovar e publicar em /insights e /en/insights? A tradução do outro idioma é automática.",
+        "Aprovar e publicar em /news e /en/news? A tradução do outro idioma é automática.",
       )
     ) {
       return;

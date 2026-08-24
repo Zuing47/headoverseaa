@@ -11,7 +11,7 @@ export const en: SiteContent = {
     { label: "Private Equity", href: "/en/private-equity" },
     { label: "Real Estate", href: "/en/real-estate" },
     { label: "Portfolio", href: "/en/cases" },
-    { label: "News", href: "/en/insights" },
+    { label: "News", href: "/en/news" },
   ],
   cta: {
     primary: "Get in touch",
@@ -110,7 +110,7 @@ export const en: SiteContent = {
       eyebrow: "News",
       title: "Market news and perspectives.",
       viewAll: "Learn more",
-      viewAllHref: "/en/insights",
+      viewAllHref: "/en/news",
     },
     finalCta: {
       title: "Enduring value starts with the right partnership.",
@@ -611,7 +611,7 @@ export const en: SiteContent = {
         category: "Company",
         categoryColor: "#3a3f4a",
         author: "Head Oversea",
-        href: "/en/insights/us-operational-presence",
+        href: "/en/news/us-operational-presence",
         image: "/images/ft.jpg",
         body: [
           "Head Oversea is deepening its operational presence in the United States from Orlando — a base for governance, relationships, and execution alongside portfolio companies.",
@@ -628,7 +628,7 @@ export const en: SiteContent = {
         category: "Portfolio",
         categoryColor: "#c85e18",
         author: "Head Oversea",
-        href: "/en/insights/riolaser-us-market",
+        href: "/en/news/riolaser-us-market",
         image: "/images/empresas/riolaser.jpg",
         body: [
           "Riolaser illustrates Head Oversea’s active ownership model: leadership entry, governance structure, and operational discipline from the start of the cycle.",
@@ -645,7 +645,7 @@ export const en: SiteContent = {
         category: "Real Estate",
         categoryColor: "#26476f",
         author: "Head Oversea",
-        href: "/en/insights/real-estate-two-markets",
+        href: "/en/news/real-estate-two-markets",
         image: "/images/philadelphia-skyline-us-real-estate.jpg",
         body: [
           "In real estate, Head Oversea invests with strategic discipline and patient capital — without rushing short-term liquidity.",
@@ -662,7 +662,7 @@ export const en: SiteContent = {
         category: "Thesis",
         categoryColor: "#2f3a34",
         author: "Head Oversea",
-        href: "/en/insights/active-governance-ownership",
+        href: "/en/news/active-governance-ownership",
         image: "/images/private-equity-team-collaboration.jpg",
         body: [
           "Injecting capital without a seat in the decision room is a different thesis from active ownership. Head Oversea chooses the latter.",
@@ -818,7 +818,7 @@ export const en: SiteContent = {
         title: "Portfolio & News",
         links: [
           { label: "Portfolio", href: "/en/cases" },
-          { label: "News", href: "/en/insights" },
+          { label: "News", href: "/en/news" },
           { label: "Materials", href: "/en/materials" },
         ],
       },

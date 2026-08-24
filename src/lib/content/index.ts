@@ -39,7 +39,7 @@ const PT_TO_EN: Record<string, string> = {
   "/sobre": "/en/about",
   "/servicos": "/en/services",
   "/contato": "/en/contact",
-  "/insights": "/en/insights",
+  "/news": "/en/news",
   "/por-que-head-oversea": "/en/why-head-oversea",
   "/tese": "/en/thesis",
   "/como-atuamos": "/en/how-we-work",
@@ -59,7 +59,7 @@ const EN_TO_PT: Record<string, string> = {
   "/en/leadership": "/sobre",
   "/en/services": "/servicos",
   "/en/contact": "/contato",
-  "/en/insights": "/insights",
+  "/en/news": "/news",
   "/en/why-head-oversea": "/por-que-head-oversea",
   "/en/thesis": "/tese",
   "/en/how-we-work": "/como-atuamos",
@@ -91,13 +91,13 @@ export function alternateLocalePath(pathname: string): string {
   const brandEn = pathname.match(/^\/en\/cases\/([^/]+)$/);
   if (brandEn) return `/cases/${brandEn[1]}`;
 
-  const newsPt = pathname.match(/^\/insights\/([^/]+)$/);
+  const newsPt = pathname.match(/^\/news\/([^/]+)$/);
   if (newsPt) {
-    return `/en/insights/${NEWS_PT_TO_EN[newsPt[1]] ?? newsPt[1]}`;
+    return `/en/news/${NEWS_PT_TO_EN[newsPt[1]] ?? newsPt[1]}`;
   }
-  const newsEn = pathname.match(/^\/en\/insights\/([^/]+)$/);
+  const newsEn = pathname.match(/^\/en\/news\/([^/]+)$/);
   if (newsEn) {
-    return `/insights/${NEWS_EN_TO_PT[newsEn[1]] ?? newsEn[1]}`;
+    return `/news/${NEWS_EN_TO_PT[newsEn[1]] ?? newsEn[1]}`;
   }
 
   if (locale === "pt") {

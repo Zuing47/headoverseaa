@@ -1,9 +1,9 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import Image from "next/image";
 import { AnimatePresence, motion } from "framer-motion";
 import type { Locale, TeamMember } from "@/types/content";
+import { ProtectedPhoto } from "@/components/ui/ProtectedAvatar";
 import { EASE_OUT } from "@/lib/motion";
 import { cn } from "@/lib/utils";
 
@@ -65,18 +65,19 @@ export function TeamCarousel({ team, locale = "pt" }: TeamCarouselProps) {
             className="absolute inset-0"
           >
             {member.photo ? (
-              <Image
-                src={member.photo}
-                alt={member.name}
-                fill
-                sizes="(max-width: 1024px) 100vw, 42vw"
-                className="object-cover object-top transition-transform duration-[900ms] ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:scale-[1.03]"
-              />
+              <div className="absolute inset-0 transition-transform duration-[900ms] ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:scale-[1.03]">
+                <ProtectedPhoto
+                  src={member.photo}
+                  alt={member.name}
+                  fill
+                  sizes="(max-width: 1024px) 100vw, 42vw"
+                />
+              </div>
             ) : (
               <div className="absolute inset-0 bg-[#ddd]" />
             )}
             <div
-              className="pointer-events-none absolute inset-0"
+              className="pointer-events-none absolute inset-0 z-[2]"
               aria-hidden
               style={{
                 background:

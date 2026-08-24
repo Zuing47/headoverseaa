@@ -168,7 +168,7 @@ export function PrivateEquityPageView({
   const t = COPY[locale];
   const en = locale === "en";
   const casesHref = en ? "/en/cases" : "/cases";
-  const insightsHref = en ? "/en/insights" : "/insights";
+  const insightsHref = en ? "/en/news" : "/news";
 
   const peCases = content.cases.items
     .filter((c) => c.category === "Private Equity" || c.id === "riolaser")

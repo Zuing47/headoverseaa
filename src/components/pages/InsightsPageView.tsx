@@ -4,6 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { BackLabel, BackShell, MeridianLink } from "@/components/back";
 import { Reveal } from "@/components/home/reveal";
+import { ProtectedAvatar } from "@/components/ui/ProtectedAvatar";
 import { NEWS_COVER_FALLBACK } from "@/lib/news/cover";
 import { getContent } from "@/lib/content";
 import type { Insight, Locale } from "@/types/content";
@@ -74,12 +75,7 @@ function LeadStory({ item, en }: { item: Insight; en: boolean }) {
         ) : null}
         <p className="mt-5 flex items-center gap-2.5 text-[12px] tracking-wide text-black/35">
           {item.authorPhoto ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
-              src={item.authorPhoto}
-              alt=""
-              className="h-6 w-6 rounded-full object-cover object-top"
-            />
+            <ProtectedAvatar src={item.authorPhoto} alt="" size={24} />
           ) : null}
           <span>
             {item.date}
@@ -143,12 +139,7 @@ function FeedRow({ item }: { item: Insight }) {
           <p className="label-caps text-black/40">{item.category}</p>
           <span className="inline-flex items-center gap-1.5 text-[12px] text-black/30">
             {item.authorPhoto ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
-                src={item.authorPhoto}
-                alt=""
-                className="h-4 w-4 rounded-full object-cover object-top"
-              />
+              <ProtectedAvatar src={item.authorPhoto} alt="" size={16} />
             ) : null}
             {item.date}
             {item.author ? ` · ${item.author}` : ""}
@@ -224,7 +215,7 @@ export function InsightsPageView({
   const { lead, side, feed, also } = splitBoard(insights);
 
   return (
-    <BackShell content={content} locale={locale} headerSurface="light">
+    <BackShell content={content} locale={locale} headerSurface="dark">
       <section className="border-b border-black/[0.06] bg-black text-white">
         <div className="page-shell pb-10 pt-24 md:pb-14 md:pt-28 lg:pb-16 lg:pt-32">
           <Reveal variant="rise">

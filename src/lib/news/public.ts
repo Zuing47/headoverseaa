@@ -18,7 +18,7 @@ function publishTime(a: NewsArticleRecord): number {
 
 /**
  * EN board mirrors PT ranking by matching the same slug across locales.
- * (Twins keep the source slug so /insights/x ↔ /en/insights/x.)
+ * (Twins keep the source slug so /news/x ↔ /en/news/x.)
  */
 function orderForLocale(
   locale: Locale,

@@ -139,7 +139,7 @@ function buildNav(locale: Locale): NavEntry[] {
     {
       type: "link",
       label: en ? "News" : "Notícias",
-      href: p("/insights", "/en/insights"),
+      href: p("/news", "/en/news"),
     },
     {
       type: "link",

@@ -24,7 +24,7 @@ export default async function NotFound() {
         { href: "/en/private-equity", label: "Private Equity" },
         { href: "/en/real-estate", label: "Real Estate" },
         { href: "/en/cases", label: "Portfolio" },
-        { href: "/en/insights", label: "News" },
+        { href: "/en/news", label: "News" },
         { href: "/en/contact", label: "Contact" },
       ]
     : [
@@ -32,7 +32,7 @@ export default async function NotFound() {
         { href: "/private-equity", label: "Private Equity" },
         { href: "/real-estate", label: "Real Estate" },
         { href: "/cases", label: "Portfólio" },
-        { href: "/insights", label: "Notícias" },
+        { href: "/news", label: "Notícias" },
         { href: "/contato", label: "Contato" },
       ];
 
