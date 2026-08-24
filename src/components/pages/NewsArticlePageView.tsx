@@ -36,7 +36,7 @@ function CoverImage({ src, alt }: { src: string; alt: string }) {
       src={src}
       alt={alt}
       fill
-      sizes="100vw"
+      sizes="(max-width: 768px) 100vw, 720px"
       className="object-cover"
       priority
       quality={90}
@@ -57,7 +57,7 @@ function SourceCard({
 }) {
   const inner = (
     <>
-      <div className="relative flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-black/[0.04] ring-1 ring-black/[0.08]">
+      <div className="relative flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-white ring-1 ring-black/[0.08]">
         {logo ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img
@@ -67,24 +67,21 @@ function SourceCard({
             referrerPolicy="no-referrer"
           />
         ) : (
-          <span className="text-[11px] font-bold uppercase tracking-wide text-black/40">
+          <span className="text-[10px] font-bold uppercase tracking-wide text-black/35">
             {name.slice(0, 2)}
           </span>
         )}
       </div>
       <div className="min-w-0 flex-1">
-        <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-black/40">
+        <p className="text-[11px] font-medium text-black/40">
           {en ? "Source" : "Fonte"}
         </p>
-        <p className="mt-0.5 truncate text-[15px] font-semibold text-black">
+        <p className="mt-0.5 truncate text-[14px] font-semibold text-black">
           {name}
         </p>
-        {url ? (
-          <p className="mt-0.5 truncate text-[12px] text-black/45">{url}</p>
-        ) : null}
       </div>
       {url ? (
-        <span className="shrink-0 text-[18px] text-black/30" aria-hidden>
+        <span className="shrink-0 text-[16px] text-black/25" aria-hidden>
           →
         </span>
       ) : null}
@@ -92,7 +89,7 @@ function SourceCard({
   );
 
   const className =
-    "mt-10 flex items-center gap-4 rounded-2xl border border-black/[0.08] bg-[#f7f8fa] px-4 py-4 transition-colors";
+    "mt-10 flex items-center gap-3.5 border border-black/[0.08] bg-[#fafafa] px-4 py-3.5 transition-colors";
 
   if (url) {
     return (
@@ -100,7 +97,7 @@ function SourceCard({
         href={url}
         target="_blank"
         rel="noopener noreferrer"
-        className={`${className} hover:border-black/20 hover:bg-[#f0f2f5]`}
+        className={`${className} hover:border-black/15 hover:bg-[#f5f5f5]`}
       >
         {inner}
       </a>
@@ -110,7 +107,11 @@ function SourceCard({
   return <div className={className}>{inner}</div>;
 }
 
-/** G1-inspired editorial article — HO typography, white plane, byline with team photo. */
+/**
+ * Editorial article layout — rhythm inspired by major news portals
+ * (narrow column, dek, byline, share, cover) with Head Oversea identity.
+ * Deliberately not a Globo/G1 clone: HO serif display, navy accents, Meridian CTA.
+ */
 export function NewsArticlePageView({
   content,
   locale = "pt",
@@ -129,13 +130,14 @@ export function NewsArticlePageView({
     : article.description
       ? [article.description]
       : [];
-  const lead = article.description || paragraphs[0] || "";
-  const bodyParas =
-    lead && paragraphs[0] === lead ? paragraphs.slice(1) : paragraphs;
+  const lead = article.description || "";
+  const bodyParas = paragraphs;
 
   const cover = article.image || NEWS_COVER_FALLBACK;
   const sourceLabel = article.sourceName?.trim();
   const showSource = Boolean(sourceLabel || article.sourceUrl);
+  const bylineName = article.author || "Head Oversea";
+  const bylinePrefix = en ? "By" : "Por";
 
   return (
     <BackShell
@@ -144,82 +146,99 @@ export function NewsArticlePageView({
       withContact={false}
       headerSurface="light"
     >
-      <BackBand tone="white" className="!pt-8 md:!pt-12">
-        <Reveal variant="rise">
-          <BackBreadcrumb items={crumbs} />
-        </Reveal>
-
-        <article className="mx-auto mt-8 max-w-[46rem] md:mt-10">
+      <BackBand tone="white" className="!pb-16 !pt-6 md:!pb-24 md:!pt-10">
+        <div className="mx-auto max-w-[42rem]">
           <Reveal variant="rise">
-            <p className="text-[12px] font-semibold uppercase tracking-[0.16em] text-[#0a2540]">
-              {article.category}
-            </p>
-            <h1 className="font-display mt-4 text-[clamp(1.85rem,4.2vw,3.15rem)] font-medium leading-[1.12] tracking-[-0.02em] text-black">
-              {article.title}
-            </h1>
-            {lead ? (
-              <p className="mt-5 text-[1.125rem] font-medium leading-[1.55] text-black/75 md:text-[1.2rem]">
-                {lead}
+            <BackBreadcrumb items={crumbs} />
+          </Reveal>
+
+          <article className="mt-7 md:mt-9">
+            <Reveal variant="rise">
+              <p className="text-[13px] font-semibold text-[#0a2540]">
+                {article.category}
               </p>
+
+              <h1 className="mt-3 text-[clamp(1.65rem,4vw,2.65rem)] font-bold leading-[1.18] tracking-[-0.02em] text-black">
+                {article.title}
+              </h1>
+
+              {lead ? (
+                <p className="mt-4 text-[1.05rem] leading-[1.55] text-[#5c5c5c] md:text-[1.125rem] md:leading-[1.55]">
+                  {lead}
+                </p>
+              ) : null}
+
+              <div className="mt-6 flex flex-wrap items-center gap-3">
+                {article.authorPhoto ? (
+                  <div className="relative h-10 w-10 shrink-0 overflow-hidden rounded-full bg-black/[0.06]">
+                    <Image
+                      src={article.authorPhoto}
+                      alt={bylineName}
+                      fill
+                      sizes="40px"
+                      className="object-cover object-top"
+                    />
+                  </div>
+                ) : null}
+                <div className="min-w-0 text-[13px] leading-snug text-[#666]">
+                  <p>
+                    <span className="text-black/50">{bylinePrefix} </span>
+                    <span className="font-semibold text-black">{bylineName}</span>
+                    {article.authorRole ? (
+                      <span className="text-black/45">
+                        {" "}
+                        — {article.authorRole}
+                      </span>
+                    ) : null}
+                  </p>
+                  <p className="mt-0.5 text-[12px] text-black/40">
+                    {article.date}
+                    <span className="text-black/25"> · </span>
+                    Head Oversea
+                  </p>
+                </div>
+              </div>
+
+              <NewsShareBar
+                title={article.title}
+                path={article.href}
+                locale={locale}
+                variant="inline"
+              />
+            </Reveal>
+
+            <Reveal variant="rise">
+              <figure className="mt-7 md:mt-8">
+                <div className="relative aspect-[16/9] w-full overflow-hidden bg-black/[0.04]">
+                  <CoverImage src={cover} alt={article.title} />
+                </div>
+                <figcaption className="mt-2 text-[12px] leading-snug text-black/40">
+                  {article.category}
+                  {sourceLabel ? ` · ${sourceLabel}` : ""}
+                </figcaption>
+              </figure>
+            </Reveal>
+
+            <EditorialBody paragraphs={bodyParas} className="mt-8 md:mt-10" />
+
+            {showSource ? (
+              <SourceCard
+                name={
+                  sourceLabel || (en ? "Original source" : "Fonte original")
+                }
+                url={article.sourceUrl}
+                logo={article.sourceLogoUrl}
+                en={en}
+              />
             ) : null}
 
-            <div className="mt-7 flex flex-wrap items-center gap-3 border-y border-black/[0.08] py-4">
-              {article.authorPhoto ? (
-                <div className="relative h-11 w-11 shrink-0 overflow-hidden rounded-full bg-black/[0.06] ring-1 ring-black/[0.08]">
-                  <Image
-                    src={article.authorPhoto}
-                    alt={article.author || ""}
-                    fill
-                    sizes="44px"
-                    className="object-cover object-top"
-                  />
-                </div>
-              ) : (
-                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-black text-[11px] font-semibold text-white">
-                  HO
-                </div>
-              )}
-              <div className="min-w-0">
-                <p className="text-[14px] font-semibold text-black">
-                  {article.author || "Head Oversea"}
-                </p>
-                <p className="text-[12px] text-black/45">
-                  {article.authorRole ? `${article.authorRole} · ` : ""}
-                  {article.date}
-                </p>
-              </div>
+            <div className="mt-12 border-t border-black/[0.08] pt-8">
+              <MeridianLink href={indexHref}>
+                {en ? "Back to News" : "Voltar para Notícias"}
+              </MeridianLink>
             </div>
-          </Reveal>
-
-          <Reveal variant="rise">
-            <figure className="relative mt-8 aspect-[16/10] w-full overflow-hidden bg-black/[0.04] md:mt-10">
-              <CoverImage src={cover} alt={article.title} />
-            </figure>
-          </Reveal>
-
-          <EditorialBody paragraphs={bodyParas} className="mt-10 md:mt-12" />
-
-          {showSource ? (
-            <SourceCard
-              name={sourceLabel || (en ? "Original source" : "Fonte original")}
-              url={article.sourceUrl}
-              logo={article.sourceLogoUrl}
-              en={en}
-            />
-          ) : null}
-
-          <NewsShareBar
-            title={article.title}
-            path={article.href}
-            locale={locale}
-          />
-
-          <div className="mt-12 border-t border-black/[0.08] pt-10">
-            <MeridianLink href={indexHref}>
-              {en ? "Back to News" : "Voltar para Notícias"}
-            </MeridianLink>
-          </div>
-        </article>
+          </article>
+        </div>
       </BackBand>
     </BackShell>
   );

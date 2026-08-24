@@ -7,6 +7,8 @@ type NewsShareBarProps = {
   title: string;
   path: string;
   locale?: Locale;
+  /** inline = under byline (news-portal rhythm); footer = bottom of article */
+  variant?: "inline" | "footer";
 };
 
 const COPY = {
@@ -125,6 +127,7 @@ export function NewsShareBar({
   title,
   path,
   locale = "pt",
+  variant = "footer",
 }: NewsShareBarProps) {
   const t = COPY[locale];
   const [status, setStatus] = useState<string | null>(null);
@@ -184,52 +187,51 @@ export function NewsShareBar({
     if (ok) setStatus(t.copied);
   }, [shareUrl, t.copied]);
 
-  const btn =
-    "inline-flex h-10 w-10 items-center justify-center text-black/45 transition-colors hover:text-black";
+  const pill =
+    "inline-flex h-9 items-center gap-1.5 rounded-full border border-black/[0.1] bg-[#f3f3f3] px-3.5 text-[12px] font-medium text-[#444] transition hover:bg-[#ebebeb] hover:text-black";
+
+  const actions = (
+    <div className="flex flex-wrap items-center gap-2">
+      <button type="button" onClick={onWhatsApp} className={pill}>
+        <WhatsAppIcon className="h-3.5 w-3.5" />
+        {t.whatsapp}
+      </button>
+      <button type="button" onClick={onInstagram} className={pill}>
+        <InstagramIcon className="h-3.5 w-3.5" />
+        {t.instagram}
+      </button>
+      <button type="button" onClick={onNativeShare} className={pill}>
+        <ShareIcon className="h-3.5 w-3.5" />
+        {t.share}
+      </button>
+      <button type="button" onClick={onCopy} className={pill}>
+        <LinkIcon className="h-3.5 w-3.5" />
+        {t.copy}
+      </button>
+    </div>
+  );
+
+  if (variant === "inline") {
+    return (
+      <div className="mt-5">
+        {actions}
+        {status ? (
+          <p className="mt-2 text-[12px] text-black/40" role="status">
+            {status}
+          </p>
+        ) : null}
+      </div>
+    );
+  }
 
   return (
     <div className="mt-12 border-t border-black/[0.08] pt-10">
-      <p className="label-caps text-black/40">{t.label}</p>
-      <div className="mt-4 flex items-center gap-1">
-        <button
-          type="button"
-          onClick={onWhatsApp}
-          className={btn}
-          aria-label={t.whatsapp}
-          title={t.whatsapp}
-        >
-          <WhatsAppIcon className="h-5 w-5" />
-        </button>
-        <button
-          type="button"
-          onClick={onInstagram}
-          className={btn}
-          aria-label={t.instagram}
-          title={t.instagram}
-        >
-          <InstagramIcon className="h-5 w-5" />
-        </button>
-        <button
-          type="button"
-          onClick={onNativeShare}
-          className={btn}
-          aria-label={t.share}
-          title={t.share}
-        >
-          <ShareIcon className="h-5 w-5" />
-        </button>
-        <button
-          type="button"
-          onClick={onCopy}
-          className={btn}
-          aria-label={t.copy}
-          title={t.copy}
-        >
-          <LinkIcon className="h-5 w-5" />
-        </button>
-      </div>
+      <p className="text-[12px] font-semibold uppercase tracking-[0.12em] text-black/40">
+        {t.label}
+      </p>
+      <div className="mt-4">{actions}</div>
       {status ? (
-        <p className="mt-3 text-[12px] tracking-[0.04em] text-black/40" role="status">
+        <p className="mt-3 text-[12px] text-black/40" role="status">
           {status}
         </p>
       ) : null}

@@ -84,16 +84,20 @@ export async function POST(request: Request) {
 
   const lang = locale === "en" ? "English" : "Portuguese (Brazil)";
   const system = `You are a senior financial editor for Head Oversea (private equity / real estate, Brazil–US).
-Rewrite and EXPAND news into a fuller institutional article.
+Rewrite and EXPAND news into a fuller institutional article with a news-portal structure.
 Rules:
 - Output language: ${lang} only.
 - Return ONLY valid JSON with keys: title, summary, body (no markdown fences).
-- summary: 1–2 sentences, compelling lead (max ~500 chars).
-- body: 5 to 8 paragraphs separated by a blank line. Substantially longer than the input — add context, market implications, and clear structure. Stay factual; do not invent numbers, quotes, or deals not implied by the source.
-- Use **double asterisks** for bold on key company names, fund names, and critical terms (sparingly, 4–10 uses).
+- summary: 1–2 sentences dek/lead under the headline (max ~500 chars).
+- body: 5 to 8 blocks separated by a blank line. Substantially longer than the input. Stay factual; do not invent numbers, quotes, or deals not implied by the source.
+- Structure helpers (each on its own line/paragraph):
+  - ## Subheading for 1–2 section titles
+  - **bold** for key company/fund names (4–10 uses)
+  - > pull-quote line for one key takeaway (optional)
+  - - bullet items when listing points (optional)
 - Do NOT use HTML.
 - If an image URL is provided, you MAY insert at most ONE mid-article figure on its own line as: ![short caption](EXACT_URL) using that exact URL only. Never invent image URLs.
-- Tone: serious, clear, G1/institutional — not clickbait.`;
+- Tone: serious, clear, institutional — not clickbait, not a clone of any specific news brand.`;
 
   const user = `Category: ${category}
 Source outlet: ${sourceName || "n/a"}
